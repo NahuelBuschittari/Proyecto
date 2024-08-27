@@ -1,0 +1,73 @@
+// dummyParkings.js
+export const DUMMY_PARKINGS = [
+    {
+        id: 1,
+        name: 'Parking 1',
+        address: 'Calle San Martín 1234',
+        lat: '-32.9468',
+        lon: '-60.6393',
+    },
+    {
+        id: 2,
+        name: 'Parking 2',
+        address: 'Calle Córdoba 5678',
+        lat: '-32.9440',
+        lon: '-60.6382',
+    },
+    {
+        id: 3,
+        name: 'Parking 3',
+        address: 'Calle Rioja 910',
+        lat: '-32.9452',
+        lon: '-60.6371',
+    },
+    {
+        id: 4,
+        name: 'Parking 4',
+        address: 'Calle Sarmiento 112',
+        lat: '-32.9465',
+        lon: '-60.6410',
+    },
+    {
+        id: 5,
+        name: 'Parking 5',
+        address: 'Calle Tucumán 334',
+        lat: '-32.9473',
+        lon: '-60.6401',
+    },
+    {
+        id: 6,
+        name: 'Parking 6',
+        address: 'Calle Entre Ríos 567',
+        lat: '-32.9481',
+        lon: '-60.6422',
+    },
+    {
+        id: 7,
+        name: 'Parking 7',
+        address: 'Calle Paraná 789',
+        lat: '-32.9490',
+        lon: '-60.6445',
+    },
+    {
+        id: 8,
+        name: 'Parking 8',
+        address: 'Calle Mendoza 234',
+        lat: '-32.9502',
+        lon: '-60.6460',
+    },
+    {
+        id: 9,
+        name: 'Parking 9',
+        address: 'Calle 9 de Julio 345',
+        lat: '-32.9515',
+        lon: '-60.6481',
+    },
+    {
+        id: 10,
+        name: 'Parking 10',
+        address: 'Calle Buenos Aires 456',
+        lat: '-32.9528',
+        lon: '-60.6492',
+    },
+];
