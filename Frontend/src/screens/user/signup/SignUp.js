@@ -53,10 +53,10 @@ const SignUp = ({ navigation }) => {
         navigation.navigate('Login');
       }
     } else if (step === 2) {
-      if (!address) {
-        Alert.alert('Error', 'Por favor, ingrese una dirección.');
-        return;
-      }
+      //if (!address) {
+        //Alert.alert('Error', 'Por favor, ingrese una dirección.');
+        //return;
+      //}
       setStep(step + 1);
     } else if (step === 3) {
       if(!carCapacity || !motoCapacity || !bikeCapacity){

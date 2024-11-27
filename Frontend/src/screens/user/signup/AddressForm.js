@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextInput, View} from 'react-native';
+import { TextInput, View,StyleSheet} from 'react-native';
 import { styles } from './SharedStyles.js';
 import MapComponent from '../../../components/MapComponent.js';
 const AddressForm = ({ address, setAddress }) => (
@@ -16,7 +16,7 @@ const AddressForm = ({ address, setAddress }) => (
 
 const styles2 = StyleSheet.create({
     container: {
-        flex: 1,
+        flex: 8,
     },
 });
 export default AddressForm;
