@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Button, FlatList, TouchableOpacity } from 'react-native';
-import { getNearbyParkings } from '../components/getNearbyParkings';
+import { getNearbyParkings } from '../../components/getNearbyParkings';
 
 const ParkingDetails = ({ route }) => {
     const { location } = route.params;

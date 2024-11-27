@@ -1,22 +1,21 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, Button } from 'react-native';
 
-const UpdateSpace = () => {
-  const [availableSpaces, setAvailableSpaces] = useState('');
+const Profile = () => {
+  const [characteristics, setCharacteristics] = useState('');
 
   const onUpdatePressed = () => {
-    // Lógica para actualizar el espacio disponible en la base de datos
+    // Lógica para actualizar las características en la base de datos
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Actualizar Espacio Disponible</Text>
+      <Text style={styles.title}>Actualizar Características</Text>
       <TextInput
         style={styles.input}
-        placeholder="Espacios Disponibles"
-        value={availableSpaces}
-        onChangeText={setAvailableSpaces}
-        keyboardType="numeric"
+        placeholder="Características"
+        value={characteristics}
+        onChangeText={setCharacteristics}
       />
       <Button
         title="Actualizar"
@@ -39,12 +38,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   input: {
-    height: 40,
+    height: 100,
     borderColor: 'gray',
-    borderBottomWidth: 1,
+    borderWidth: 1,
     width: '100%',
     marginBottom: 20,
+    textAlignVertical: 'top',
   },
 });
 
-export default UpdateSpace;
+export default Profile;

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { TextInput, View, FlatList, Text, TouchableOpacity, Button, StyleSheet } from 'react-native';
-import { getLocationSuggestions } from '../components/getLocationSuggestions';
-import MapComponent from '../components/MapComponent';
+import { getLocationSuggestions } from '../../components/getLocationSuggestions';
+import MapComponent from '../../components/MapComponent';
 
 const SearchParking = ({ navigation }) => {
     const [query, setQuery] = useState('');
@@ -11,7 +11,7 @@ const SearchParking = ({ navigation }) => {
     const handleInputChange = async (text) => {
         setQuery(text);
 
-        if (text.length > 2) {
+        if (text.length > 4) {
             const results = await getLocationSuggestions(text);
             setSuggestions(results);
         } else {

@@ -1,26 +1,27 @@
 import React from 'react';
 import { TextInput, StyleSheet } from 'react-native';
 
-const CustomInput = ({ placeholder, value, setValue, secureTextEntry }) => {
+const CustomInput = ({ value, setValue, placeholder, secureTextEntry }) => {
   return (
     <TextInput
-      style={styles.input}
-      placeholder={placeholder}
       value={value}
       onChangeText={setValue}
+      placeholder={placeholder}
+      style={styles.input}
       secureTextEntry={secureTextEntry}
+      placeholderTextColor="#394c74" // East Bay color
     />
   );
 };
 
 const styles = StyleSheet.create({
   input: {
-    width: '100%',
+    backgroundColor: '#b1c8e7', // Spindle
+    borderRadius: 10,
+    marginBottom: 10,
     padding: 10,
-    marginVertical: 5,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
+    width: '80%',
+    color: '#0a0a0a', // Black
   },
 });
 

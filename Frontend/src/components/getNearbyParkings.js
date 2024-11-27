@@ -10,7 +10,7 @@ export const getNearbyParkings = async (selectedLocation, maxDistance) => {
 
     for (const parking of DUMMY_PARKINGS) {
         const distance = await getDistance(lat, lon, parking.lat, parking.lon);
-        if (distance <= maxDistanceInMeters) {
+        if (distance <= maxDistanceInMeters ) {
             filteredParkings.push(parking);
         }
     }
