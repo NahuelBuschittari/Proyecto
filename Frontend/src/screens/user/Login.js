@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/CustomButton';
+import {styles} from '../../styles/SharedStyles';
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -16,7 +17,7 @@ const Login = ({ navigation }) => {
   };
 
   const onForgotPasswordPressed = () => {
-    navigation.navigate('PasswordReset'); // O la pantalla que maneje el "Olvidé mi contraseña"
+    navigation.navigate('PasswordReset'); 
   };
 
   return (
@@ -36,7 +37,6 @@ const Login = ({ navigation }) => {
         secureTextEntry 
       />
 
-      {/* Link de "¿Olvidaste tu contraseña?" */}
       <TouchableOpacity onPress={onForgotPasswordPressed}>
         <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
       </TouchableOpacity>
@@ -55,32 +55,5 @@ const Login = ({ navigation }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#f5f5f5', // Wild Sand
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#0a0a0a', // Black
-    marginBottom: 20,
-  },
-  forgotPassword: {
-    color: '#394c74', // East Bay
-    marginVertical: 10,
-    textDecorationLine: 'underline',
-  },
-  signupButton: {
-    backgroundColor: '#8ba4c1', // Nepal
-  },
-  signupButtonText: {
-    color: '#0a0a0a', // Black
-  },
-});
 
 export default Login;

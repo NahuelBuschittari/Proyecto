@@ -1,22 +1,18 @@
 import React from 'react';
-import { TextInput, View,StyleSheet} from 'react-native';
-import { styles } from './SharedStyles.js';
+import { View,StyleSheet} from 'react-native';
+import { styles } from '../../../styles/SharedStyles.js';
 import MapComponent from '../../../components/MapComponent.js';
+import CustomInput from '../../../components/CustomInput.js';
 const AddressForm = ({ address, setAddress }) => (
-  <View style={styles2.container}>
-    <TextInput
+  <View style={styles.container}>
+    <CustomInput
       style={styles.input}
       placeholder="Dirección"
       value={address}
-      onChangeText={setAddress}
+      setValue={setAddress}
     />
-    <MapComponent />
+    <MapComponent style={styles.mapPlaceholder}/>
   </View>
 );
 
-const styles2 = StyleSheet.create({
-    container: {
-        flex: 8,
-    },
-});
 export default AddressForm;

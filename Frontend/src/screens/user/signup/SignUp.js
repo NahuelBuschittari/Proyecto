@@ -1,6 +1,8 @@
 import React, { useState } from 'react'; 
-import { View, TextInput, Text, Button, Switch, Alert, ScrollView } from 'react-native';
-import { styles } from './SharedStyles.js';
+import { View,  Text, Button, Switch, Alert, ScrollView } from 'react-native';
+import { styles } from '../../../styles/SharedStyles.js';
+import CustomButton from '../../../components/CustomButton.js';
+import CustomInput from '../../../components/CustomInput.js';
 import UserForm from './UserForm';
 import AddressForm from './AddressForm';
 import VehiclePricesForm from './VehiclePricesForm';
@@ -136,22 +138,22 @@ const SignUp = ({ navigation }) => {
 
       {step === 1 && (
         <>
-          <TextInput
+          <CustomInput
             style={styles.input}
             placeholder="Email"
             value={email}
-            onChangeText={setEmail}
+            setValue={setEmail}
             keyboardType="email-address"
           />
-          <TextInput
+          <CustomInput
             style={styles.input}
             placeholder="Contraseña"
             value={password}
-            onChangeText={setPassword}
+            setValue={setPassword}
             secureTextEntry
           />
-          <Button
-            title={isParking ? "Siguiente" : "Registrarse"}
+          <CustomButton
+            text={isParking ? "Siguiente" : "Registrarse"}
             onPress={onSignUpPressed}
           />
         </>
@@ -164,8 +166,8 @@ const SignUp = ({ navigation }) => {
             setAddress={setAddress}
           />
           <View style={styles.buttonContainer}>
-            <Button title="Atrás" onPress={onBackPressed} />
-            <Button title="Siguiente" onPress={onSignUpPressed} />
+            <CustomButton text="Atrás" onPress={onBackPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
+            <CustomButton text="Siguiente" onPress={onSignUpPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
           </View>
         </>
       )}
@@ -180,8 +182,8 @@ const SignUp = ({ navigation }) => {
             setBikeCapacity={setBikeCapacity}
           />
           <View style={styles.buttonContainer}>
-            <Button title="Atrás" onPress={onBackPressed} />
-            <Button title="Siguiente" onPress={onSignUpPressed} />
+            <CustomButton text="Atrás" onPress={onBackPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
+            <CustomButton text="Siguiente" onPress={onSignUpPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
           </View>
         </>
       )}
@@ -194,8 +196,8 @@ const SignUp = ({ navigation }) => {
             prices={prices}
           />
           <View style={styles.buttonContainer}>
-            <Button title="Atrás" onPress={onBackPressed} />
-            <Button title={vehiculoIndex < vehiculos.length - 1 ? "Siguiente Vehículo" : "Finalizar Paso"} onPress={onSignUpPressed} />
+          <CustomButton text="Atrás" onPress={onBackPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
+          <CustomButton text={vehiculoIndex < vehiculos.length - 1 ? "Siguiente Vehículo" : "Finalizar Paso"} onPress={onSignUpPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
           </View>
         </>
       )}
@@ -228,8 +230,8 @@ const SignUp = ({ navigation }) => {
         setHasFreeWiFi={setHasFreeWiFi}
         />
         <View style={styles.buttonContainer}>
-            <Button title="Atrás" onPress={onBackPressed} />
-            <Button title="Siguiente" onPress={onSignUpPressed} />
+          <CustomButton text="Atrás" onPress={onBackPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
+          <CustomButton text="Siguiente" onPress={onSignUpPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
         </View>
         </>
       )}
@@ -242,8 +244,8 @@ const SignUp = ({ navigation }) => {
         schedule={schedule}
         />
         <View style={styles.buttonContainer}>
-            <Button title="Atrás" onPress={onBackPressed} />
-            <Button title="Siguiente" onPress={onSignUpPressed} />
+          <CustomButton text="Atrás" onPress={onBackPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
+          <CustomButton text="Siguiente" onPress={onSignUpPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
         </View>
         </>
       )}

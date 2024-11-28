@@ -1,27 +1,37 @@
+// CustomInput.js
 import React from 'react';
 import { TextInput, StyleSheet } from 'react-native';
+import { theme } from '../styles/theme';
 
-const CustomInput = ({ value, setValue, placeholder, secureTextEntry }) => {
+const CustomInput = ({ 
+  value, 
+  setValue, 
+  placeholder, 
+  secureTextEntry,
+  style 
+}) => {
   return (
     <TextInput
       value={value}
       onChangeText={setValue}
       placeholder={placeholder}
-      style={styles.input}
+      style={[styles.input, style]}
       secureTextEntry={secureTextEntry}
-      placeholderTextColor="#394c74" // East Bay color
+      placeholderTextColor={theme.colors.primary}
     />
   );
 };
 
 const styles = StyleSheet.create({
   input: {
-    backgroundColor: '#b1c8e7', // Spindle
-    borderRadius: 10,
-    marginBottom: 10,
-    padding: 10,
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginBottom: theme.spacing.sm,
+    padding: theme.spacing.sm,
     width: '80%',
-    color: '#0a0a0a', // Black
+    color: theme.colors.text,
   },
 });
 

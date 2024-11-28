@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Switch } from 'react-native';
-import { styles } from './SharedStyles.js'; // Asegúrate de que la ruta sea correcta
+import { styles } from '../../../styles/SharedStyles.js'; // Asegúrate de que la ruta sea correcta
 
 const CharacteristicsForm = ({
   isCovered, setIsCovered,

@@ -1,29 +1,29 @@
 import React from 'react';
-import { TextInput, Text, View } from 'react-native';
-import { styles } from './SharedStyles.js';
-
+import { Text, View } from 'react-native';
+import { styles } from '../../../styles/SharedStyles.js';
+import CustomInput from '../../../components/CustomInput.js';
 const UserForm = ({ isParking, name, surname, birthDate, setName, setSurname, setBirthDate}) => {
   return (
     <>
-      <TextInput
+      <CustomInput
         style={styles.input}
         placeholder={isParking ? "Nombre del Estacionamiento" : "Nombre"}
         value={name}
-        onChangeText={setName}
+        setValue={setName}
       />
       {!isParking && (
         <>
-          <TextInput
+          <CustomInput
             style={styles.input}
             placeholder="Apellido"
             value={surname}
-            onChangeText={setSurname}
+            setValue={setSurname}
           />
-          <TextInput
+          <CustomInput
             style={styles.input}
             placeholder="Fecha de Nacimiento"
             value={birthDate}
-            onChangeText={setBirthDate}
+            setValue={setBirthDate}
           />
         </>
       )}

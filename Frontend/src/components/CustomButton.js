@@ -1,26 +1,62 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { theme } from '../styles/theme';
 
-const CustomButton = ({ text, onPress, style, textStyle }) => {
+const CustomButton = ({ 
+  text, 
+  onPress, 
+  variant = 'primary', 
+  disabled = false,
+  style,
+  textStyle 
+}) => {
+  const buttonVariants = {
+    primary: {
+      backgroundColor: disabled ? theme.colors.secondary : theme.colors.primary,
+      textColor: theme.colors.background,
+    },
+    secondary: {
+      backgroundColor: theme.colors.secondary,
+      textColor: theme.colors.text,
+    },
+  };
+
+  const currentVariant = buttonVariants[variant];
+
   return (
-    <TouchableOpacity onPress={onPress} style={[styles.button, style]}>
-      <Text style={[styles.buttonText, textStyle]}>{text}</Text>
+    <TouchableOpacity 
+      onPress={onPress}
+      disabled={disabled}
+      style={[
+        styles.button, 
+        { backgroundColor: currentVariant.backgroundColor },
+        style
+      ]}
+    >
+      <Text 
+        style={[
+          styles.buttonText, 
+          { color: currentVariant.textColor },
+          textStyle
+        ]}
+      >
+        {text}
+      </Text>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#394c74', // East Bay
-    padding: 15,
-    borderRadius: 10,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
     width: '80%',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: theme.spacing.sm,
   },
   buttonText: {
-    color: '#f5f5f5', // Wild Sand
-    fontWeight: 'bold',
+    fontSize: theme.typography.fontSize.normal,
+    fontWeight: theme.typography.fontWeight.bold,
   },
 });
 

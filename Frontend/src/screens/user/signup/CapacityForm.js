@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput } from 'react-native';
-import { styles } from './SharedStyles.js';
+import { styles } from '../../../styles/SharedStyles.js';
 
 const CapacityForm = ({ carCapacity, motoCapacity, bikeCapacity, setCarCapacity, setMotoCapacity, setBikeCapacity }) => (
   <>

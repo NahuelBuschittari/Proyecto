@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput } from 'react-native';
-import { styles } from './SharedStyles';
+import { styles } from '../../../styles/SharedStyles';
 
 const ScheduleForm = ({ handleScheduleChange, schedule }) => {
   return (
