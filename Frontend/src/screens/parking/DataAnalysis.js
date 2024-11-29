@@ -1,50 +1,82 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Button } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { styles } from '../../styles/SharedStyles';
+import { theme } from '../../styles/theme';
 
 const DataAnalysis = () => {
-  const [characteristics, setCharacteristics] = useState('');
-
-  const onUpdatePressed = () => {
-    // Lógica para actualizar las características en la base de datos
-  };
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Actualizar Características</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Características"
-        value={characteristics}
-        onChangeText={setCharacteristics}
-      />
-      <Button
-        title="Actualizar"
-        onPress={onUpdatePressed}
-      />
+    <View style={customStyles.container}>
+      <Text style={customStyles.message}>
+        📊 La sección de análisis de datos estará disponible próximamente.
+      </Text>
+      <Text style={customStyles.info}>
+        Estamos trabajando en la integración con Power BI para mostrar insights detallados.
+      </Text>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+export default DataAnalysis;
+
+// Estilos personalizados
+const customStyles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
+    alignItems: 'center',
+    backgroundColor: theme.colors.background,
+    paddingHorizontal: theme.spacing.lg,
   },
-  title: {
-    fontSize: 24,
+  message: {
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 20,
+    color: theme.colors.primary,
+    textAlign: 'center',
+    marginBottom: theme.spacing.md,
   },
-  input: {
-    height: 100,
-    borderColor: 'gray',
-    borderWidth: 1,
-    width: '100%',
-    marginBottom: 20,
-    textAlignVertical: 'top',
+  info: {
+    fontSize: 16,
+    color: theme.colors.text,
+    textAlign: 'center',
   },
 });
 
-export default DataAnalysis;
+// const DataAnalysis = () => {
+//   // URL del reporte de Power BI (puedes cambiar esto por tu enlace)
+//   const powerBIUrl = 'https://app.powerbi.com/links/b3UsYyDeQg?ctid=a447b9c2-a213-4ec1-8103-3ea69a516a59&pbi_source=linkShare';
+
+//   return (
+//     <View style={customStyles.container}>
+//       <WebView
+//         source={{ uri: powerBIUrl }}
+//         startInLoadingState={true} // Muestra el indicador mientras carga
+//         renderLoading={() => (
+//           <ActivityIndicator 
+//             size="large" 
+//             color={theme.colors.primary} 
+//             style={customStyles.loading} 
+//           />
+//         )}
+//         style={customStyles.webView}
+//       />
+//     </View>
+//   );
+// };
+
+// export default DataAnalysis;
+
+// // Estilos personalizados
+// const customStyles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: theme.colors.background,
+//   },
+//   webView: {
+//     flex: 1,
+//   },
+//   loading: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+// });
