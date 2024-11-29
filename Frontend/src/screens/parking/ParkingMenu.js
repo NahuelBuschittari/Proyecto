@@ -1,46 +1,74 @@
 import React from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { styles } from '../../styles/SharedStyles';
+import { theme } from '../../styles/theme';
 
 const ParkingMenu = ({ navigation }) => {
+  const MenuButton = ({ title, onPress }) => (
+    <TouchableOpacity 
+      style={[styles.navigationButton, {
+        backgroundColor: theme.colors.secondary,
+        marginVertical: theme.spacing.sm,
+        paddingVertical: theme.spacing.md,
+        width: '90%', 
+        alignSelf: 'center', 
+      }]}
+      onPress={onPress}
+    >
+      <Text 
+        style={[
+          styles.navigationButtonText, 
+          { 
+            color: theme.colors.text, 
+            fontSize: theme.typography.fontSize.normal, 
+            textAlign: 'center' 
+          }
+        ]}
+      >
+        {title}
+      </Text>
+    </TouchableOpacity>
+  );
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { justifyContent: 'flex-start' }]}>
       <Text style={styles.title}>Menú Principal</Text>
-      <Button
-        title="Análisis de datos"
-        onPress={() => navigation.navigate('UpdateSpace')}
-      />
-      <Button
-        title="Actualizar espacio disponible"
-        onPress={() => navigation.navigate('UpdateSpace')}
-      />
-      <Button
-        title="Actualizar precios"
-        onPress={() => navigation.navigate('UpdateCharacteristics')}
-      />
-      <Button
-        title="Información de pago"
-        onPress={() => navigation.navigate('UpdateSpace')}
-      />
-      <Button
-        title="Mi perfil"
-        onPress={() => navigation.navigate('UpdateSpace')}
-      />
+      
+      <ScrollView 
+        contentContainerStyle={{
+          width: '100%',
+          alignItems: 'center',
+          paddingBottom: theme.spacing.lg
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <MenuButton 
+          title="Análisis de Datos" 
+          onPress={() => navigation.navigate('DataAnalysis')}
+        />
+        <MenuButton 
+          title="Actualizar Espacio" 
+          onPress={() => navigation.navigate('UpdateSpace')}
+        />
+        <MenuButton 
+          title="Actualizar Precios" 
+          onPress={() => navigation.navigate('UpdatePrices')}
+        />
+        <MenuButton 
+          title="Actualizar Características" 
+          onPress={() => navigation.navigate('UpdateCharacteristics')}
+        />
+        <MenuButton 
+          title="Información de Pago" 
+          onPress={() => navigation.navigate('Payment')}
+        />
+        <MenuButton 
+          title="Perfil de Estacionamiento" 
+          onPress={() => navigation.navigate('ParkingProfile')}
+        />
+      </ScrollView>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-});
 
 export default ParkingMenu;
