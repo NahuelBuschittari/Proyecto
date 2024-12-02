@@ -17,69 +17,72 @@ const CharacteristicsForm = ({
   hasFreeWiFi, setHasFreeWiFi
 }) => {
   return (
-    <View style={styles.container}>
+    <>
       <Text style={styles.title}>Características del Estacionamiento</Text>
-      <FeatureToggle
-        label="¿Está techado?"
-        value={isCovered}
-        onValueChange={setIsCovered}
-      />
-      <FeatureToggle
-        label="¿Tiene seguridad 24 horas?"
-        value={has24hSecurity}
-        onValueChange={setHas24hSecurity}
-      />
-      <FeatureToggle
-        label="¿Cuenta con cámaras de vigilancia?"
-        value={hasCCTV}
-        onValueChange={setHasCCTV}
-      />
-      <FeatureToggle
-        label="¿Ofrece servicio de valet?"
-        value={hasValetService}
-        onValueChange={setHasValetService}
-      />
-      <FeatureToggle
-        label="¿Estacionamiento para discapacitados?"
-        value={hasDisabledParking}
-        onValueChange={setHasDisabledParking}
-      />
-      <FeatureToggle
-        label="¿Cargadores para vehículos eléctricos?"
-        value={hasEVChargers}
-        onValueChange={setHasEVChargers}
-      />
-      <FeatureToggle
-        label="¿Ofrece sistema de pago automático?"
-        value={hasAutoPayment}
-        onValueChange={setHasAutoPayment}
-      />
-      <FeatureToggle
-        label="¿Tiene acceso con tarjeta/ticket?"
-        value={hasCardAccess}
-        onValueChange={setHasCardAccess}
-      />
-      <FeatureToggle
-        label="¿Ofrece lavado de autos?"
-        value={hasCarWash}
-        onValueChange={setHasCarWash}
-      />
-      <FeatureToggle
-        label="¿Tiene baños disponibles?"
-        value={hasRestrooms}
-        onValueChange={setHasRestrooms}
-      />
-      <FeatureToggle
-        label="¿Ofrece asistencia para averías?"
-        value={hasBreakdownAssistance}
-        onValueChange={setHasBreakdownAssistance}
-      />
-      <FeatureToggle
-        label="¿Cuenta con cobertura WiFi gratuita?"
-        value={hasFreeWiFi}
-        onValueChange={setHasFreeWiFi}
-      />
-    </View>
+      <View 
+      >
+        <FeatureToggle
+          label="¿Está techado?"
+          value={isCovered}
+          onValueChange={setIsCovered}
+        />
+        <FeatureToggle
+          label="¿Tiene seguridad 24 horas?"
+          value={has24hSecurity}
+          onValueChange={setHas24hSecurity}
+        />
+        <FeatureToggle
+          label="¿Cuenta con cámaras de vigilancia?"
+          value={hasCCTV}
+          onValueChange={setHasCCTV}
+        />
+        <FeatureToggle
+          label="¿Ofrece servicio de valet?"
+          value={hasValetService}
+          onValueChange={setHasValetService}
+        />
+        <FeatureToggle
+          label="¿Estacionamiento para discapacitados?"
+          value={hasDisabledParking}
+          onValueChange={setHasDisabledParking}
+        />
+        <FeatureToggle
+          label="¿Cargadores para vehículos eléctricos?"
+          value={hasEVChargers}
+          onValueChange={setHasEVChargers}
+        />
+        <FeatureToggle
+          label="¿Ofrece sistema de pago automático?"
+          value={hasAutoPayment}
+          onValueChange={setHasAutoPayment}
+        />
+        <FeatureToggle
+          label="¿Tiene acceso con tarjeta/ticket?"
+          value={hasCardAccess}
+          onValueChange={setHasCardAccess}
+        />
+        <FeatureToggle
+          label="¿Ofrece lavado de autos?"
+          value={hasCarWash}
+          onValueChange={setHasCarWash}
+        />
+        <FeatureToggle
+          label="¿Tiene baños disponibles?"
+          value={hasRestrooms}
+          onValueChange={setHasRestrooms}
+        />
+        <FeatureToggle
+          label="¿Ofrece asistencia para averías?"
+          value={hasBreakdownAssistance}
+          onValueChange={setHasBreakdownAssistance}
+        />
+        <FeatureToggle
+          label="¿Cuenta con cobertura WiFi gratuita?"
+          value={hasFreeWiFi}
+          onValueChange={setHasFreeWiFi}
+        />
+      </View>
+    </>
   );
 };
 

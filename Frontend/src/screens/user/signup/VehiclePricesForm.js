@@ -1,24 +1,28 @@
 import React from 'react';
-import { View, Text, TextInput } from 'react-native';
+import { View, Text } from 'react-native';
+import CustomInput from '../../../components/CustomInput';
 import { styles } from '../../../styles/SharedStyles.js';
-const VehiclePricesForm = ({ vehiculo, periodos, handlePriceChange, prices }) => (
-  
-  <View style={styles.card}>
-    <Text style={styles.cardTitle}>{vehiculo}</Text>
-    <View style={styles.grid}>
+
+const VehiclePricesForm = ({ vehiculo, periodos, handlePriceChange, prices }) => {
+  return (
+    <View style={styles.formContainer}>
+      <Text style={styles.subtitle}>Establecer Precios para: {vehiculo}</Text>
       {periodos.map((periodo) => (
-        <View key={periodo} style={styles.priceInputContainer}>
-          <Text style={styles.label}>{periodo}</Text>
-          <TextInput
-            style={styles.input}
-            keyboardType="numeric"
-            placeholder="0.00"
-            onChangeText={(value) => handlePriceChange(vehiculo, periodo, value)}
-          />
-        </View>
+        <CustomInput
+          key={`${vehiculo}-${periodo}`}
+          placeholder={`Precio (${periodo})`}
+          value={prices[periodo] || ''}
+          setValue={(value) => {
+            // Validar solo números
+            const numericValue = value.replace(/[^0-9.]/g, '');
+            handlePriceChange(vehiculo, periodo, numericValue);
+          }}
+          keyboardType="numeric"
+          style={styles.priceInput}
+        />
       ))}
     </View>
-  </View>
-);
+  );
+};
 
 export default VehiclePricesForm;

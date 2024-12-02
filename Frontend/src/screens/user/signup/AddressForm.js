@@ -11,7 +11,7 @@ const AddressForm = ({ address, setAddress }) => (
       value={address}
       setValue={setAddress}
     />
-    <MapComponent style={styles.mapPlaceholder}/>
+  
   </View>
 );
 

@@ -143,4 +143,20 @@ export const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.small,
     fontWeight: theme.typography.fontWeight.bold,
   },
+  summarySection: {
+    marginBottom: 15,
+    padding: 10,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 5
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10
+  },
+  subSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 5
+  }
 });

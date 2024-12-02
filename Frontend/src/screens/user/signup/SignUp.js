@@ -7,28 +7,35 @@ import UserForm from './UserForm';
 import AddressForm from './AddressForm';
 import VehiclePricesForm from './VehiclePricesForm';
 import CharacteristicsForm from './CharacteristicsForm.js';
-import ScheduleForm from './ScheduleForm.js'
-import CapacityForm from './CapacityForm.js'
-const vehiculos = ["Auto", "Camioneta", "Moto", "Bicicleta"];
-const periodos = ["Fracción", "Hora", "Medio día", "Día"];
-const dias=["Lunes","Martes","Miércoles","Jueves","Sábado","Domingo","Feriado"]
-const horario=["Desde", "Hasta"]
+import ScheduleForm from './ScheduleForm.js';
+import CapacityForm from './CapacityForm.js';
 
 const SignUp = ({ navigation }) => {
   const [isParking, setIsParking] = useState(false);
   const [step, setStep] = useState(1);
   const [vehiculoIndex, setVehiculoIndex] = useState(0);
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [surname, setSurname] = useState('');
   const [birthDate, setBirthDate] = useState('');
+  const [repeatPassword, setRepeatPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  
   const [carCapacity, setCarCapacity] = useState('');
   const [bikeCapacity, setBikeCapacity] = useState('');
   const [motoCapacity, setMotoCapacity] = useState('');
+
   const [address, setAddress] = useState('');
-  const [prices, setPrices] = useState({});
-  const [schedule, setSchedule]=useState({});
+
+  const [prices, setPrices] = useState({
+    Auto: {},
+    Camioneta: {},
+    Moto: {},
+    Bicicleta: {}
+  });
+
   const [isCovered, setIsCovered] = useState(false);
   const [has24hSecurity, setHas24hSecurity] = useState(false);
   const [hasCCTV, setHasCCTV] = useState(false);
@@ -41,6 +48,56 @@ const SignUp = ({ navigation }) => {
   const [hasRestrooms, setHasRestrooms] = useState(false);
   const [hasBreakdownAssistance, setHasBreakdownAssistance] = useState(false);
   const [hasFreeWiFi, setHasFreeWiFi] = useState(false);
+
+
+  const characteristics = [
+    { label: 'Techado', value: isCovered },
+    { label: 'Seguridad 24h', value: has24hSecurity },
+    { label: 'Cámaras de Seguridad', value: hasCCTV },
+    { label: 'Servicio de Valet', value: hasValetService },
+    { label: 'Estacionamiento para Discapacitados', value: hasDisabledParking },
+    { label: 'Cargadores para Vehículos Eléctricos', value: hasEVChargers },
+    { label: 'Pago Automático', value: hasAutoPayment },
+    { label: 'Acceso con Tarjeta', value: hasCardAccess },
+    { label: 'Lavado de Autos', value: hasCarWash },
+    { label: 'Baños', value: hasRestrooms },
+    { label: 'Asistencia en Carretera', value: hasBreakdownAssistance },
+    { label: 'WiFi Gratuito', value: hasFreeWiFi }
+  ];
+
+  // Filtrar solo las características seleccionadas
+  const selectedCharacteristics = characteristics.filter(char => char.value);
+  const periodos = ['fraccion', 'hora', 'medio dia', 'dia completo'];
+  const vehiculos = ['Auto', 'Camioneta', 'Moto', 'Bicicleta'];
+  const vehiculo = vehiculos[vehiculoIndex];
+  
+  const [schedule, setSchedule] = useState({
+    L: { openTime: '', closeTime: '' },
+    Ma: { openTime: '', closeTime: '' },
+    Mi: { openTime: '', closeTime: '' },
+    J: { openTime: '', closeTime: '' },
+    V: { openTime: '', closeTime: '' },
+    S: { openTime: '', closeTime: '' },
+    D: { openTime: '', closeTime: '' },
+    F: { openTime: '', closeTime: '' },
+  });
+  const handleScheduleChange = (newSchedule) => {
+    setSchedule((prevSchedule) => {
+      const updatedSchedule = { ...prevSchedule };
+      
+      // Itera sobre los días seleccionados y actualiza sus horarios
+      newSchedule.days.forEach((day) => {
+        updatedSchedule[day] = {
+          openTime: newSchedule.openTime,
+          closeTime: newSchedule.closeTime,
+        };
+      });
+  
+      return updatedSchedule;
+    });
+  };
+  
+  
 
   const onSignUpPressed = () => {
     if (step === 1) {
@@ -55,10 +112,10 @@ const SignUp = ({ navigation }) => {
         navigation.navigate('Login');
       }
     } else if (step === 2) {
-      //if (!address) {
-        //Alert.alert('Error', 'Por favor, ingrese una dirección.');
-        //return;
-      //}
+      if (!address) {
+        Alert.alert('Error', 'Por favor, ingrese una dirección.');
+        return;
+      }
       setStep(step + 1);
     } else if (step === 3) {
       if(!carCapacity || !motoCapacity || !bikeCapacity){
@@ -67,10 +124,11 @@ const SignUp = ({ navigation }) => {
       }
       setStep(step + 1);
     }else if (step === 4) {
+
       if (vehiculoIndex < vehiculos.length - 1) {
         setVehiculoIndex(vehiculoIndex + 1);
       } else {
-        setStep(step+1)
+        setStep(step + 1);
       }
     } else if (step === 5) {
       // Validar características seleccionadas si es necesario
@@ -80,10 +138,17 @@ const SignUp = ({ navigation }) => {
       if (Object.keys(schedule).length === 0) {
         Alert.alert('Error', 'Por favor, ingrese los horarios del estacionamiento.');
         return;
+      } else{
+        setStep(step+1);
       }
-      // Aquí podrías enviar los datos al backend o mostrar mensaje de éxito
-      Alert.alert('Éxito', 'Registro de estacionamiento completado.');
-      navigation.navigate('Login');
+    } else if (step === 7){
+        // Aquí podrías enviar los datos al backend o mostrar mensaje de éxito
+      Alert.alert('Éxito', 'Registro de estacionamiento completado.', [
+        {
+          text: 'Inicio',
+          onPress: () => navigation.navigate('Login'),
+        },
+      ]);;
     }
   };
 
@@ -96,25 +161,23 @@ const SignUp = ({ navigation }) => {
   };
 
   const handlePriceChange = (vehiculo, periodo, value) => {
-    setPrices(prevPrices => ({ ...prevPrices, [`${vehiculo}-${periodo}`]: value }));
+    setPrices((prevPrices) => ({
+      ...prevPrices,
+      [vehiculo]: {
+        ...prevPrices[vehiculo],
+        [periodo]: value,
+      },
+    }));
   };
-
-  const handleScheduleChange = (diaGrupo, horario, value) => {
-  setSchedule(prevSchedule => ({
-    ...prevSchedule,
-    [diaGrupo]: {
-      ...prevSchedule[diaGrupo],
-      [horario]: value,
-    },
-  }));
-};
+  
+  
 
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>Crear Cuenta</Text>
       <View style={styles.switchContainer}>
-        <Text>{isParking ? 'Registro de Estacionamiento' : 'Registro de Usuario'}</Text>
+        <Text style={styles.cardTitle}>{isParking ? 'Registro de Estacionamiento' : 'Registro de Usuario'}</Text>
         <Switch
           value={isParking}
           onValueChange={value => {
@@ -150,9 +213,21 @@ const SignUp = ({ navigation }) => {
             placeholder="Contraseña"
             value={password}
             setValue={setPassword}
-            secureTextEntry
+            secureTextEntry={!showPassword}
           />
+          <CustomInput
+            style={styles.input}
+            placeholder="Repetir Contraseña"
+            value={repeatPassword}
+            setValue={setRepeatPassword}
+            secureTextEntry={!showPassword}
+            
+          />
+          <CustomButton style={styles.navigationButton} textStyle={styles.navigationButtonText}
+            text={showPassword ? "Ocultar Contraseña" : "Mostrar Contraseña"} 
+            onPress={() => setShowPassword(!showPassword)} />
           <CustomButton
+            style={styles.navigationButton} textStyle={styles.navigationButtonText}
             text={isParking ? "Siguiente" : "Registrarse"}
             onPress={onSignUpPressed}
           />
@@ -189,57 +264,57 @@ const SignUp = ({ navigation }) => {
       )}
       {step === 4 && (
         <>
-          <VehiclePricesForm
-            vehiculo={vehiculos[vehiculoIndex]}
-            periodos={periodos}
-            handlePriceChange={handlePriceChange}
-            prices={prices}
-          />
+          <View>
+              <VehiclePricesForm
+                vehiculo={vehiculo}
+                periodos={periodos}
+                handlePriceChange={handlePriceChange}
+                prices={prices[vehiculo] || {}}
+              />
+          </View>
           <View style={styles.buttonContainer}>
-          <CustomButton text="Atrás" onPress={onBackPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
-          <CustomButton text={vehiculoIndex < vehiculos.length - 1 ? "Siguiente Vehículo" : "Finalizar Paso"} onPress={onSignUpPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
+            <CustomButton text="Atrás" onPress={onBackPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
+            <CustomButton text={vehiculoIndex < vehiculos.length - 1 ? "Siguiente Vehículo" : "Finalizar Paso"} onPress={onSignUpPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
           </View>
         </>
       )}
       {step === 5 && (
         <>
-        <CharacteristicsForm
-        isCovered={isCovered}
-        setIsCovered={setIsCovered}
-        has24hSecurity={has24hSecurity}
-        setHas24hSecurity={setHas24hSecurity}
-        hasCCTV={hasCCTV}
-        setHasCCTV={setHasCCTV}
-        hasValetService={hasValetService}
-        setHasValetService={setHasValetService}
-        hasDisabledParking={hasDisabledParking}
-        setHasDisabledParking={setHasDisabledParking}
-        hasEVChargers={hasEVChargers}
-        setHasEVChargers={setHasEVChargers}
-        hasAutoPayment={hasAutoPayment}
-        setHasAutoPayment={setHasAutoPayment}
-        hasCardAccess={hasCardAccess}
-        setHasCardAccess={setHasCardAccess}
-        hasCarWash={hasCarWash}
-        setHasCarWash={setHasCarWash}
-        hasRestrooms={hasRestrooms}
-        setHasRestrooms={setHasRestrooms}
-        hasBreakdownAssistance={hasBreakdownAssistance}
-        setHasBreakdownAssistance={setHasBreakdownAssistance}
-        hasFreeWiFi={hasFreeWiFi}
-        setHasFreeWiFi={setHasFreeWiFi}
-        />
-        <View style={styles.buttonContainer}>
-          <CustomButton text="Atrás" onPress={onBackPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
-          <CustomButton text="Siguiente" onPress={onSignUpPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
-        </View>
+            <CharacteristicsForm
+            isCovered={isCovered}
+            setIsCovered={setIsCovered}
+            has24hSecurity={has24hSecurity}
+            setHas24hSecurity={setHas24hSecurity}
+            hasCCTV={hasCCTV}
+            setHasCCTV={setHasCCTV}
+            hasValetService={hasValetService}
+            setHasValetService={setHasValetService}
+            hasDisabledParking={hasDisabledParking}
+            setHasDisabledParking={setHasDisabledParking}
+            hasEVChargers={hasEVChargers}
+            setHasEVChargers={setHasEVChargers}
+            hasAutoPayment={hasAutoPayment}
+            setHasAutoPayment={setHasAutoPayment}
+            hasCardAccess={hasCardAccess}
+            setHasCardAccess={setHasCardAccess}
+            hasCarWash={hasCarWash}
+            setHasCarWash={setHasCarWash}
+            hasRestrooms={hasRestrooms}
+            setHasRestrooms={setHasRestrooms}
+            hasBreakdownAssistance={hasBreakdownAssistance}
+            setHasBreakdownAssistance={setHasBreakdownAssistance}
+            hasFreeWiFi={hasFreeWiFi}
+            setHasFreeWiFi={setHasFreeWiFi}
+            />       
+          <View style={styles.buttonContainer}>
+            <CustomButton text="Atrás" onPress={onBackPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
+            <CustomButton text="Siguiente" onPress={onSignUpPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
+          </View>
         </>
       )}
       {step === 6 && (
         <>
         <ScheduleForm
-        dias={dias}
-        horario={horario}
         handleScheduleChange={handleScheduleChange}
         schedule={schedule}
         />
@@ -248,8 +323,93 @@ const SignUp = ({ navigation }) => {
           <CustomButton text="Siguiente" onPress={onSignUpPressed} style={styles.navigationButton} textStyle={styles.navigationButtonText}/>
         </View>
         </>
+      )}{step === 7 &&(
+      <>
+        <Text style={styles.title}>Resumen de Registro</Text>
+
+       <View style={styles.card}>
+          <Text style={styles.cardTitle}>Información Personal</Text>
+          <Text style={styles.label}>Nombre: {name} {surname}</Text>
+          <Text style={styles.label}>Email: {email}</Text>
+          <Text style={styles.label}>Dirección: {address}</Text>
+        </View>
+ 
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Capacidades</Text>
+          <Text style={styles.label}>Autos: {carCapacity}</Text>
+          <Text style={styles.label}>Motos: {motoCapacity}</Text>
+          <Text style={styles.label}>Bicicletas: {bikeCapacity}</Text>
+        </View>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Precios por Vehículo</Text>
+          {Object.keys(prices).length > 0 ? (
+            <>
+              {/* Encabezados para los períodos */}
+              <View style={styles.horizontalContainer}>
+                <Text style={[styles.label, styles.header]}>Vehículo</Text>
+                {Object.keys(prices[Object.keys(prices)[0]]).map((periodo) => (
+                  <Text key={periodo} style={[styles.label, styles.header]}>
+                    {periodo}
+                  </Text>
+                ))}
+              </View>
+
+              {/* Filas con los precios */}
+              {Object.keys(prices).map((vehiculo) => (
+                <View key={vehiculo} style={styles.horizontalContainer}>
+                  <Text style={styles.label}>{vehiculo}</Text>
+                  {Object.keys(prices[vehiculo]).map((periodo) => (
+                    <Text key={periodo} style={styles.label}>
+                      ${prices[vehiculo][periodo] || 'No definido'}
+                    </Text>
+                  ))}
+                </View>
+              ))}
+            </>
+          ) : (
+            <Text style={styles.errorText}>No hay precios definidos.</Text>
+          )}
+        </View>
+
+  
+        {selectedCharacteristics.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Características del Estacionamiento</Text>
+            {selectedCharacteristics.map((char, index) => (
+              <Text key={index} style={styles.label}>• {char.label}</Text>
+            ))}
+          </View>
+        )} 
+      <View style={styles.card}>
+      <Text  style={styles.cardTitle}>Horarios</Text>
+        {Object.keys(schedule).map((day) => {
+            if (schedule[day].openTime && schedule[day].closeTime) {
+              return (
+                  <Text key={day}>{day}: {schedule[day].openTime} - {schedule[day].closeTime}</Text>
+              );
+            }
+            return null;
+          })}
+      </View>
+
+        <View style={styles.buttonContainer}>
+          <CustomButton
+            text="Atrás"
+            onPress={onBackPressed}
+            style={styles.navigationButton}
+            textStyle={styles.navigationButtonText}
+          />
+          <CustomButton
+            text="Finalizar Registro"
+            onPress={onSignUpPressed}
+            style={styles.navigationButton}
+            textStyle={styles.navigationButtonText}
+          />
+        </View>
+        
+      </>
       )}
-    </ScrollView>
+    </View>
   );
 };
 
