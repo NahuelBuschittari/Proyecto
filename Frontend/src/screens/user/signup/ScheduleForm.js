@@ -58,7 +58,7 @@ const addSchedule = () => {
 };
 
   return (
-    <ScrollView contentContainerStyle={styles2.container}>
+    <>
       <View style={styles2.formContainer}>
         <Text style={styles.label}>Selecciona los días:</Text>
         <View style={styles2.daysContainer}>
@@ -153,7 +153,7 @@ const addSchedule = () => {
           return null;
         })}
       </View>
-    </ScrollView>
+    </>
   );
 };
 
