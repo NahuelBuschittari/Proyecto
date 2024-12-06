@@ -1,5 +1,5 @@
 import React, { useState } from 'react'; 
-import { View, Text, Button, Switch, Alert, ScrollView, KeyboardAvoidingView, } from 'react-native';
+import { View, Text, Button, Switch, Alert, ScrollView,} from 'react-native';
 import { styles } from '../../../styles/SharedStyles.js';
 import CustomButton from '../../../components/CustomButton.js';
 import CustomInput from '../../../components/CustomInput.js';
@@ -14,7 +14,7 @@ import { theme } from '../../../styles/theme.js';
 
 const SignUp = ({ navigation }) => {
   const [isParking, setIsParking] = useState(false);
-  const [step, setStep] = useState(5);
+  const [step, setStep] = useState(6);
   const [vehiculoIndex, setVehiculoIndex] = useState(0);
 
   const [userData, setUserData] = useState({
@@ -242,20 +242,15 @@ const SignUp = ({ navigation }) => {
       </View>
 
       {step === 1 && (
-      <>
-          <UserForm
-            userData={userData}
-            setUserData={setUserData}
-            isParking={isParking}
-          />
-          <CustomButton
-            text={!isParking ? 'Registrarse' : 'Siguiente'}
-            onPress={() => handleNavigation('next')}
-            style={styles.navigationButton}
-            textStyle={styles.navigationButtonText}
-          />
-
-      </>
+        <ScrollView contentContainerStyle={[{
+          alignItems:'center',
+          flexGrow: 1,}]}>
+            <UserForm
+              userData={userData}
+              setUserData={setUserData}
+              isParking={isParking}
+            />
+        </ScrollView>
       )}
 
       {step === 2 && (
@@ -379,6 +374,14 @@ const SignUp = ({ navigation }) => {
       )}
       {/* Footer */}
       <View style={styles.footer}>
+      {step === 1 && (
+        <CustomButton
+        text={!isParking ? 'Registrarse' : 'Siguiente'}
+        onPress={() => handleNavigation('next')}
+        style={styles.navigationButton}
+        textStyle={styles.navigationButtonText}
+        />
+      )}
       {step > 1 && (
         <>
           <CustomButton
@@ -393,8 +396,7 @@ const SignUp = ({ navigation }) => {
           />
         </>   
       )}
-        
-    </View>
+      </View>
     </View>
   );
 };

@@ -4,7 +4,7 @@ import { theme } from './theme';
 export const styles = StyleSheet.create({
   // Contenedor principal
   container: {
-    flex: 0.85678,
+    flex: 0.85,
     alignItems: 'center',
     justifyContent:'center',
     padding: theme.spacing.lg,

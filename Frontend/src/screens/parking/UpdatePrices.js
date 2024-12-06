@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, Picker, FlatList, TextInput, TouchableOpacity, Alert,} from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, Alert,} from 'react-native';
 import { styles } from '../../styles/SharedStyles'; 
-import { theme } from '../../styles/theme'; 
+import { theme } from '../../styles/theme';
+import {Picker} from '@react-native-picker/picker'
 
 const UpdatePrices = () => {
   const vehicles = {
