@@ -1,20 +1,20 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import CustomInput from '../../../components/CustomInput';
 import { styles } from '../../../styles/SharedStyles.js';
 
 const VehiclePricesForm = ({ vehiculo, periodos, handlePriceChange, prices }) => {
   return (
-    <>
+    <ScrollView contentContainerStyle={{ flexGrow: 15 }}>
       <Text style={styles.cardTitle}>Establecer Precios para: {vehiculo}</Text>
       {periodos.map((periodo) => (
-        <>
+        <View key={`${vehiculo}-${periodo}`}>
         <Text style={styles.upperInputText}>Precio {periodo}</Text>
         <View style={{flexDirection: 'row', alignSelf: 'center', width:'100%', justifyContent:'center'}}>
-          <Text style={[styles.label,{verticalAlign:'bottom'}]}>$</Text>
+          <Text style={[styles.label,{verticalAlign:'middle', paddingRight:'1%'}]}>$</Text>
           <CustomInput
-            key={`${vehiculo}-${periodo}`}
-            placeholder={`Precio (${periodo})`}
+            
+            placeholder={`Ingrese el precio en formato: 0.00`}
             value={prices[periodo] || ''}
             setValue={(value) => {
               // Validar solo números
@@ -22,12 +22,11 @@ const VehiclePricesForm = ({ vehiculo, periodos, handlePriceChange, prices }) =>
               handlePriceChange(vehiculo, periodo, numericValue);
             }}
             keyboardType="numeric"
-            style={styles.priceInput}
           />
         </View>
-        </>
+        </View>
       ))}
-    </>
+    </ScrollView>
   );
 };
 

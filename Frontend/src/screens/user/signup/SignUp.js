@@ -1,5 +1,5 @@
 import React, { useState } from 'react'; 
-import { View, Text, Button, Switch, Alert, ScrollView } from 'react-native';
+import { View, Text, Button, Switch, Alert, ScrollView, KeyboardAvoidingView, } from 'react-native';
 import { styles } from '../../../styles/SharedStyles.js';
 import CustomButton from '../../../components/CustomButton.js';
 import CustomInput from '../../../components/CustomInput.js';
@@ -9,10 +9,12 @@ import VehiclePricesForm from './VehiclePricesForm';
 import CharacteristicsForm from './CharacteristicsForm.js';
 import ScheduleForm from './ScheduleForm.js';
 import CapacityForm from './CapacityForm.js';
+import { theme } from '../../../styles/theme.js';
+
 
 const SignUp = ({ navigation }) => {
   const [isParking, setIsParking] = useState(false);
-  const [step, setStep] = useState(4);
+  const [step, setStep] = useState(5);
   const [vehiculoIndex, setVehiculoIndex] = useState(0);
 
   const [userData, setUserData] = useState({
@@ -85,29 +87,86 @@ const SignUp = ({ navigation }) => {
 
   const periodos = ['fraccion', 'hora', 'medio dia', 'dia completo'];
   const vehiculos = ['Auto', 'Camioneta', 'Moto', 'Bicicleta'];
-  const vehiculo = vehiculos[vehiculoIndex];
 
   const validateStep = () => {
     if (step === 1) {
-      return (
-        userData.email &&
-        userData.password &&
-        userData.name &&
-        (isParking || (userData.surname && userData.birthDate))
-      );
+      // Validación para el formulario principal
+      const userFormValid = userData.email && userData.password && userData.name;
+      const additionalUserFieldsValid = isParking || (userData.surname && userData.birthDate);
+  
+      if (!userFormValid) {
+        Alert.alert('Error', 'Por favor, complete el nombre, correo y contraseña.');
+        return false;
+      }
+  
+      if (!additionalUserFieldsValid) {
+        Alert.alert('Error', 'Por favor, complete el apellido y la fecha de nacimiento.');
+        return false;
+      }
+  
+      return true;
     }
-    if (step === 2) return !!userData.address;
-    if (step === 3) {
-      const { carCapacity, bikeCapacity, motoCapacity } = capacities;
-      return carCapacity && bikeCapacity && motoCapacity;
+  
+    if (isParking) {
+      // Validaciones adicionales solo si es un estacionamiento
+      if (step === 2) {
+        if (!userData.address) {
+          Alert.alert('Error', 'Por favor, ingrese la dirección del estacionamiento.');
+          return false;
+        }
+      }
+  
+      if (step === 3) {
+        const { carCapacity, bikeCapacity, motoCapacity } = capacities;
+        if (!carCapacity || !bikeCapacity || !motoCapacity) {
+          Alert.alert('Error', 'Por favor, complete las capacidades para cada vehículo (0 si no tiene).');
+          return false;
+        }
+      }
+  
+      if (step === 4) {
+        const vehiculoPricesValid = Object.keys(prices[vehiculos[vehiculoIndex]] || {}).length > 0;
+        if (!vehiculoPricesValid) {
+          Alert.alert('Error', `Por favor, complete los precios para ${vehiculos[vehiculoIndex]}.`);
+          return false;
+        }
+      }
+  
+      if (step === 6) {
+        const scheduleValid = Object.values(schedule).some(
+          (day) => day.openTime && day.closeTime
+        );
+        if (!scheduleValid) {
+          Alert.alert('Error', 'Por favor, ingrese los horarios de apertura y cierre.');
+          return false;
+        }
+      }
+      if (step === 7) {
+        Alert.alert(
+          'Registro exitoso',
+          isParking ? 'Estacionamiento registrado correctamente.' : '¡Bienvenido!',
+          [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+        );
+      }
+      
     }
-    if (step === 6) {
-      return Object.values(schedule).some(
-        (day) => day.openTime && day.closeTime
-      );
-    }
+  
     return true;
   };
+  
+  const filteredVehiculos = vehiculos.filter((tipo) => {
+    if (tipo === 'Auto' || tipo === 'Camioneta') {
+      return parseInt(capacities.carCapacity) > 0;
+    }
+    if (tipo === 'Moto') {
+      return parseInt(capacities.motoCapacity) > 0;
+    }
+    if (tipo === 'Bicicleta') {
+      return parseInt(capacities.bikeCapacity) > 0;
+    }
+    return false;
+  });
+  
 
   const handleNavigation = (direction) => {
     if (direction === 'back' && step > 1) {
@@ -118,16 +177,23 @@ const SignUp = ({ navigation }) => {
       }
     } else if (direction === 'next') {
       if (validateStep()) {
-        if (step === 4 && vehiculoIndex < vehiculos.length - 1) {
+        if (step === 1 && !isParking) {
+          Alert.alert('Registro exitoso', '¡Bienvenido!', [
+            { text: 'OK', onPress: () => navigation.navigate('Login') },
+          ]);
+          return;
+        }
+  
+        if (step === 4 && vehiculoIndex < filteredVehiculos.length - 1) {
           setVehiculoIndex((prev) => prev + 1);
         } else {
           setStep((prev) => prev + 1);
         }
-      } else {
-        Alert.alert('Error', 'Por favor, complete todos los campos requeridos.');
       }
     }
   };
+  
+  
 
   const handlePriceChange = (vehiculo, periodo, value) => {
     setPrices((prevPrices) => ({
@@ -157,44 +223,50 @@ const SignUp = ({ navigation }) => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Crear Cuenta</Text>
-      <View style={styles.switchContainer}>
-        <Text style={styles.cardTitle}>
-          {isParking ? 'Registro de Estacionamiento' : 'Registro de Usuario'}
-        </Text>
-        <Switch
-          value={isParking}
-          onValueChange={(value) => {
-            setIsParking(value);
-            setStep(1);
-          }}
-        />
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Crear Cuenta</Text>
+        <View style={styles.switchContainer}>
+          <Text style={styles.cardTitle}>
+            {isParking ? 'Registro de Estacionamiento' : 'Registro de Usuario'}
+          </Text>
+          <Switch
+            value={isParking}
+            onValueChange={(value) => {
+              setIsParking(value);
+              setStep(1);
+            }}
+          />
+        </View>
       </View>
 
       {step === 1 && (
-      <> 
-        <UserForm
-          userData={userData}
-          setUserData={setUserData}
-          isParking={isParking}
-        />
-        <CustomButton
-          text={!isParking ? 'Registrarse' : 'Siguiente'}
-          onPress={() => handleNavigation('next')}
-          style={styles.navigationButton}
-          textStyle={styles.navigationButtonText}
-        />
+      <>
+          <UserForm
+            userData={userData}
+            setUserData={setUserData}
+            isParking={isParking}
+          />
+          <CustomButton
+            text={!isParking ? 'Registrarse' : 'Siguiente'}
+            onPress={() => handleNavigation('next')}
+            style={styles.navigationButton}
+            textStyle={styles.navigationButtonText}
+          />
+
       </>
       )}
 
       {step === 2 && (
+      <View style={styles.mapPlaceholder}>
         <AddressForm
           address={userData.address}
           setAddress={(value) =>
             setUserData((prev) => ({ ...prev, address: value }))
           }
         />
+      </View>
       )}
 
       {step === 3 && (
@@ -205,30 +277,37 @@ const SignUp = ({ navigation }) => {
       )}
 
       {step === 4 && (
+      <ScrollView style={styles.scrollContent}> 
         <VehiclePricesForm
-          vehiculo={vehiculo}
+          vehiculo={filteredVehiculos[vehiculoIndex]}
           periodos={periodos}
           handlePriceChange={handlePriceChange}
-          prices={prices[vehiculo] || {}}
+          prices={prices[filteredVehiculos[vehiculoIndex]] || {}}
         />
+      </ScrollView>
       )}
 
+
       {step === 5 && (
+      <ScrollView style={styles.scrollContent}> 
         <CharacteristicsForm
           features={features}
           updateFeature={updateFeature}
         />
+      </ScrollView>
       )}
 
       {step === 6 && (
-        <ScheduleForm
-          schedule={schedule}
-          handleScheduleChange={handleScheduleChange}
-        />
+      <ScrollView style={styles.scrollContent}> 
+          <ScheduleForm
+            schedule={schedule}
+            handleScheduleChange={handleScheduleChange}
+          />
+      </ScrollView> 
       )}
 
       {step === 7 && (
-        <>
+        <ScrollView style={styles.scrollContent}> 
           <Text style={styles.title}>Resumen de Registro</Text>
           {/* Resumen de datos */}
           <View style={styles.card}>
@@ -236,6 +315,7 @@ const SignUp = ({ navigation }) => {
             <Text style={styles.label}>Nombre: {userData.name} {userData.surname}</Text>
             <Text style={styles.label}>Email: {userData.email}</Text>
             <Text style={styles.label}>Dirección: {userData.address}</Text>
+            <Text style={styles.label}>Fecha de nacimiento: {userData.birthDate}</Text>
           </View>
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Capacidades</Text>
@@ -295,25 +375,27 @@ const SignUp = ({ navigation }) => {
                 return null;
               })}
           </View>
-        </>
+        </ScrollView> 
       )}
+      {/* Footer */}
+      <View style={styles.footer}>
       {step > 1 && (
-      <View style={styles.buttonContainer}>        
+        <>
           <CustomButton
             text="Atrás"
             onPress={() => handleNavigation('back')}
             style={styles.navigationButton}
-            textStyle={styles.navigationButtonText}
+          />        
+          <CustomButton
+            text={step === 7 ? 'Finalizar' : 'Siguiente'}
+            onPress={() => handleNavigation('next')}
+            style={styles.navigationButton}
           />
-        <CustomButton
-          text={step === 7 ? 'Finalizar Registro' : 'Siguiente'}
-          onPress={() => handleNavigation('next')}
-          style={styles.navigationButton}
-          textStyle={styles.navigationButtonText}
-        />
-      </View>
+        </>   
       )}
-    </ScrollView>
+        
+    </View>
+    </View>
   );
 };
 

@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { TextInput, View, FlatList, Text, TouchableOpacity, Button, StyleSheet } from 'react-native';
+import { View, FlatList, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { getLocationSuggestions } from '../../components/getLocationSuggestions';
 import MapComponent from '../../components/MapComponent';
+import { theme } from '../../styles/theme';
+import { styles } from '../../styles/SharedStyles';
+import CustomButton from '../../components/CustomButton';
+import CustomInput from '../../components/CustomInput';
 
 const SearchParking = ({ navigation }) => {
     const [query, setQuery] = useState('');
@@ -11,7 +15,7 @@ const SearchParking = ({ navigation }) => {
     const handleInputChange = async (text) => {
         setQuery(text);
 
-        if (text.length > 4) {
+        if (text.length > 8) {
             const results = await getLocationSuggestions(text);
             setSuggestions(results);
         } else {
@@ -32,59 +36,69 @@ const SearchParking = ({ navigation }) => {
     };
 
     return (
-        <View style={styles.container}>
-            <View style={styles.searchBox}>
-                <TextInput 
-                    value={query} 
-                    onChangeText={handleInputChange} 
-                    placeholder="Buscar ubicación..." 
-                    style={styles.input}
-                />
+        <View style={styles2.container}>
+            <View style={styles2.searchBox}>
+                <View style={[{flexDirection:'row'}]}>
+                    <CustomInput
+                        value={query}
+                        setValue={handleInputChange}
+                        placeholder="Buscar ubicación..."
+                        style={styles2.input}
+                    />
+                    <CustomButton
+                        style={styles2.addButton}
+                        textStyle={styles.navigationButtonText}
+                        onPress={handleNext}
+                        text="🔍"
+                    />
+                </View>
                 <FlatList
                     data={suggestions}
                     keyExtractor={(item, index) => index.toString()}
                     renderItem={({ item }) => (
                         <TouchableOpacity onPress={() => handleSuggestionClick(item)}>
-                            <Text style={styles.suggestion}>{item.display_name}</Text>
+                            <Text style={styles2.suggestion}>{item.display_name}</Text>
                         </TouchableOpacity>
                     )}
                 />
-                <Button title="Siguiente" onPress={handleNext} disabled={!selectedLocation} />
             </View>
             <MapComponent location={selectedLocation} />
         </View>
     );
 };
 
-const styles = StyleSheet.create({
+const styles2 = StyleSheet.create({
     container: {
         flex: 1,
     },
     searchBox: {
-        position: 'absolute',
-        top: 10,
-        left: 10,
-        right: 10,
-        zIndex: 1,  // Asegura que el buscador esté por encima del mapa
-        backgroundColor: 'white',  // Fondo blanco para que las sugerencias sean visibles
-        borderRadius: 5,
-        padding: 0,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.8,
-        shadowRadius: 2,
-        elevation: 5, // Sombra en Android
+        alignSelf: 'center',
+        marginVertical: theme.spacing.sm,
+        padding: theme.spacing.md,
+        borderRadius: theme.borderRadius.md,
+        backgroundColor: theme.colors.background,
+        zIndex: 1,
+        elevation: 5,
+        width: '75%',
     },
     input: {
         height: 40,
-        borderColor: 'gray',
-        borderWidth: 1,
-        paddingLeft: 8,
+        borderRadius: theme.borderRadius.md,
+        paddingHorizontal: theme.spacing.sm,
+        backgroundColor: theme.colors.inputBackground,
+        color: theme.colors.text,
     },
     suggestion: {
-        padding: 10,
+        padding: theme.spacing.sm,
         borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
+        borderBottomColor: theme.colors.border,
+        color: theme.colors.text,
+    },
+    addButton: {
+        backgroundColor: theme.colors.primary,
+        borderRadius: theme.borderRadius.md,
+        padding: theme.spacing.sm,
+        width:'15%'
     },
 });
 

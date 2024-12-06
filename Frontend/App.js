@@ -25,7 +25,7 @@ const Stack = createStackNavigator();
 const App = () => {
   //const { isAuthenticated, userRole } = useAuth() || {}; // Manejo de posibles valores indefinidos
  const isAuthenticated= false //valores provisorios para llegar al user
- userRole= 'parking'
+ userRole= 'driver'
   return (
     <NavigationContainer>
       <Stack.Navigator>

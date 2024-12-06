@@ -8,16 +8,22 @@ const CustomInput = ({
   setValue, 
   placeholder, 
   secureTextEntry,
-  style 
+  style,
+  keyboardType,
+  autoFocus = false ,
+  editable=true
 }) => {
   return (
     <TextInput
+      keyboardType={keyboardType}
       value={value}
       onChangeText={setValue}
       placeholder={placeholder}
       style={[styles.input, style]}
       secureTextEntry={secureTextEntry}
       placeholderTextColor={theme.colors.primary}
+      autoFocus={autoFocus}
+      editable={editable}
     />
   );
 };
