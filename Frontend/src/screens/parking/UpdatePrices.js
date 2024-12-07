@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, Picker, FlatList, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, Alert,} from 'react-native';
 import { styles } from '../../styles/SharedStyles'; 
-import { theme } from '../../styles/theme'; 
+import { theme } from '../../styles/theme';
+import {Picker} from '@react-native-picker/picker'
 
 const UpdatePrices = () => {
   const vehicles = {
@@ -51,10 +52,7 @@ const UpdatePrices = () => {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={[styles.centeredContainer, { flex: 1 }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <>
       <View style={[styles.card, { width: '90%', alignSelf: 'center' }]}>
         <Text style={[styles.title, { textAlign: 'center', marginBottom: theme.spacing.md }]}>
           Actualizar Precios
@@ -141,7 +139,7 @@ const UpdatePrices = () => {
           <Text style={styles.navigationButtonText}>Guardar</Text>
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </>
   );
 };
 

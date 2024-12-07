@@ -2,93 +2,34 @@ import React from 'react';
 import { View, Text, Switch } from 'react-native';
 import { styles } from '../../../styles/SharedStyles.js'; // Asegúrate de que la ruta sea correcta
 
-const CharacteristicsForm = ({
-  isCovered, setIsCovered,
-  has24hSecurity, setHas24hSecurity,
-  hasCCTV, setHasCCTV,
-  hasValetService, setHasValetService,
-  hasDisabledParking, setHasDisabledParking,
-  hasEVChargers, setHasEVChargers,
-  hasAutoPayment, setHasAutoPayment,
-  hasCardAccess, setHasCardAccess,
-  hasCarWash, setHasCarWash,
-  hasRestrooms, setHasRestrooms,
-  hasBreakdownAssistance, setHasBreakdownAssistance,
-  hasFreeWiFi, setHasFreeWiFi
-}) => {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Características del Estacionamiento</Text>
-      <FeatureToggle
-        label="¿Está techado?"
-        value={isCovered}
-        onValueChange={setIsCovered}
-      />
-      <FeatureToggle
-        label="¿Tiene seguridad 24 horas?"
-        value={has24hSecurity}
-        onValueChange={setHas24hSecurity}
-      />
-      <FeatureToggle
-        label="¿Cuenta con cámaras de vigilancia?"
-        value={hasCCTV}
-        onValueChange={setHasCCTV}
-      />
-      <FeatureToggle
-        label="¿Ofrece servicio de valet?"
-        value={hasValetService}
-        onValueChange={setHasValetService}
-      />
-      <FeatureToggle
-        label="¿Estacionamiento para discapacitados?"
-        value={hasDisabledParking}
-        onValueChange={setHasDisabledParking}
-      />
-      <FeatureToggle
-        label="¿Cargadores para vehículos eléctricos?"
-        value={hasEVChargers}
-        onValueChange={setHasEVChargers}
-      />
-      <FeatureToggle
-        label="¿Ofrece sistema de pago automático?"
-        value={hasAutoPayment}
-        onValueChange={setHasAutoPayment}
-      />
-      <FeatureToggle
-        label="¿Tiene acceso con tarjeta/ticket?"
-        value={hasCardAccess}
-        onValueChange={setHasCardAccess}
-      />
-      <FeatureToggle
-        label="¿Ofrece lavado de autos?"
-        value={hasCarWash}
-        onValueChange={setHasCarWash}
-      />
-      <FeatureToggle
-        label="¿Tiene baños disponibles?"
-        value={hasRestrooms}
-        onValueChange={setHasRestrooms}
-      />
-      <FeatureToggle
-        label="¿Ofrece asistencia para averías?"
-        value={hasBreakdownAssistance}
-        onValueChange={setHasBreakdownAssistance}
-      />
-      <FeatureToggle
-        label="¿Cuenta con cobertura WiFi gratuita?"
-        value={hasFreeWiFi}
-        onValueChange={setHasFreeWiFi}
-      />
-    </View>
-  );
-};
+const CharacteristicsForm = ({ features, updateFeature }) => {
+  const characteristics = [
+    { label: 'Techado', key: 'isCovered' },
+    { label: 'Seguridad 24h', key: 'has24hSecurity' },
+    { label: 'Cámaras de Seguridad', key: 'hasCCTV' },
+    { label: 'Servicio de Valet', key: 'hasValetService' },
+    { label: 'Estacionamiento para Discapacitados', key: 'hasDisabledParking' },
+    { label: 'Cargadores para Vehículos Eléctricos', key: 'hasEVChargers' },
+    { label: 'Pago Automático', key: 'hasAutoPayment' },
+    { label: 'Acceso con Tarjeta', key: 'hasCardAccess' },
+    { label: 'Lavado de Autos', key: 'hasCarWash' },
+    { label: 'Baños', key: 'hasRestrooms' },
+    { label: 'Asistencia en Carretera', key: 'hasBreakdownAssistance' },
+    { label: 'WiFi Gratuito', key: 'hasFreeWiFi' },
+  ];
 
-const FeatureToggle = ({ label, value, onValueChange }) => {
   return (
-    <View style={styles.switchContainer}>
-      <Text style={styles.label}>{label}</Text>
-      <Switch value={value} onValueChange={onValueChange} />
-    </View>
+    <>
+      {characteristics.map(({ label, key }) => (
+        <View key={key} style={styles.switchContainer}>
+          <Text style={styles.label}>{label}</Text>
+          <Switch
+            value={features[key]}
+            onValueChange={(value) => updateFeature(key, value)}
+          />
+        </View>
+      ))}
+    </>
   );
 };
 
