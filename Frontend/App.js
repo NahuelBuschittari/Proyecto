@@ -19,12 +19,13 @@ import NewDrive from './src/screens/driver/NewDrive'
 import UserMenu from './src/screens/driver/UserMenu';
 import SearchParking from './src/screens/driver/SearchParking';
 import ParkingDetails from './src/screens/driver/ParkingDetails';
+import MapScreen from './src/screens/driver/MapScreen';
 import { useAuth } from './src/context/AuthContext'; // Contexto de autenticación
 const Stack = createStackNavigator();
 
 const App = () => {
   //const { isAuthenticated, userRole } = useAuth() || {}; // Manejo de posibles valores indefinidos
- const isAuthenticated= false //valores provisorios para llegar al user
+ const isAuthenticated= true //valores provisorios para llegar al user
  userRole= 'driver'
   return (
     <NavigationContainer>
@@ -50,6 +51,7 @@ const App = () => {
               </>
             ) : (
               <>
+                <Stack.Screen name="MapScreen" component={MapScreen} />
                 <Stack.Screen name="NewDrive" component={NewDrive} />
                 <Stack.Screen name="UserMenu" component={UserMenu} />
                 <Stack.Screen name="SearchParking" component={SearchParking} />
