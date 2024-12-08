@@ -194,4 +194,9 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '90%',
   },
+  picker: {
+    height: 50,
+    width: '100%',
+    marginBottom: 12,
+  },
 });

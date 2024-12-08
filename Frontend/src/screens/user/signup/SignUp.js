@@ -10,11 +10,12 @@ import CharacteristicsForm from './CharacteristicsForm.js';
 import ScheduleForm from './ScheduleForm.js';
 import CapacityForm from './CapacityForm.js';
 import { theme } from '../../../styles/theme.js';
+import { Picker } from '@react-native-picker/picker';
 
 
 const SignUp = ({ navigation }) => {
   const [isParking, setIsParking] = useState(false);
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(3);
   const [vehiculoIndex, setVehiculoIndex] = useState(0);
 
   const [userData, setUserData] = useState({
@@ -125,7 +126,10 @@ const SignUp = ({ navigation }) => {
       }
     }
   };
-  
+   // Estado para el vehículo seleccionado
+   const [selectedVehicle, setSelectedVehicle] = useState(
+    Object.keys(prices)[0] || '' // Selecciona el primer vehículo por defecto
+  );
   
 
   const handlePriceChange = (vehiculo, periodo, value) => {
@@ -336,59 +340,6 @@ const validations = {
     };
   }
 };
-  // const validateStep = () => {
-  //   if (step === 1) {
-  //     // Validación para el formulario principal
-  //     const userFormValid = userData.email && userData.password && userData.name;
-  //     const additionalUserFieldsValid = isParking || (userData.surname && userData.birthDate);
-  
-  //     if (!userFormValid) {
-  //       Alert.alert('Error', 'Por favor, complete el nombre, correo y contraseña.');
-  //       return false;
-  //     }
-  
-  //     if (!additionalUserFieldsValid) {
-  //       Alert.alert('Error', 'Por favor, complete el apellido y la fecha de nacimiento.');
-  //       return false;
-  //     }
-  
-  //     return true;
-  //   }
-  
-  //   if (isParking) {
-  //     // Validaciones adicionales solo si es un estacionamiento
-  //     if (step === 2) {
-  //       if (!userData.address) {
-  //         Alert.alert('Error', 'Por favor, ingrese la dirección del estacionamiento.');
-  //         return false;
-  //       }
-  //     }
-  
-  //     if (step === 3) {
-  //       const { carCapacity, bikeCapacity, motoCapacity } = capacities;
-  //       if (!carCapacity || !bikeCapacity || !motoCapacity) {
-  //         Alert.alert('Error', 'Por favor, complete las capacidades para cada vehículo (0 si no tiene).');
-  //         return false;
-  //       }
-  //     }
-  
-  //     if (step === 4) {
-  //       const vehiculoPricesValid = Object.keys(prices[vehiculos[vehiculoIndex]] || {}).length > 0;
-  //       if (!vehiculoPricesValid) {
-  //         Alert.alert('Error', `Por favor, complete los precios para ${vehiculos[vehiculoIndex]}.`);
-  //         return false;
-  //       }
-  //     }
-  
-  //     if (step === 6) {
-  //       const scheduleValid = Object.values(schedule).some(
-  //         (day) => day.openTime && day.closeTime
-  //       );
-  //       if (!scheduleValid) {
-  //         Alert.alert('Error', 'Por favor, ingrese los horarios de apertura y cierre.');
-  //         return false;
-  //       }
-  //     }
   const validateStep = () => {
     if (step === 1) {
       const userValidation = validations.validateUserData(userData, isParking);
@@ -549,25 +500,35 @@ const validations = {
             <Text style={styles.cardTitle}>Precios por Vehículo</Text>
             {Object.keys(prices).length > 0 ? (
               <>
-                {/* Encabezados para los períodos */}
-                <View style={styles.horizontalContainer}>
-                  <Text style={[styles.label, styles.header]}>Vehículo</Text>
-                  {Object.keys(prices[Object.keys(prices)[0]]).map((periodo) => (
-                    <Text key={periodo} style={[styles.label, styles.header]}>
-                      {periodo}
-                    </Text>
-                  ))}
-                </View>
-
-                {/* Filas con los precios */}
-                {Object.keys(prices).map((vehiculo) => (
-                  <View key={vehiculo} style={styles.horizontalContainer}>
-                    <Text style={styles.label}>{vehiculo}</Text>
-                    {Object.keys(prices[vehiculo]).map((periodo) => (
-                      <Text key={periodo} style={styles.label}>
-                        ${prices[vehiculo][periodo] || 'No definido'}
-                      </Text>
+                {/* Picker for vehicle selection */}
+                <View style={{borderWidth: 1,
+                  borderColor: theme.colors.secondary,
+                  borderRadius: theme.borderRadius.md,
+                  backgroundColor: theme.colors.background,
+                  width: '100%'}}>
+                  <Picker
+                    selectedValue={selectedVehicle}
+                    onValueChange={(itemValue) => setSelectedVehicle(itemValue)}
+                    style={styles.picker}
+                  >
+                    {Object.keys(prices).map((vehicle) => (
+                      <Picker.Item key={vehicle} label={vehicle} value={vehicle} />
                     ))}
+                  </Picker>
+                </View>
+                {/* Display selected vehicle prices */}
+                <View style={styles.horizontalContainer}>
+                  <Text style={[styles.label, styles.header]}>Periodo</Text>
+                  <Text style={[styles.label, styles.header]}>Precio</Text>
+                </View>
+                {periodos.map((periodo) => (
+                  <View key={periodo} style={styles.horizontalContainer}>
+                    <Text style={styles.label}>{periodo}</Text>
+                    <Text style={styles.label}>
+                      {prices[selectedVehicle]?.[periodo] !== undefined
+                        ? `$${prices[selectedVehicle][periodo]}`
+                        : 'No definido'}
+                    </Text>
                   </View>
                 ))}
               </>
@@ -591,7 +552,7 @@ const validations = {
             {Object.keys(schedule).map((day) => {
                 if (schedule[day].openTime && schedule[day].closeTime) {
                   return (
-                      <Text key={day}>{day}: {schedule[day].openTime} - {schedule[day].closeTime}</Text>
+                      <Text style={styles.label} key={day}>{day}: {schedule[day].openTime} - {schedule[day].closeTime}</Text>
                   );
                 }
                 return null;
