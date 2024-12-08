@@ -1,7 +1,8 @@
 import React, {useState} from 'react';
-import { Modal,Button,Text, View, TouchableOpacity, StyleSheet, TextInput ,Pressable} from 'react-native';
+import { Modal,Button,Text, View, TouchableOpacity, StyleSheet, TextInput ,Pressable, Platform} from 'react-native';
 import { styles } from '../../../styles/SharedStyles.js';
 import CustomInput from '../../../components/CustomInput.js';
+import CustomButton from '../../../components/CustomButton.js';
 import { theme } from '../../../styles/theme.js';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -18,12 +19,17 @@ const UserForm = ({ userData, setUserData, isParking }) => {
     }
     toggleDatepicker();
   };
-  
-
   const [showPassword, setShowPassword] = useState(false);
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
-
+  const getMaximumBirthDate = () => {
+    const today = new Date();
+    return new Date(
+      today.getFullYear() - 18, 
+      today.getMonth(), 
+      today.getDate()
+    );
+  };
   const toggleDatepicker=()=>{
     setShowPicker(!showPicker);
   }
@@ -48,11 +54,13 @@ const UserForm = ({ userData, setUserData, isParking }) => {
           />
           <Text style={styles.upperInputText}>Fecha de nacimiento</Text>
           <Pressable onPress={toggleDatepicker} style={[{width:'100%', alignItems:'center'}]}>
-            <CustomInput
+            <TextInput
             placeholder="Introduzca fecha de Nacimiento"
             value={userData.birthDate}
             setValue={(value) => handleInputChange('birthDate', value)}
             editable={false}
+            onPressIn={toggleDatepicker}
+            style={styles2.input}
             />            
           </Pressable>
           {showPicker && (
@@ -61,6 +69,7 @@ const UserForm = ({ userData, setUserData, isParking }) => {
             display="default"
             value={date}
             onChange={onChange}
+            maximumDate={getMaximumBirthDate()}
           />
           )} 
         </>
@@ -96,5 +105,16 @@ const UserForm = ({ userData, setUserData, isParking }) => {
     </>
   );
 };
-
+const styles2 = StyleSheet.create({
+  input: {
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginBottom: theme.spacing.sm,
+    padding: theme.spacing.sm,
+    width: '80%',
+    color: theme.colors.text,
+  },
+});
 export default UserForm;
