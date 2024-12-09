@@ -20,6 +20,7 @@ import UserMenu from './src/screens/driver/UserMenu';
 import SearchParking from './src/screens/driver/SearchParking';
 import ParkingDetails from './src/screens/driver/ParkingDetails';
 import MapScreen from './src/screens/driver/MapScreen';
+import Navigation from './src/screens/driver/Navigation';
 import { useAuth } from './src/context/AuthContext'; // Contexto de autenticación
 const Stack = createStackNavigator();
 
@@ -51,6 +52,7 @@ const App = () => {
               </>
             ) : (
               <>
+                <Stack.Screen name="Navigation" component={Navigation} />
                 <Stack.Screen name="MapScreen" component={MapScreen} />
                 <Stack.Screen name="NewDrive" component={NewDrive} />
                 <Stack.Screen name="UserMenu" component={UserMenu} />

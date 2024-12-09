@@ -15,6 +15,7 @@ export const theme = {
     },
     typography: {
       fontSize: {
+        xsmall: 8,
         small: 12,
         normal: 16,
         title: 24,
