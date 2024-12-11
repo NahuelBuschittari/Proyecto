@@ -12,13 +12,14 @@ import { theme } from '../../styles/theme';
 import { dummyParkingData } from './DUMMY_PARKINGS';
 import getAvailableParkings from '../../components/getAvailableParkings';
 import * as Location from 'expo-location';
-
+import getDay from '../../components/getDay';
 const Navigation = () => {
     const [origin, setOrigin] = useState(null);
     const [selectedVehicle, handleVehicleSelect] = useState('car-side');
     const [vehicle, setVehicle] = useState('driving');
     const [parkingsDisponibles, setParkingsDisponibles] = useState([]);
     const [loading, setLoading] = useState(true); // Nuevo estado de carga
+    const [currentDay, setCurrentDay] = useState(null);
     const [selectedParking, setSelectedParking] = useState(null);
     const [mapRegion, setMapRegion] = useState({
         latitude: -32.9479,
@@ -66,7 +67,9 @@ const Navigation = () => {
     useEffect(() => {
         const fetchAvailableParkings = async () => {
             try {
-                const availableParkings = await getAvailableParkings(dummyParkingData, selectedVehicle);
+                const day= await getDay();
+                setCurrentDay(day);
+                const availableParkings = await getAvailableParkings(dummyParkingData, selectedVehicle, day);
                 setParkingsDisponibles(availableParkings);
                 setLoading(false);
             } catch (error) {
@@ -121,7 +124,7 @@ const Navigation = () => {
                     </Marker>
                 ))}
             </MapView>
-             <Modal
+            <Modal
                 animationType="slide"
                 transparent={true}
                 visible={!!selectedParking}
@@ -144,14 +147,55 @@ const Navigation = () => {
                                 : '0'}{' '}
                             lugares disponibles
                         </Text>
-
-
+                        <Text>
+                            Precios para el vehículo seleccionado:
+                        </Text>
+                        {selectedParking?.prices && (
+                            <View>
+                                {selectedVehicle === 'car-side'   ? (
+                                    <>
+                                        <Text>Fracción: ${selectedParking.prices.Auto.fraccion}</Text>
+                                        <Text>Hora: ${selectedParking.prices.Auto.hora}</Text>
+                                        <Text>Medio día: ${selectedParking.prices.Auto["medio dia"]}</Text>
+                                        <Text>Día completo: ${selectedParking.prices.Auto["dia completo"]}</Text>
+                                    </>
+                                ) : selectedVehicle === 'truck-pickup' ?(
+                                    <>
+                                        <Text>Fracción: ${selectedParking.prices.Camioneta.fraccion}</Text>
+                                        <Text>Hora: ${selectedParking.prices.Camioneta.hora}</Text>
+                                        <Text>Medio día: ${selectedParking.prices.Camioneta["medio dia"]}</Text>
+                                        <Text>Día completo: ${selectedParking.prices.Camioneta["dia completo"]}</Text>
+                                    </>
+                                ) : selectedVehicle === 'motorcycle' ? (
+                                    <>
+                                        <Text>Fracción: ${selectedParking.prices.Moto.fraccion}</Text>
+                                        <Text>Hora: ${selectedParking.prices.Moto.hora}</Text>
+                                        <Text>Medio día: ${selectedParking.prices.Moto["medio dia"]}</Text>
+                                        <Text>Día completo: ${selectedParking.prices.Moto["dia completo"]}</Text>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Text>Fracción: ${selectedParking.prices.Bicicleta.fraccion}</Text>
+                                        <Text>Hora: ${selectedParking.prices.Bicicleta.hora}</Text>
+                                        <Text>Medio día: ${selectedParking.prices.Bicicleta["medio dia"]}</Text>
+                                        <Text>Día completo: ${selectedParking.prices.Bicicleta["dia completo"]}</Text>
+                                    </>
+                                )}
+                                <Text>
+                                    Cierra a las {' '}
+                                    {currentDay && selectedParking?.schedule[currentDay]
+                                        ? selectedParking.schedule[currentDay].closeTime
+                                        : 'Horario no disponible'}
+                                </Text>
+                            </View>
+                        )}
                         <View style={styles2.modalButtonContainer}>
                             <CustomButton 
                                 style={styles.navigationButton} 
                                 textStyle={styles.navigationButtonText}
                                 onPress={() => setSelectedParking(null)}
-                                text='Cerrar'/>
+                                text='Cerrar'
+                            />
                             <CustomButton 
                                 style={styles.navigationButton} 
                                 textStyle={styles.navigationButtonText}
@@ -170,6 +214,7 @@ const Navigation = () => {
                     </View>
                 </View>
             </Modal>
+
 
             {/* Selector de tipo de vehículo */}
             <View style={[styles.footer, { width: '100%' }]}>
