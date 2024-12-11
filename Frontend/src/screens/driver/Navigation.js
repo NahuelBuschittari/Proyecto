@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Image, Modal, ActivityIndicator} from 'react-native';
-import MapView,{ Callout, Marker} from 'react-native-maps';
+import { View, StyleSheet, TouchableOpacity, Text, Image, Modal, ActivityIndicator } from 'react-native';
+import MapView, { Callout, Marker } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
-import {GOOGLE_MAPS_KEY} from '@env';
+import { GOOGLE_MAPS_KEY } from '@env';
 import { Linking } from 'react-native';
 import CustomButton from '../../components/CustomButton';
 import getLocation from '../../components/getLocation';
@@ -13,7 +13,9 @@ import { dummyParkingData } from './DUMMY_PARKINGS';
 import getAvailableParkings from '../../components/getAvailableParkings';
 import * as Location from 'expo-location';
 import getDay from '../../components/getDay';
-const Navigation = () => {
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
+const Navigation = ({ navigation }) => {
     const [origin, setOrigin] = useState(null);
     const [selectedVehicle, handleVehicleSelect] = useState('car-side');
     const [vehicle, setVehicle] = useState('driving');
@@ -67,7 +69,7 @@ const Navigation = () => {
     useEffect(() => {
         const fetchAvailableParkings = async () => {
             try {
-                const day= await getDay();
+                const day = await getDay();
                 setCurrentDay(day);
                 const availableParkings = await getAvailableParkings(dummyParkingData, selectedVehicle, day);
                 setParkingsDisponibles(availableParkings);
@@ -82,11 +84,11 @@ const Navigation = () => {
     }, [selectedVehicle]); // Se ejecuta cada vez que cambia el tipo de vehículo
 
 
-    function openGoogleMaps(origin,latitude,longitude,vehicle) {
+    function openGoogleMaps(origin, latitude, longitude, vehicle) {
         const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${latitude},${longitude}&travelmode=${vehicle}`;
         Linking.openURL(url);
-      };
-    
+    };
+
     if (loading || !origin) {
         return (
             <View style={styles2.loadingContainer}>
@@ -95,32 +97,32 @@ const Navigation = () => {
             </View>
         );
     }
-    return(
+    return (
         <View style={styles2.container}>
             <MapView
-            style={styles2.map}
-            initialRegion={mapRegion}
-            onRegionChangeComplete={(region)=>setMapRegion(region)}>
+                style={styles2.map}
+                initialRegion={mapRegion}
+                onRegionChangeComplete={(region) => setMapRegion(region)}>
                 {/* Marcador para la ubicación actual */}
                 <Marker coordinate={origin}>
-                    <Image source={require("../../../assets/radio-button-checked.png")} style={{ width: 25, height: 25 }}/>
+                    <Image source={require("../../../assets/radio-button-checked.png")} style={{ width: 25, height: 25 }} />
                 </Marker>
-                
+
                 {/* Marcadores de estacionamientos disponibles */}
                 {parkingsDisponibles.map((parking) => (
                     <Marker
-                        style={{backgroundColor:theme.colors.primary}}
+                        style={{ backgroundColor: theme.colors.primary }}
                         key={parking.userData.id}
                         coordinate={{
                             latitude: parking.userData.address.latitude,
                             longitude: parking.userData.address.longitude,
                         }}
-                        onPress={()=>setSelectedParking(parking)}
+                        onPress={() => setSelectedParking(parking)}
                     >
                         <Image
                             source={require("../../../assets/Parking_icon.png")}
                             style={{ width: 25, height: 25 }}
-                        />                    
+                        />
                     </Marker>
                 ))}
             </MapView>
@@ -132,38 +134,42 @@ const Navigation = () => {
             >
                 <View style={styles2.modalBackground}>
                     <View style={styles2.modalContainer}>
+                        <TouchableOpacity
+                            onPress={() => setSelectedParking(null)}
+                            style={styles2.closeButton}
+                        >
+                            <Ionicons name="close" size={24} color={theme.colors.text} />
+                        </TouchableOpacity>
+
                         <Text style={styles2.modalTitle}>{selectedParking?.userData.name}</Text>
-                        <Text style={styles2.modalAddress}>
-                            {selectedParking?.userData.address.street} {selectedParking?.userData.address.number}
-                        </Text>
                         <Text style={styles.label}>
                             Quedan{' '}
                             {selectedParking?.capacities
                                 ? selectedVehicle === 'car-side' || selectedVehicle === 'truck-pickup'
                                     ? selectedParking.capacities.carCapacity
                                     : selectedVehicle === 'motorcycle'
-                                    ? selectedParking.capacities.motoCapacity 
-                                    : selectedParking.capacities.bikeCapacity 
+                                        ? selectedParking.capacities.motoCapacity
+                                        : selectedParking.capacities.bikeCapacity
                                 : '0'}{' '}
                             lugares disponibles
                         </Text>
                         <Text style={styles.label}>
-                                    Cierra a las {' '}
-                                    {currentDay && selectedParking?.schedule[currentDay]
-                                        ? selectedParking.schedule[currentDay].closeTime
-                                        : 'Horario no disponible'}
+                            Cierra a las {' '}
+                            {currentDay && selectedParking?.schedule[currentDay]
+                                ? selectedParking.schedule[currentDay].closeTime
+                                : 'Horario no disponible'}
                         </Text>
                         {selectedParking?.prices && (
                             <View style={styles.card}>
                                 <Text style={styles.label}>Tarifa de precios</Text>
-                                {selectedVehicle === 'car-side'   ? (
+                                {selectedVehicle === 'car-side' ? (
                                     <>
                                         <Text>Fracción: ${selectedParking.prices.Auto.fraccion}</Text>
                                         <Text>Hora: ${selectedParking.prices.Auto.hora}</Text>
                                         <Text>Medio día: ${selectedParking.prices.Auto["medio dia"]}</Text>
                                         <Text>Día completo: ${selectedParking.prices.Auto["dia completo"]}</Text>
                                     </>
-                                ) : selectedVehicle === 'truck-pickup' ?(
+                                ) : selectedVehicle === 'truck-pickup' ? (
                                     <>
                                         <Text>Fracción: ${selectedParking.prices.Camioneta.fraccion}</Text>
                                         <Text>Hora: ${selectedParking.prices.Camioneta.hora}</Text>
@@ -186,17 +192,11 @@ const Navigation = () => {
                                     </>
                                 )}
                             </View>
-                            )}                            
-                        
+                        )}
+
                         <View style={styles2.modalButtonContainer}>
-                            <CustomButton 
-                                style={styles.navigationButton} 
-                                textStyle={styles.navigationButtonText}
-                                onPress={() => setSelectedParking(null)}
-                                text='Cerrar'
-                            />
-                            <CustomButton 
-                                style={styles.navigationButton} 
+                            <CustomButton
+                                style={styles.navigationButton}
                                 textStyle={styles.navigationButtonText}
                                 text='Ir con Maps'
                                 onPress={() => {
@@ -208,7 +208,18 @@ const Navigation = () => {
                                     );
                                     setSelectedParking(null);
                                 }}
-                            />    
+                            />
+                            <CustomButton
+                                style={[styles.navigationButton, { width: 150 }]}
+                                textStyle={styles.navigationButtonText}
+                                text='Ver características'
+                                onPress={() => {
+                                    navigation.navigate('SpecificParkingDetails', {
+                                        parkingData: selectedParking
+                                    });
+                                    setSelectedParking(null);
+                                }}
+                            />
                         </View>
                     </View>
                 </View>
@@ -238,68 +249,75 @@ const Navigation = () => {
     );
 };
 const styles2 = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor:theme.colors.background
-  },
-  map: {
-    width: '100%',
-    height: '90%',
-  },
-  vehicleIcon: {
-    padding: 10,
-    borderRadius: 10,
-    verticalAlign:'center',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
-    marginBottom: 10,
-  },
-  modalAddress: {
-    fontSize: 16,
-    color: theme.colors.secondary,
-    marginBottom: 5,
-    textAlign: 'center',
-  },
-  modalSpaces: {
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  modalButtonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-
-loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-},
-modalBackground: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-},
-modalContainer: {
-    width: '80%',
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-        width: 0,
-        height: 2,
+    container: {
+        flex: 1,
+        backgroundColor: theme.colors.background
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-},
+    map: {
+        width: '100%',
+        height: '90%',
+    },
+    vehicleIcon: {
+        padding: 10,
+        borderRadius: 10,
+        verticalAlign: 'center',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: theme.colors.primary,
+        marginBottom: 10,
+    },
+    modalAddress: {
+        fontSize: 16,
+        color: theme.colors.secondary,
+        marginBottom: 5,
+        textAlign: 'center',
+    },
+    modalSpaces: {
+        fontSize: 16,
+        marginBottom: 20,
+    },
+    closeButton: {
+        position: 'absolute',
+        right: 10,
+        top: 10,
+        padding: 5,
+    },
+
+    modalButtonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        width: '100%',
+        marginTop: theme.spacing.lg,
+    },
+
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: theme.colors.background,
+    },
+    modalBackground: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    modalContainer: {
+        width: '80%',
+        backgroundColor: 'white',
+        borderRadius: 20,
+        padding: 20,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
 });
 export default Navigation;
-

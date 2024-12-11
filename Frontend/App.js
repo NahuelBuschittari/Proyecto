@@ -21,6 +21,10 @@ import SearchParking from './src/screens/driver/SearchParking';
 import ParkingDetails from './src/screens/driver/ParkingDetails';
 import MapScreen from './src/screens/driver/MapScreen';
 import Navigation from './src/screens/driver/Navigation';
+import SpecificParkingDetails from './src/screens/driver/SpecificParkingDetails';
+import DriverProfile from './src/screens/driver/DriverProfile';
+import Review from './src/screens/driver/Review';
+
 import { useAuth } from './src/context/AuthContext'; // Contexto de autenticación
 const Stack = createStackNavigator();
 
@@ -52,12 +56,15 @@ const App = () => {
               </>
             ) : (
               <>
+                <Stack.Screen name="UserMenu" component={UserMenu} />
+                <Stack.Screen name="Review" component={Review} />   
                 <Stack.Screen name="Navigation" component={Navigation} />
                 <Stack.Screen name="MapScreen" component={MapScreen} />
                 <Stack.Screen name="NewDrive" component={NewDrive} />
-                <Stack.Screen name="UserMenu" component={UserMenu} />
                 <Stack.Screen name="SearchParking" component={SearchParking} />
-                <Stack.Screen name="ParkingDetails" component={ParkingDetails} />                
+                <Stack.Screen name="ParkingDetails" component={ParkingDetails} />      
+                <Stack.Screen name="SpecificParkingDetails" component={SpecificParkingDetails} />  
+                <Stack.Screen name="DriverProfile" component={DriverProfile} />
               </>
             )}
           </>
