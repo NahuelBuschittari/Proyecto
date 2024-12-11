@@ -15,7 +15,7 @@ import { Picker } from '@react-native-picker/picker';
 
 const SignUp = ({ navigation }) => {
   const [isParking, setIsParking] = useState(false);
-  const [step, setStep] = useState(3);
+  const [step, setStep] = useState(1);
   const [vehiculoIndex, setVehiculoIndex] = useState(0);
 
   const [userData, setUserData] = useState({
