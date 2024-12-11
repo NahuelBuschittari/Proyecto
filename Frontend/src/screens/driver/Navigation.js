@@ -136,7 +136,7 @@ const Navigation = () => {
                         <Text style={styles2.modalAddress}>
                             {selectedParking?.userData.address.street} {selectedParking?.userData.address.number}
                         </Text>
-                        <Text>
+                        <Text style={styles.label}>
                             Quedan{' '}
                             {selectedParking?.capacities
                                 ? selectedVehicle === 'car-side' || selectedVehicle === 'truck-pickup'
@@ -147,11 +147,15 @@ const Navigation = () => {
                                 : '0'}{' '}
                             lugares disponibles
                         </Text>
-                        <Text>
-                            Precios para el vehículo seleccionado:
+                        <Text style={styles.label}>
+                                    Cierra a las {' '}
+                                    {currentDay && selectedParking?.schedule[currentDay]
+                                        ? selectedParking.schedule[currentDay].closeTime
+                                        : 'Horario no disponible'}
                         </Text>
                         {selectedParking?.prices && (
-                            <View>
+                            <View style={styles.card}>
+                                <Text style={styles.label}>Tarifa de precios</Text>
                                 {selectedVehicle === 'car-side'   ? (
                                     <>
                                         <Text>Fracción: ${selectedParking.prices.Auto.fraccion}</Text>
@@ -181,14 +185,9 @@ const Navigation = () => {
                                         <Text>Día completo: ${selectedParking.prices.Bicicleta["dia completo"]}</Text>
                                     </>
                                 )}
-                                <Text>
-                                    Cierra a las {' '}
-                                    {currentDay && selectedParking?.schedule[currentDay]
-                                        ? selectedParking.schedule[currentDay].closeTime
-                                        : 'Horario no disponible'}
-                                </Text>
                             </View>
-                        )}
+                            )}                            
+                        
                         <View style={styles2.modalButtonContainer}>
                             <CustomButton 
                                 style={styles.navigationButton} 
@@ -272,29 +271,6 @@ const styles2 = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-  },
-  modalButtonCancel: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    padding: 10,
-    borderRadius: 10,
-    marginRight: 10,
-    alignItems: 'center',
-  },
-  modalButtonCancelText: {
-    color: theme.colors.secondary,
-    fontWeight: 'bold',
-  },
-  modalButtonNavigate: {
-    flex: 1,
-    backgroundColor: theme.colors.primary,
-    padding: 10,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  modalButtonNavigateText: {
-    color: 'white',
-    fontWeight: 'bold',
   },
 
 loadingContainer: {
