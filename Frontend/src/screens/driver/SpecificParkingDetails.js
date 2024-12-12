@@ -11,6 +11,23 @@ const SpecificParkingDetails = ({ route, navigation }) => {
     const [activeSection, setActiveSection] = useState(null);
     const [userLocation, setUserLocation] = useState(null);
 
+    React.useLayoutEffect(() => {
+        navigation.setOptions({
+            headerBackTitle: 'Atrás',
+            headerLeft: () => (
+                <TouchableOpacity
+                    onPress={() => {
+                        navigation.navigate('Navigation', {
+                            selectedParking: parkingData
+                        });
+                    }}
+                >
+                    <Text style={styles2.headerBackText}>Atrás</Text>
+                </TouchableOpacity>
+            ),
+        });
+    }, [navigation, parkingData]);
+
     useEffect(() => {
         (async () => {
             const { status } = await Location.requestForegroundPermissionsAsync();
@@ -164,7 +181,7 @@ const SpecificParkingDetails = ({ route, navigation }) => {
                     </View>
                     <CustomButton
                         style={styles2.mapsButton}
-                        textStyle={styles2.mapsButtonText}
+                        textStyle={{color: 'white'}}
                         text="Ir con Maps"
                         onPress={openGoogleMaps}
                     />
@@ -237,6 +254,11 @@ const styles2 = StyleSheet.create({
     headerTextContainer: {
         alignItems: 'center',
         marginBottom: theme.spacing.md,
+    },
+    headerBackText: {
+        color: theme.colors.primary,
+        fontSize: theme.typography.fontSize.normal,
+        marginLeft: theme.spacing.sm,
     },
     scrollContainer: {
         paddingTop: 80, 

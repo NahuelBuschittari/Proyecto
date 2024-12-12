@@ -15,12 +15,12 @@ import * as Location from 'expo-location';
 import getDay from '../../components/getDay';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const Navigation = ({ navigation }) => {
+const Navigation = ({ navigation, route }) => {
     const [origin, setOrigin] = useState(null);
     const [selectedVehicle, handleVehicleSelect] = useState('car-side');
     const [vehicle, setVehicle] = useState('driving');
     const [parkingsDisponibles, setParkingsDisponibles] = useState([]);
-    const [loading, setLoading] = useState(true); // Nuevo estado de carga
+    const [loading, setLoading] = useState(true); 
     const [currentDay, setCurrentDay] = useState(null);
     const [selectedParking, setSelectedParking] = useState(null);
     const [mapRegion, setMapRegion] = useState({
@@ -81,7 +81,13 @@ const Navigation = ({ navigation }) => {
         };
 
         fetchAvailableParkings();
-    }, [selectedVehicle]); // Se ejecuta cada vez que cambia el tipo de vehículo
+    }, [selectedVehicle]);
+
+    useEffect(() => {
+        if (route.params?.selectedParking) {
+            setSelectedParking(route.params.selectedParking);
+        }
+    }, [route.params?.selectedParking]);
 
 
     function openGoogleMaps(origin, latitude, longitude, vehicle) {
@@ -267,6 +273,8 @@ const styles2 = StyleSheet.create({
         fontWeight: 'bold',
         color: theme.colors.primary,
         marginBottom: 10,
+        marginRight: 10,
+        textAlign: 'center',
     },
     modalAddress: {
         fontSize: 16,
