@@ -1,12 +1,49 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { styles } from '../../styles/SharedStyles';
 import { theme } from '../../styles/theme';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { FontAwesome5 } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+import CustomButton from '../../components/CustomButton';
 
 const SpecificParkingDetails = ({ route, navigation }) => {
     const { parkingData } = route.params;
     const [activeSection, setActiveSection] = useState(null);
+    const [userLocation, setUserLocation] = useState(null);
+
+    useEffect(() => {
+        (async () => {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status === 'granted') {
+                const location = await Location.getCurrentPositionAsync({});
+                setUserLocation({
+                    latitude: location.coords.latitude,
+                    longitude: location.coords.longitude,
+                });
+            }
+        })();
+    }, []);
+
+    const openGoogleMaps = () => {
+        if (!userLocation) return;
+        const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.latitude},${userLocation.longitude}&destination=${parkingData.userData.address.latitude},${parkingData.userData.address.longitude}&travelmode=driving`;
+        Linking.openURL(url);
+    };
+
+    const featureTranslations = {
+        isCovered: { text: 'Estacionamiento Cubierto', icon: 'warehouse' },
+        has24hSecurity: { text: 'Seguridad 24h', icon: 'shield-alt' },
+        hasCCTV: { text: 'Cámaras de Seguridad', icon: 'video' },
+        hasValetService: { text: 'Servicio de Valet', icon: 'car' },
+        hasDisabledParking: { text: 'Estacionamiento para Discapacitados', icon: 'wheelchair' },
+        hasEVChargers: { text: 'Cargadores para Vehículos Eléctricos', icon: 'charging-station' },
+        hasAutoPayment: { text: 'Pago Automático', icon: 'money-bill-wave' },
+        hasCardAccess: { text: 'Acceso con Tarjeta', icon: 'id-card' },
+        hasCarWash: { text: 'Lavado de Autos', icon: 'soap' },
+        hasRestrooms: { text: 'Baños', icon: 'restroom' },
+        hasBreakdownAssistance: { text: 'Asistencia Mecánica', icon: 'tools' },
+        hasFreeWiFi: { text: 'WiFi Gratuito', icon: 'wifi' }
+    };
 
     const AccordionSection = ({ title, isActive, onPress, children }) => (
         <View style={styles2.accordionContainer}>
@@ -15,7 +52,7 @@ const SpecificParkingDetails = ({ route, navigation }) => {
                 onPress={onPress}
             >
                 <Text style={styles2.accordionTitle}>{title}</Text>
-                <Ionicons
+                <FontAwesome5
                     name={isActive ? 'chevron-up' : 'chevron-down'}
                     size={24}
                     color={theme.colors.text}
@@ -91,57 +128,138 @@ const SpecificParkingDetails = ({ route, navigation }) => {
         </View>
     );
 
+    const FeaturesContent = () => (
+        <View style={styles2.featuresContainer}>
+            {Object.entries(parkingData.features).map(([key, value]) =>
+                value && (
+                    <View key={key} style={styles2.featureItem}>
+                        <FontAwesome5
+                            name={featureTranslations[key].icon}
+                            size={20}
+                            color={theme.colors.primary}
+                            style={styles2.featureIcon}
+                        />
+                        <Text style={styles2.featureText}>
+                            {featureTranslations[key].text}
+                        </Text>
+                    </View>
+                )
+            )}
+        </View>
+    );
+
     return (
-        <ScrollView contentContainerStyle={[styles.container, { paddingBottom: theme.spacing.xl }]}>
-            <View style={styles2.header}>
-                <Text style={styles2.title}>{parkingData.userData.name}</Text>
-                <Text style={styles2.address}>
-                    {parkingData.userData.address.street} {parkingData.userData.address.number}
-                </Text>
+        <View style={styles2.mainContainer}>
+            <View style={styles2.stickyHeader}>
+                <View style={styles2.headerContent}>
+                    <View style={styles2.headerTextContainer}>
+                        <Text style={styles2.title}>{parkingData.userData.name}</Text>
+                        <Text style={styles2.address}>
+                            {parkingData.userData.address.street} {parkingData.userData.address.number}
+                        </Text>
+                    </View>
+                    <CustomButton
+                        style={styles2.mapsButton}
+                        textStyle={styles2.mapsButtonText}
+                        text="Ir con Maps"
+                        onPress={openGoogleMaps}
+                    />
+                </View>
             </View>
 
-            <AccordionSection
-                title="Capacidad"
-                isActive={activeSection === 'capacity'}
-                onPress={() => setActiveSection(activeSection === 'capacity' ? null : 'capacity')}
-            >
-                <CapacityContent />
-            </AccordionSection>
+            <ScrollView contentContainerStyle={styles2.scrollContainer}>
+                <AccordionSection
+                    title="Capacidad"
+                    isActive={activeSection === 'capacity'}
+                    onPress={() => setActiveSection(activeSection === 'capacity' ? null : 'capacity')}
+                >
+                    <CapacityContent />
+                </AccordionSection>
 
-            <AccordionSection
-                title="Precios"
-                isActive={activeSection === 'prices'}
-                onPress={() => setActiveSection(activeSection === 'prices' ? null : 'prices')}
-            >
-                <PricesContent />
-            </AccordionSection>
+                <AccordionSection
+                    title="Precios"
+                    isActive={activeSection === 'prices'}
+                    onPress={() => setActiveSection(activeSection === 'prices' ? null : 'prices')}
+                >
+                    <PricesContent />
+                </AccordionSection>
 
-            <AccordionSection
-                title="Horarios"
-                isActive={activeSection === 'schedule'}
-                onPress={() => setActiveSection(activeSection === 'schedule' ? null : 'schedule')}
-            >
-                <ScheduleContent />
-            </AccordionSection>
-        </ScrollView>
+                <AccordionSection
+                    title="Horarios"
+                    isActive={activeSection === 'schedule'}
+                    onPress={() => setActiveSection(activeSection === 'schedule' ? null : 'schedule')}
+                >
+                    <ScheduleContent />
+                </AccordionSection>
+
+                <AccordionSection
+                    title="Características"
+                    isActive={activeSection === 'features'}
+                    onPress={() => setActiveSection(activeSection === 'features' ? null : 'features')}
+                >
+                    <FeaturesContent />
+                </AccordionSection>
+            </ScrollView>
+        </View>
     );
 };
 
 const styles2 = StyleSheet.create({
-    header: {
-        padding: theme.spacing.md,
+    mainContainer: {
+        flex: 1,
+        backgroundColor: theme.colors.background,
+    },
+    stickyHeader: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: theme.colors.background,
+        zIndex: 1000,
         borderBottomWidth: 1,
         borderBottomColor: theme.colors.border,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    headerContent: {
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: theme.spacing.md,
+    },
+    headerTextContainer: {
+        alignItems: 'center',
+        marginBottom: theme.spacing.md,
+    },
+    scrollContainer: {
+        paddingTop: 80, 
+        paddingBottom: theme.spacing.xl,
     },
     title: {
-        fontSize: theme.typography.fontSize.xlarge,
+        fontSize: theme.typography.fontSize.large,
         fontWeight: 'bold',
         color: theme.colors.text,
+        textAlign: 'center',
         marginBottom: theme.spacing.sm,
     },
     address: {
-        fontSize: theme.typography.fontSize.normal,
+        fontSize: theme.typography.fontSize.small,
         color: theme.colors.secondary,
+        textAlign: 'center',
+        marginBottom: theme.spacing.sm,
+    },
+    mapsButton: {
+        color: theme.colors.white,   
+        fontSize: theme.typography.fontSize.small,
+        fontWeight: 'bold',
+    },
+    mapsButtonText: {
+        color: theme.colors.white,
+        fontSize: theme.typography.fontSize.small,
+        fontWeight: 'bold',
     },
     accordionContainer: {
         marginVertical: theme.spacing.sm,
@@ -165,6 +283,22 @@ const styles2 = StyleSheet.create({
         backgroundColor: theme.colors.background,
         borderBottomLeftRadius: theme.borderRadius.md,
         borderBottomRightRadius: theme.borderRadius.md,
+    },
+    featuresContainer: {
+        gap: theme.spacing.md,
+    },
+    featureItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: theme.spacing.sm,
+    },
+    featureIcon: {
+        marginRight: theme.spacing.md,
+        width: 24,
+    },
+    featureText: {
+        fontSize: theme.typography.fontSize.normal,
+        color: theme.colors.text,
     },
     priceCard: {
         marginBottom: theme.spacing.md,
