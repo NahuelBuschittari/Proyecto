@@ -130,21 +130,25 @@ const SpecificParkingDetails = ({ route, navigation }) => {
 
     const FeaturesContent = () => (
         <View style={styles2.featuresContainer}>
-            {Object.entries(parkingData.features).map(([key, value]) =>
-                value && (
-                    <View key={key} style={styles2.featureItem}>
-                        <FontAwesome5
-                            name={featureTranslations[key].icon}
-                            size={20}
-                            color={theme.colors.primary}
-                            style={styles2.featureIcon}
-                        />
-                        <Text style={styles2.featureText}>
-                            {featureTranslations[key].text}
-                        </Text>
-                    </View>
-                )
-            )}
+            {Object.entries(parkingData.features).map(([key, value]) => (
+                <View key={key} style={styles2.featureItem}>
+                    <FontAwesome5 
+                        name={featureTranslations[key].icon} 
+                        size={20} 
+                        color={theme.colors.primary}
+                        style={styles2.featureIcon}
+                    />
+                    <Text style={styles2.featureText}>
+                        {featureTranslations[key].text}
+                    </Text>
+                    <FontAwesome5 
+                        name={value ? 'check' : 'times'} 
+                        size={20} 
+                        color={value ? theme.colors.success : theme.colors.error}
+                        style={styles2.featureStatus}
+                    />
+                </View>
+            ))}
         </View>
     );
 
@@ -291,14 +295,23 @@ const styles2 = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: theme.spacing.sm,
+        justifyContent: 'space-between',
+        borderBottomWidth: 1,
+        borderBottomColor: theme.colors.border,
     },
     featureIcon: {
         marginRight: theme.spacing.md,
         width: 24,
     },
     featureText: {
+        flex: 1,
         fontSize: theme.typography.fontSize.normal,
         color: theme.colors.text,
+        marginRight: theme.spacing.md,
+    },
+    featureStatus: {
+        width: 24,
+        textAlign: 'right',
     },
     priceCard: {
         marginBottom: theme.spacing.md,
