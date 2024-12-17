@@ -15,7 +15,7 @@ const NewDrive = ({ navigation }) => {
   // Función para navegar a la pantalla "SearchParking" cuando el botón Siguiente sea presionado
   const handleNext = () => {
     if (vehicle) {
-      navigation.navigate('SearchParking'); // Navega a la pantalla SearchParking
+      navigation.navigate('SearchParking', {vehicle: vehicle}); // Navega a la pantalla SearchParking
     } else {
       Alert.alert('Por favor, selecciona un vehículo primero.');
     }
