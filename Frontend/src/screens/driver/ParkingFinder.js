@@ -5,7 +5,9 @@ import {
   Switch, 
   FlatList, 
   StyleSheet, 
-  ScrollView
+  ScrollView,
+  Pressable,
+  ActivityIndicator 
 } from 'react-native';
 import { Drawer } from 'react-native-paper';
 import CustomButton from '../../components/CustomButton';
@@ -15,7 +17,7 @@ import { theme } from '../../styles/theme';
 import { dummyParkingData } from './DUMMY_PARKINGS';
 import { Picker } from '@react-native-picker/picker';
 import getDay from '../../components/getDay';
-
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371; // Radio de la Tierra en kilómetros
@@ -35,26 +37,84 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 };
 
 const ParkingFinder = ({ route, navigation }) => {
-  const { location, vehicle } = route.params;
-  const [parkings, setParkings] = useState(dummyParkingData);
-  const [activeFilterCategory, setActiveFilterCategory] = useState('caracteristicas');
-  const [selectedVehicle, setSelectedVehicle] = useState(vehicle || 'Auto');
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [currentDay,setCurrentDay]=useState('L');
 
   useEffect(() => {
     const fetchDay = async () => {
       try {
         const day = await getDay();
         setCurrentDay(day);
+        setFilters(prevFilters => ({
+          ...prevFilters,
+          selectedDay: day
+        }));
+        set
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching day:', error);
-        setCurrentDay('L'); 
+        setCurrentDay('L');
+        setFilters(prevFilters => ({
+          ...prevFilters,
+          selectedDay: 'L'
+        }));
+        setLoading(false); 
       }
     };
   
     fetchDay();
   }, []);
+  const { location, vehicle } = route.params;
+  const [parkings, setParkings] = useState(dummyParkingData);
+  const [activeFilterCategory, setActiveFilterCategory] = useState('caracteristicas');
+  const [selectedVehicle, setSelectedVehicle] = useState(vehicle || 'Auto');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [currentDay,setCurrentDay]=useState('L');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDay = async () => {
+      try {
+        const day = await getDay();
+        setCurrentDay(day);
+        setFilters(prevFilters => ({
+          ...prevFilters,
+          selectedDay: day
+        }));
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching day:', error);
+        setCurrentDay('L');
+        setFilters(prevFilters => ({
+          ...prevFilters,
+          selectedDay: 'L'
+        }));
+        setLoading(false); 
+      }
+    };
+  
+    fetchDay();
+  }, []);
+
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [pickerDate, setPickerDate] = useState(new Date());
+
+  const onTimeChange = (event, selectedDate, isStartTime) => {
+    const currentDate = selectedDate || pickerDate;
+    const formattedTime = currentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+
+    if (event.type === "set") {
+      if (isStartTime) {
+        setFilters({ ...filters, selectedStartTime: formattedTime });
+        setShowStartTimePicker(false);
+      } else {
+        setFilters({ ...filters, selectedEndTime: formattedTime });
+        setShowEndTimePicker(false);
+      }
+    } else {
+      setShowStartTimePicker(false);
+      setShowEndTimePicker(false);
+    }
+  };
 
   const [filters, setFilters] = useState({
     vehicleType: selectedVehicle,
@@ -73,10 +133,10 @@ const ParkingFinder = ({ route, navigation }) => {
     hasRestrooms: null,
     hasBreakdownAssistance: null,
     hasFreeWiFi: null,
-    openNow:true,
-    selectedDay: null,
-    selectedStartTime: null,
-    selectedEndTime: null
+    openNow:false,
+    selectedDay:  currentDay,
+    selectedStartTime: '8:00',
+    selectedEndTime: '18:00'
   });
 
   const [sortBy, setSortBy] = useState('price');
@@ -102,10 +162,10 @@ const ParkingFinder = ({ route, navigation }) => {
       hasRestrooms: null,
       hasBreakdownAssistance: null,
       hasFreeWiFi: null,
-      openNow:true,
-      selectedDay: null,
-      selectedStartTime: null,
-      selectedEndTime: null
+      openNow:false,
+      selectedDay: currentDay,
+      selectedStartTime: '8:00',
+      selectedEndTime: '18:00'
     });
   }, [selectedVehicle]);
 
@@ -223,8 +283,15 @@ const ParkingFinder = ({ route, navigation }) => {
       // Aplicar dirección (ascendente o descendente)
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-    
-
+    console.log('Que hay en currentDay?', currentDay);
+    if (loading) {
+            return (
+                <View style={styles2.container}>
+                    <ActivityIndicator size="large" color={theme.colors.primary} />
+                    <Text>Cargando contenido...</Text>
+                </View>
+            );
+    }
   return (
     <View style={styles2.container}>
       <Text style={styles.title}>Encontrar Estacionamiento</Text>
@@ -488,26 +555,49 @@ const ParkingFinder = ({ route, navigation }) => {
                     </View>
                   </View>
                   <View style={styles2.row}>
-                    <Text>Hora desde:</Text>
+                    <Text>Hora desde:</Text>                   
+                    <Pressable onPress={() => setShowStartTimePicker(true)} style={{width:'40%',height:'35%'}}>
                     <CustomInput
-                      style={styles2.input}
+                      style={[styles2.input,{width:'100%',height:'100%'}]}
                       placeholder="(HH:MM)"
                       value={filters.selectedStartTime || ''}
-                      onChangeText={(text) => 
-                        setFilters({ ...filters, selectedStartTime: text })
-                      }
+                      onChangeText={(text) => setFilters({ ...filters, selectedStartTime: text })}
+                      editable={false}
                     />
+                    </Pressable>
                   </View>
+
                   <View style={styles2.row}>
-                    <Text>Hora desde:</Text>
+                    <Text>Hora hasta:</Text>
+                    
+                    <Pressable onPress={() => setShowEndTimePicker(true)} style={{width:'40%',height:'35%'}}>
                     <CustomInput
-                    style={styles2.input}
-                    placeholder="(HH:MM)"
-                    value={filters.selectedEndTime || ''}
-                    onChangeText={(text) => 
-                      setFilters({ ...filters, selectedEndTime: text })
-                    }/>
+                      style={[styles2.input,{width:'100%',height:'100%'}]}
+                      placeholder="(HH:MM)"
+                      value={filters.selectedEndTime || ''}
+                      onChangeText={(text) => setFilters({ ...filters, selectedEndTime: text })}
+                      editable={false}
+                    />
+                    </Pressable>
                   </View>
+
+                  {showStartTimePicker && (
+                    <DateTimePicker
+                      mode="time"
+                      display="default"
+                      value={pickerDate}
+                      onChange={(event, selectedDate) => onTimeChange(event, selectedDate, true)}
+                    />
+                  )}
+
+                  {showEndTimePicker && (
+                    <DateTimePicker
+                      mode="time"
+                      display="default"
+                      value={pickerDate}
+                      onChange={(event, selectedDate) => onTimeChange(event, selectedDate, false)}
+                    />
+                  )}
                   
                   
                   <View style={styles2.row}>
@@ -552,6 +642,7 @@ const ParkingFinder = ({ route, navigation }) => {
         renderItem={({ item }) => {
           const dayToShow = filters.openNow ? currentDay : filters.selectedDay;
           const schedule = item.schedule[dayToShow];
+          console.log(filters.selectedDay);
             return (
               <View style={styles.card}>
                 <Text style={styles2.parkingTitle}>{item.userData.name}</Text>
@@ -585,7 +676,6 @@ const ParkingFinder = ({ route, navigation }) => {
 };
 
 const styles2 = StyleSheet.create({
-  // Tus estilos originales más algunos nuevos
   noResults: {
     textAlign: 'center',
     marginTop: 20,
