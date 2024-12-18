@@ -66,6 +66,13 @@ const ParkingMenu = ({ navigation }) => {
           title="Perfil de Estacionamiento" 
           onPress={() => navigation.navigate('ParkingProfile')}
         />
+        <MenuButton 
+          title="Cerrar Sesión" 
+          onPress={() => {
+            // No action for now, as requested
+            console.log('Logout button pressed');
+          }}
+        />
       </ScrollView>
     </View>
   );
