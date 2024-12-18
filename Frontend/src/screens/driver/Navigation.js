@@ -223,7 +223,7 @@ const Navigation = ({ navigation, route }) => {
                                     navigation.navigate('SpecificParkingDetails', {
                                         parkingData: selectedParking
                                     });
-                                    setSelectedParking(null);
+                                     setSelectedParking(null);
                                 }}
                             />
                         </View>

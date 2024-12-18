@@ -9,6 +9,7 @@ import {
   Pressable,
   ActivityIndicator 
 } from 'react-native';
+import { Linking } from 'react-native';
 import { Drawer } from 'react-native-paper';
 import CustomButton from '../../components/CustomButton';
 import CustomInput from '../../components/CustomInput';
@@ -18,7 +19,7 @@ import { dummyParkingData } from './DUMMY_PARKINGS';
 import { Picker } from '@react-native-picker/picker';
 import getDay from '../../components/getDay';
 import DateTimePicker from '@react-native-community/datetimepicker';
-
+import * as Location from 'expo-location';
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371; // Radio de la Tierra en kilómetros
   const toRadians = (degrees) => degrees * Math.PI / 180;
@@ -43,56 +44,38 @@ const ParkingFinder = ({ route, navigation }) => {
       try {
         const day = await getDay();
         setCurrentDay(day);
-        setFilters(prevFilters => ({
-          ...prevFilters,
-          selectedDay: day
-        }));
-        set
-        setLoading(false);
+        setLoading(false); 
       } catch (error) {
         console.error('Error fetching day:', error);
-        setCurrentDay('L');
-        setFilters(prevFilters => ({
-          ...prevFilters,
-          selectedDay: 'L'
-        }));
         setLoading(false); 
       }
     };
-  
+    const fetchLocation = async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.error('Permission to access location was denied');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setOrigin({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude
+      });
+    };
+
     fetchDay();
+    fetchLocation();
   }, []);
   const { location, vehicle } = route.params;
   const [parkings, setParkings] = useState(dummyParkingData);
   const [activeFilterCategory, setActiveFilterCategory] = useState('caracteristicas');
   const [selectedVehicle, setSelectedVehicle] = useState(vehicle || 'Auto');
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [currentDay,setCurrentDay]=useState('L');
+  const [currentDay,setCurrentDay]=useState('');
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchDay = async () => {
-      try {
-        const day = await getDay();
-        setCurrentDay(day);
-        setFilters(prevFilters => ({
-          ...prevFilters,
-          selectedDay: day
-        }));
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching day:', error);
-        setCurrentDay('L');
-        setFilters(prevFilters => ({
-          ...prevFilters,
-          selectedDay: 'L'
-        }));
-        setLoading(false); 
-      }
-    };
-  
-    fetchDay();
-  }, []);
+  const [origin, setOrigin] = useState(null);
+ 
 
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
@@ -122,7 +105,6 @@ const ParkingFinder = ({ route, navigation }) => {
     isCovered: null,
     has24hSecurity: null,
     hasEVChargers: null,
-    openNow: false,
     maxPrice: null,
     hasCCTV: null,
     hasValetService: null,
@@ -132,13 +114,18 @@ const ParkingFinder = ({ route, navigation }) => {
     hasCarWash: null,
     hasRestrooms: null,
     hasBreakdownAssistance: null,
-    hasFreeWiFi: null,
+    hasFreeWiFi: null,    
+    selectedDay:  null,
+    selectedStartTime: null,
+    selectedEndTime: null,
     openNow:false,
-    selectedDay:  currentDay,
-    selectedStartTime: '8:00',
-    selectedEndTime: '18:00'
   });
 
+
+  const openGoogleMaps = (origin, latitude, longitude, vehicle) => {
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${latitude},${longitude}&travelmode=${vehicle}`;
+    Linking.openURL(url);
+  };
   const [sortBy, setSortBy] = useState('price');
   const [sortDirection, setSortDirection] = useState('asc');
 
@@ -151,7 +138,6 @@ const ParkingFinder = ({ route, navigation }) => {
       isCovered: null,
       has24hSecurity: null,
       hasEVChargers: null,
-      openNow: false,
       maxPrice: null,
       hasCCTV: null,
       hasValetService: null,
@@ -162,10 +148,10 @@ const ParkingFinder = ({ route, navigation }) => {
       hasRestrooms: null,
       hasBreakdownAssistance: null,
       hasFreeWiFi: null,
+      selectedDay: null,
+      selectedStartTime: null,
+      selectedEndTime: null,
       openNow:false,
-      selectedDay: currentDay,
-      selectedStartTime: '8:00',
-      selectedEndTime: '18:00'
     });
   }, [selectedVehicle]);
 
@@ -174,7 +160,7 @@ const ParkingFinder = ({ route, navigation }) => {
       // Mapeo de capacidades según el tipo de vehículo
       const vehicleCapacityMap = {
         'Auto': 'carCapacity',
-        'Camioneta': 'carCapacity', // Asumiendo que usa la misma capacidad que Auto
+        'Camioneta': 'carCapacity',
         'Moto': 'motoCapacity',
         'Bicicleta': 'bikeCapacity'
       };
@@ -216,11 +202,9 @@ const ParkingFinder = ({ route, navigation }) => {
         }
       }
 
-    const dayToCheck = filters.openNow ? currentDay : filters.selectedDay;
-    const scheduleForDay = parking.schedule[dayToCheck];
-
     // Validación de horario
     if (filters.openNow) {
+      const scheduleForDay = parking.schedule[currentDay];
       const currentTime = new Date().toLocaleTimeString('es-AR', {
         hour: '2-digit',
         minute: '2-digit',
@@ -236,6 +220,7 @@ const ParkingFinder = ({ route, navigation }) => {
     // Filtro de horario específico
     if (!filters.openNow && filters.selectedDay && 
         filters.selectedStartTime && filters.selectedEndTime) {
+          const scheduleForDay = parking.schedule[filters.selectedDay];
       if (filters.selectedStartTime < scheduleForDay.openTime || 
           filters.selectedEndTime > scheduleForDay.closeTime) {
         return false;
@@ -283,7 +268,7 @@ const ParkingFinder = ({ route, navigation }) => {
       // Aplicar dirección (ascendente o descendente)
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-    console.log('Que hay en currentDay?', currentDay);
+    
     if (loading) {
             return (
                 <View style={styles2.container}>
@@ -536,6 +521,23 @@ const ParkingFinder = ({ route, navigation }) => {
             {/* Filtro de horarios */}
             {activeFilterCategory === 'horario' && (
                 <>
+
+                  <View style={styles2.row}>
+                    <Text>Abierto ahora</Text>
+                    <Switch
+                      value={filters.openNow}
+                      onValueChange={(value) => {
+                        setFilters(prevFilters => ({ 
+                          ...prevFilters, 
+                          openNow: value,
+                          // Si se activa openNow, usar el día actual y limpiar los otros filtros de tiempo
+                          selectedDay: null ,
+                          selectedStartTime:  null ,
+                          selectedEndTime: null 
+                        }));
+                      }}
+                    />
+                  </View>
                   <View style={styles2.row}>
                     <Text>Dia:</Text>
                     <View style={[{width:'70%'}]}>
@@ -598,21 +600,6 @@ const ParkingFinder = ({ route, navigation }) => {
                       onChange={(event, selectedDate) => onTimeChange(event, selectedDate, false)}
                     />
                   )}
-                  
-                  
-                  <View style={styles2.row}>
-                    <Text>Abierto ahora</Text>
-                    <Switch
-                      value={filters.openNow}
-                      onValueChange={(value) =>
-                        setFilters({ 
-                          ...filters, 
-                          openNow: value,
-                          selectedDay: value ? currentDay : filters.selectedDay
-                        })
-                      }
-                    />
-                  </View>
                 </>
               )}
 
@@ -640,9 +627,18 @@ const ParkingFinder = ({ route, navigation }) => {
         data={filteredParkings}
         keyExtractor={(item) => item.userData.id.toString()}
         renderItem={({ item }) => {
-          const dayToShow = filters.openNow ? currentDay : filters.selectedDay;
-          const schedule = item.schedule[dayToShow];
+          let dayToShow = null;
+          let schedule = null;
+
+          if (filters.openNow) {
+            dayToShow = currentDay;
+            schedule = item.schedule[dayToShow];
+          } else if (filters.selectedDay !== null) {
+            dayToShow = filters.selectedDay;
+            schedule = item.schedule[dayToShow];
+          }
           console.log(filters.selectedDay);
+          console.log(currentDay);
             return (
               <View style={styles.card}>
                 <Text style={styles2.parkingTitle}>{item.userData.name}</Text>
@@ -657,10 +653,25 @@ const ParkingFinder = ({ route, navigation }) => {
                 <Text>Medio día: ${item.prices[selectedVehicle]['medio dia']}</Text>
                 <Text>Día completo: ${item.prices[selectedVehicle]['dia completo']}</Text>
                 </View>
-                <Text>Horarios ({dayToShow}): {schedule.openTime} - {schedule.closeTime}</Text> 
+                <Text>{item.userData.address.latitude} {item.userData.address.longitude}</Text>
+                {schedule && (
+                <Text>Horarios ({dayToShow}): {schedule.openTime} - {schedule.closeTime}</Text>
+                )} 
                 <View style={styles.buttonContainer}>
-                  <CustomButton style={styles.navigationButton} textStyle={styles.navigationButtonText} text='Mas info'/>  
-                  <CustomButton style={styles.navigationButton} textStyle={styles.navigationButtonText} text='Ir con Google Maps'/>      
+                  <CustomButton style={styles.navigationButton} textStyle={styles.navigationButtonText} text='Mas info'
+                  onPress={() => {
+                    navigation.navigate('SpecificParkingDetails', {
+                        parkingData: item
+                    });
+                }}/>  
+                  <CustomButton style={styles.navigationButton} textStyle={styles.navigationButtonText} text='Ir con Google Maps'
+                   onPress={() => {
+                    if (origin) {
+                      openGoogleMaps(origin, item.userData.address.latitude, item.userData.address.longitude, selectedVehicle);
+                    } else {
+                      console.error('Current location not available');
+                    }
+                  }}/>      
                 </View>      
               </View>
             );
