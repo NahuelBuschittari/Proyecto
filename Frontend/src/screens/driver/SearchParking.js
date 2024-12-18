@@ -7,11 +7,11 @@ import { styles } from '../../styles/SharedStyles';
 import CustomButton from '../../components/CustomButton';
 import CustomInput from '../../components/CustomInput';
 
-const SearchParking = ({ navigation }) => {
+const SearchParking = ({ route,navigation }) => {
     const [query, setQuery] = useState('');
     const [suggestions, setSuggestions] = useState([]);
     const [selectedLocation, setSelectedLocation] = useState(null);
-
+    const {vehicle}=route.params;
     const handleInputChange = async (text) => {
         setQuery(text);
 
@@ -31,7 +31,7 @@ const SearchParking = ({ navigation }) => {
 
     const handleNext = () => {
         if (selectedLocation) {
-            navigation.navigate('ParkingDetails', { location: selectedLocation });
+            navigation.navigate('ParkingFinder', { location: selectedLocation, vehicle:vehicle });
         }
     };
 
