@@ -1,193 +1,276 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
-import { WebView } from 'react-native-webview';
+import { LineChart, PieChart, StackedBarChart } from 'react-native-chart-kit';
 import { styles } from '../../styles/SharedStyles';
 import { theme } from '../../styles/theme';
 
-// Sample data for demonstration (reemplaza con tus datos reales)
 const parkingData = {
-  capacityVsUsage: [
-    { name: 'Parking A', capacity: 200, actualUsage: 150 },
-    { name: 'Parking B', capacity: 150, actualUsage: 100 },
-    { name: 'Parking C', capacity: 300, actualUsage: 250 }
+  priceEvolution: [
+    { week: 'Ene', price: 10 },
+    { week: 'Feb', price: 12 },
+    { week: 'Mar', price: 15 },
+    { week: 'Abr', price: 18 },
+    { week: 'May', price:  20 },
+    { week: 'Jun', price: 28 },
+    { week: 'Jul', price: 22 },
+    { week: 'Ago', price: 29 },
+    { week: 'Sep', price: 35 },
+    { week: 'Oct', price: 37 },
+    { week: 'Nov', price: 40 },
+    { week: 'Dic', price: 42 },
+  ],
+  capacityUtilization: [
+    { month: 'Ene', available: 30, occupied: 70 },
+    { month: 'Feb', available: 25, occupied: 75 },
+    { month: 'Mar', available: 20, occupied: 80 },
+    { month: 'Abr', available: 15, occupied: 85 },
+    { month: 'May', available: 10, occupied: 90 },
+    { month: 'Jun', available: 5, occupied: 95 },
+    { month: 'Jul', available: 0, occupied: 100 },
+    { month: 'Ago', available: 10, occupied: 90 },
+    { month: 'Sep', available: 30, occupied: 70 },
+    { month: 'Oct', available: 20, occupied: 80 },
+    { month: 'Nov', available: 15, occupied: 85 },
+    { month: 'Dic', available: 10, occupied: 90 },
   ],
   hourlyDemand: [
     { hour: '00:00', vehicles: 10 },
     { hour: '06:00', vehicles: 30 },
     { hour: '12:00', vehicles: 80 },
     { hour: '18:00', vehicles: 120 },
-    { hour: '23:59', vehicles: 40 }
+    { hour: '23:59', vehicles: 40 },
   ],
-  vehicleTypes: [
-    { type: 'Car', percentage: 70 },
-    { type: 'Motorcycle', percentage: 20 },
-    { type: 'Bicycle', percentage: 10 }
+  vehicleTypeOccupancy: [
+    { type: 'Auto/Camioneta', percentage: 70, color: theme.colors.primary },
+    { type: 'Moto', percentage: 20, color: theme.colors.secondary },
+    { type: 'Bicicleta', percentage: 10, color: '#8bc34a' },
   ],
-  monthlyTrends: [
-    { month: 'Jan', vehicles: 3000 },
-    { month: 'Feb', vehicles: 3500 },
-    { month: 'Mar', vehicles: 4000 },
-    { month: 'Apr', vehicles: 4200 },
-    { month: 'May', vehicles: 4500 }
-  ]
 };
 
 const DataAnalysis = () => {
-  const [selectedChart, setSelectedChart] = useState('capacity');
+  const [selectedChart, setSelectedChart] = useState('price');
+  const screenWidth = Dimensions.get('window').width - 20;
+  const screenHeight = Math.min(Dimensions.get('window').height * 0.45, 300);
 
-  const plotlyHtml = (chartType) => {
-    let plotConfig;
-    switch (chartType) {
-      case 'capacity':
-        plotConfig = {
-          data: [{
-            x: parkingData.capacityVsUsage.map(p => p.name),
-            y: parkingData.capacityVsUsage.map(p => p.actualUsage),
-            name: 'Uso Actual',
-            type: 'bar',
-            marker: { color: theme.colors.primary }
-          }, {
-            x: parkingData.capacityVsUsage.map(p => p.name),
-            y: parkingData.capacityVsUsage.map(p => p.capacity),
-            name: 'Capacidad Total',
-            type: 'bar',
-            marker: { color: theme.colors.secondary }
-          }],
-          layout: {
-            title: 'Capacidad vs. Uso de Estacionamientos',
-            barmode: 'group',
-            xaxis: { title: 'Ubicación de Estacionamiento' },
-            yaxis: { title: 'Número de Vehículos' }
-          }
-        };
-        break;
+  const chartConfig = {
+    backgroundGradientFrom: theme.colors.background,
+    backgroundGradientTo: theme.colors.background,
+    decimalPlaces: 1,
+    color: (opacity = 1) => theme.colors.text,
+    labelColor: () => theme.colors.text,
+    propsForDots: {
+      r: '4',
+      strokeWidth: '2',
+      stroke: theme.colors.primary,
+    },
+  };
+
+  const renderChart = () => {
+    switch (selectedChart) {
+      case 'price':
+        return (
+          <LineChart
+            data={{
+              labels: parkingData.priceEvolution.map((p) => p.week),
+              datasets: [
+                {
+                  data: parkingData.priceEvolution.map((p) => p.price),
+                  color: () => theme.colors.primary,
+                  strokeWidth: 2,
+                },
+              ],
+            }}
+            width={screenWidth}
+            height={screenHeight}
+            yAxisLabel="$"
+            chartConfig={chartConfig}
+            bezier
+          />
+        );
+        case 'capacity':
+  return (
+    <View style={{ alignItems: 'center' }}>
+      {/* Leyenda encima del gráfico */}
+      <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 10 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 20 }}>
+          <View style={{ width: 20, height: 20, backgroundColor: theme.colors.secondary }} />
+          <Text style={{ marginLeft: 5 }}>Disponible</Text>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ width: 20, height: 20, backgroundColor: theme.colors.primary }} />
+          <Text style={{ marginLeft: 5 }}>Ocupado</Text>
+        </View>
+      </View>
+
+      {/* Gráfico de barras apiladas */}
+      <StackedBarChart
+        data={{
+          labels: parkingData.capacityUtilization.map((c) => c.month),
+          legend: [], // Eliminamos la leyenda interna del gráfico
+          data: parkingData.capacityUtilization.map((c) => [
+            c.available,  // Datos de "Disponible"
+            c.occupied,   // Datos de "Ocupado"
+          ]),
+          barColors: [theme.colors.secondary, theme.colors.primary], // Colores de las barras
+        }}
+        width={screenWidth}
+        height={screenHeight}
+        chartConfig={{
+          ...chartConfig,
+          legendPosition: 'bottom', // Leyenda en la parte inferior
+          barPercentage: 0.5, // Barras más delgadas
+          decimalPlaces: 0, // Redondear valores
+        }}
+        hideLegend={true}  // Ocultamos la leyenda interna
+        fromZero
+      />
+    </View>
+  );
+
+
+          
       case 'hourly':
-        plotConfig = {
-          data: [{
-            x: parkingData.hourlyDemand.map(h => h.hour),
-            y: parkingData.hourlyDemand.map(h => h.vehicles),
-            type: 'scatter',
-            mode: 'lines+markers',
-            marker: { color: theme.colors.primary }
-          }],
-          layout: {
-            title: 'Demanda Horaria de Vehículos',
-            xaxis: { title: 'Hora del Día' },
-            yaxis: { title: 'Número de Vehículos' }
-          }
-        };
-        break;
+        return (
+          <LineChart
+            data={{
+              labels: parkingData.hourlyDemand.map((h) => h.hour),
+              datasets: [
+                {
+                  data: parkingData.hourlyDemand.map((h) => h.vehicles),
+                  color: () => theme.colors.primary,
+                  strokeWidth: 2,
+                },
+              ],
+            }}
+            width={screenWidth}
+            height={screenHeight}
+            yAxisLabel=""
+            yAxisSuffix=" veh"
+            chartConfig={chartConfig}
+            bezier
+          />
+        );
       case 'vehicle-types':
-        plotConfig = {
-          data: [{
-            labels: parkingData.vehicleTypes.map(v => v.type),
-            values: parkingData.vehicleTypes.map(v => v.percentage),
-            type: 'pie',
-            marker: { colors: [theme.colors.primary, theme.colors.secondary, '#8bc34a'] }
-          }],
-          layout: {
-            title: 'Distribución de Tipos de Vehículos'
-          }
-        };
-        break;
-      case 'monthly':
-        plotConfig = {
-          data: [{
-            x: parkingData.monthlyTrends.map(m => m.month),
-            y: parkingData.monthlyTrends.map(m => m.vehicles),
-            type: 'scatter',
-            mode: 'lines+markers',
-            marker: { color: theme.colors.primary }
-          }],
-          layout: {
-            title: 'Tendencia Mensual de Vehículos',
-            xaxis: { title: 'Mes' },
-            yaxis: { title: 'Número de Vehículos' }
-          }
-        };
-        break;
+        return (
+          <PieChart
+            data={parkingData.vehicleTypeOccupancy.map((v) => ({
+              name: v.type,
+              population: v.percentage,
+              color: v.color,
+              legendFontColor: theme.colors.text,
+              legendFontSize: 12,
+            }))}
+            width={screenWidth}
+            height={screenHeight * 0.7}
+            chartConfig={chartConfig}
+            accessor="population"
+            backgroundColor="transparent"
+            paddingLeft="15"
+            center={[0, 0]}
+            absolute
+          />
+        );
     }
-
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-      </head>
-      <body style="margin: 0; padding: 0;">
-        <div id="plotly-chart" style="width: 100%; height: 100%;"></div>
-        <script>
-          Plotly.newPlot('plotly-chart', ${JSON.stringify(plotConfig.data)}, ${JSON.stringify(plotConfig.layout)}, {responsive: true});
-        </script>
-      </body>
-      </html>
-    `;
   };
 
   const chartOptions = [
-    { key: 'capacity', label: 'Capacidad vs. Uso' },
+    { key: 'price', label: 'Evolución de Precios' },
+    { key: 'capacity', label: 'Uso de Capacidad' },
     { key: 'hourly', label: 'Demanda Horaria' },
     { key: 'vehicle-types', label: 'Tipos de Vehículos' },
-    { key: 'monthly', label: 'Tendencia Mensual' }
   ];
 
   return (
-    <ScrollView style={styles.fullScreenContainer}>
-      <View style={[styles.container, { paddingTop: 20 }]}>
-        <Text style={styles.title}>Análisis de Datos de Estacionamientos</Text>
-        
-        <View style={[styles.horizontalContainer, { flexWrap: 'wrap', justifyContent: 'center' }]}>
-          {chartOptions.map(option => (
-            <TouchableOpacity
-              key={option.key}
-              onPress={() => setSelectedChart(option.key)}
-              style={[
-                styles.navigationButton,
-                {
-                  width: '45%', 
-                  margin: 5,
-                  backgroundColor: selectedChart === option.key 
-                    ? theme.colors.primary 
-                    : theme.colors.secondary
-                }
-              ]}
-            >
-              <Text 
-                style={[
-                  styles.navigationButtonText,
-                  { 
-                    color: selectedChart === option.key 
-                      ? 'white' 
-                      : theme.colors.text 
-                  }
-                ]}
-              >
-                {option.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+<ScrollView
+  contentContainerStyle={[ 
+    styles.fullScreenContainer,
+    {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 10,
+      paddingBottom: 20,
+    },
+  ]}
+>
+  <View
+    style={[
+      styles.container,
+      {
+        width: '100%',
+        alignItems: 'center',
+        paddingTop: 20,
+      },
+    ]}
+  >
+    <Text
+      style={[
+        styles.title,
+        {
+          textAlign: 'center',
+          marginBottom: 20,
+        },
+      ]}
+    >
+      Análisis de Datos
+    </Text>
 
-        <View style={{ 
-          width: '100%', 
-          height: Dimensions.get('window').height * 0.6, 
-          marginTop: 20,
-          borderWidth: 1,
-          borderColor: theme.colors.border,
-          borderRadius: theme.borderRadius.md,
-          overflow: 'hidden'
-        }}>
-          <WebView
-            source={{ html: plotlyHtml(selectedChart) }}
-            style={{ flex: 1 }}
-            scalesPageToFit={true}
-            javaScriptEnabled={true}
-            domStorageEnabled={true}
-          />
-        </View>
-      </View>
+    <ScrollView
+      contentContainerStyle={{
+        flexWrap: 'wrap',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginBottom: 20,
+      }}
+    >
+      {chartOptions.map((option) => (
+        <TouchableOpacity
+          key={option.key}
+          onPress={() => setSelectedChart(option.key)}
+          style={[
+            styles.navigationButton,
+            {
+              margin: 5,
+              backgroundColor:
+                selectedChart === option.key
+                  ? theme.colors.primary
+                  : theme.colors.secondary,
+              justifyContent: 'center',
+              alignItems: 'center', // Centrado horizontal y vertical
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.navigationButtonText,
+              {
+                color:
+                  selectedChart === option.key
+                    ? 'white'
+                    : theme.colors.text,
+                textAlign: 'center', // Asegura que el texto esté centrado
+              },
+            ]}
+          >
+            {option.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
     </ScrollView>
+
+    <View
+      style={{
+        width: '100%',
+        height: screenHeight,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {renderChart()}
+    </View>
+  </View>
+</ScrollView>
+
+
   );
 };
 
