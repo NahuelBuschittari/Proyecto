@@ -84,6 +84,12 @@ export const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.normal,
     color: theme.colors.primary,
   },
+  labelNegrita: {
+    marginBottom: theme.spacing.xs,
+    fontSize: theme.typography.fontSize.normal,
+    color: theme.colors.primary,
+    fontWeight: theme.typography.fontWeight.bold
+  },
 
   // Botón Deshabilitado
   buttonDisabled: {

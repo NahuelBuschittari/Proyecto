@@ -215,20 +215,46 @@ const ParkingFinder = ({ route, navigation }) => {
 
   return (
     <View style={styles2.container}>
-      <Text style={styles2.title}>Encontrar Estacionamiento</Text>
-        <Text>Ubicacion seleccionada:</Text>
-        <Text>{location.address.name}</Text>
+      <Text style={styles.title}>Encontrar Estacionamiento</Text>
+        <Text style={styles.labelNegrita}>Ubicacion seleccionada:</Text>
+        <Text style={styles.label}>
+          {location.address.name!=location.address.road ? 
+          `${location.address.name}, `: ''}{location.address.road} {location.address.house_number}, {location.address.city}, {location.address.state}
+        </Text>
+
+      {/* Sección de ordenamiento y filtros*/}
+      <View>
+        <Text style={styles.labelNegrita}>Ordenar por:</Text>
+        <View style={styles2.row}>
+        <View style={[{width:'70%'}]}>
+            <Picker
+              selectedValue={`${sortBy}-${sortDirection}`}
+              onValueChange={(value) => {
+                const [newSortBy, newSortDirection] = value.split('-');
+                setSortBy(newSortBy);
+                setSortDirection(newSortDirection);
+              }}
+              style={styles2.picker}
+            >
+              <Picker.Item label="Precio Ascendente" value="price-asc" />
+              <Picker.Item label="Precio Descendente" value="price-desc" />
+              <Picker.Item label="Distancia Ascendente" value="distance-asc" />
+              <Picker.Item label="Distancia Descendente" value="distance-desc" />
+            </Picker>
+          </View>
         <CustomButton
           onPress={toggleDrawer} 
-          text='Más filtros' 
-          style={styles.navigationButton}
+          text='filtrar' 
+          style={[styles.navigationButton,{width:'25%'}]}
           textStyle={styles.navigationButtonText}
         />
-      
+        </View>
+      </View>
 
       {drawerOpen && (
         <Drawer.Section style={styles2.drawer}>
           <ScrollView>
+            <View style={{ alignSelf:'center',width:'90%',borderWidth: 1, borderColor: theme.colors.primary, borderRadius: theme.spacing.sm }}>
             <Picker
               selectedValue={activeFilterCategory}
               onValueChange={(itemValue) => {
@@ -255,57 +281,55 @@ const ParkingFinder = ({ route, navigation }) => {
               />
               
             </Picker>
-
+            </View>
             {activeFilterCategory === 'ubiPrecio' && (
               <>
-                <View style={[{flexDirection: 'row'}]}>
-      <Text>Vehiculo seleccionado:</Text>
-      <View style={[{width:'50%'}]}>
-        <Picker pickerStyleType={[{fontSize:theme.typography.fontSize.small}]}
-          selectedValue={selectedVehicle}
-          onValueChange={(itemValue) => {
-            setSelectedVehicle(itemValue);
-            setFilters(prev => ({ ...prev, vehicleType: itemValue }));
-          }}
-        >
-          {['Auto', 'Camioneta', 'Moto', 'Bicicleta'].map((vehicle, index) => (
-            <Picker.Item 
-              key={index} 
-              label={vehicle} 
-              value={vehicle} 
-              color={theme.colors.text}
-            />
-          ))}
-        </Picker> 
-      </View>
-      </View>
+                <View style={styles2.row}>
+                <Text>Vehiculo:</Text>
+                <View style={[{width:'70%'}]}>
+                  <Picker pickerStyleType={[{fontSize:theme.typography.fontSize.small}]}
+                    selectedValue={selectedVehicle}
+                    onValueChange={(itemValue) => {
+                      setSelectedVehicle(itemValue);
+                      setFilters(prev => ({ ...prev, vehicleType: itemValue }));
+                    }}
+                  >
+                    {['Auto', 'Camioneta', 'Moto', 'Bicicleta'].map((vehicle, index) => (
+                      <Picker.Item 
+                        key={index} 
+                        label={vehicle} 
+                        value={vehicle} 
+                        color={theme.colors.text}
+                      />
+                    ))}
+                  </Picker> 
+                </View>
+                </View>
 
-      <View style={styles2.row}>
-        <Text>Distancia máxima:</Text>
-        <CustomInput
-          style={styles2.input}
-          placeholder="Distancia en metros"
-          keyboardType="numeric"
-          value={filters.maxDistance.toString()}
-          onChangeText={(text) => {
-            const distance = parseInt(text) || 2000;
-            setFilters({ ...filters, maxDistance: distance });
-          }}
-        />
-      </View>
-      <View style={styles2.row}>
-        <Text>Precio máximo:</Text>
-        <CustomInput
-          style={styles2.input}
-          placeholder="Precio máximo"
-          keyboardType="numeric"
-          value={filters.maxPrice ? filters.maxPrice.toString() : ''}
-          onChangeText={(text) => {
-            const price = parseInt(text) || null;
-            setFilters({ ...filters, maxPrice: price });
-          }}
-        />
-      </View>
+                <View style={styles2.row}>
+                  <Text>Distancia máxima:</Text>
+                  <CustomInput
+                    style={styles2.input}
+                    keyboardType="numeric"
+                    value={filters.maxDistance.toString()}
+                    onChangeText={(text) => {
+                      const distance = parseInt(text) || 2000;
+                      setFilters({ ...filters, maxDistance: distance });
+                    }}
+                  />
+                </View>
+                <View style={styles2.row}>
+                  <Text>Precio máximo:</Text>
+                  <CustomInput
+                    style={styles2.input}
+                    keyboardType="numeric"
+                    value={filters.maxPrice ? filters.maxPrice.toString() : ''}
+                    onChangeText={(text) => {
+                      const price = parseInt(text) || null;
+                      setFilters({ ...filters, maxPrice: price });
+                    }}
+                  />
+                </View>
               </>
             )}
             {activeFilterCategory === 'caracteristicas' && (
@@ -433,37 +457,47 @@ const ParkingFinder = ({ route, navigation }) => {
             {/* Filtro de horarios */}
             {activeFilterCategory === 'horario' && (
                 <>
-                  <Text>Seleccione un día</Text>
-                  <Picker
-                    selectedValue={filters.selectedDay}
-                    onValueChange={(value) => setFilters({ ...filters, selectedDay: value })}
-                  >
-                    <Picker.Item label="Lunes" value="L" />
-                    <Picker.Item label="Martes" value="Ma" />
-                    <Picker.Item label="Miércoles" value="Mi" />
-                    <Picker.Item label="Jueves" value="J" />
-                    <Picker.Item label="Viernes" value="V" />
-                    <Picker.Item label="Sábado" value="S" />
-                    <Picker.Item label="Domingo" value="D" />
-                    <Picker.Item label="Feriado" value="F" />
-                  </Picker>
-                
-                  <TextInput
-                    style={[styles2.input,{width:'100%'}]}
-                    placeholder="Hora desde (HH:MM)"
-                    value={filters.selectedStartTime || ''}
-                    onChangeText={(text) => 
-                      setFilters({ ...filters, selectedStartTime: text })
-                    }
-                  />
-                  <TextInput
+                  <View style={styles2.row}>
+                    <Text>Dia:</Text>
+                    <View style={[{width:'70%'}]}>
+                    <Picker
+                      selectedValue={filters.selectedDay}
+                      onValueChange={(value) => setFilters({ ...filters, selectedDay: value })}
+                    >
+                      <Picker.Item label="Lunes" value="L" />
+                      <Picker.Item label="Martes" value="Ma" />
+                      <Picker.Item label="Miércoles" value="Mi" />
+                      <Picker.Item label="Jueves" value="J" />
+                      <Picker.Item label="Viernes" value="V" />
+                      <Picker.Item label="Sábado" value="S" />
+                      <Picker.Item label="Domingo" value="D" />
+                      <Picker.Item label="Feriado" value="F" />
+                    </Picker>
+                    </View>
+                  </View>
+                  <View style={styles2.row}>
+                    <Text>Hora desde:</Text>
+                    <CustomInput
+                      style={styles2.input}
+                      placeholder="(HH:MM)"
+                      value={filters.selectedStartTime || ''}
+                      onChangeText={(text) => 
+                        setFilters({ ...filters, selectedStartTime: text })
+                      }
+                    />
+                  </View>
+                  <View style={styles2.row}>
+                    <Text>Hora desde:</Text>
+                    <CustomInput
                     style={styles2.input}
-                    placeholder="Hora hasta (HH:MM)"
+                    placeholder="(HH:MM)"
                     value={filters.selectedEndTime || ''}
                     onChangeText={(text) => 
                       setFilters({ ...filters, selectedEndTime: text })
-                    }
-                  />
+                    }/>
+                  </View>
+                  
+                  
                   <View style={styles2.row}>
                     <Text>Abierto ahora</Text>
                     <Switch
@@ -480,7 +514,7 @@ const ParkingFinder = ({ route, navigation }) => {
                 </>
               )}
 
-            <View style={styles.horizontalContainer}>
+            <View style={styles2.row}>
               <CustomButton 
                 text='Cerrar' 
                 onPress={toggleDrawer} 
@@ -497,25 +531,6 @@ const ParkingFinder = ({ route, navigation }) => {
           </ScrollView>
         </Drawer.Section>
       )}
-
-      {/* Sección de ordenamiento */}
-      <View style={styles.row}>
-        <Text>Ordenar por:</Text>
-        <Picker
-          selectedValue={`${sortBy}-${sortDirection}`}
-          onValueChange={(value) => {
-            const [newSortBy, newSortDirection] = value.split('-');
-            setSortBy(newSortBy);
-            setSortDirection(newSortDirection);
-          }}
-          style={styles2.picker}
-        >
-          <Picker.Item label="Precio Ascendente" value="price-asc" />
-          <Picker.Item label="Precio Descendente" value="price-desc" />
-          <Picker.Item label="Distancia Ascendente" value="distance-asc" />
-          <Picker.Item label="Distancia Descendente" value="distance-desc" />
-        </Picker>
-      </View>
 
       {/* Resultados */}
       {filteredParkings.length > 0 ? (
@@ -567,11 +582,12 @@ const styles2 = StyleSheet.create({
   },
       drawer: {
         position: 'absolute',
-        width: '70%',
+        width: '80%',
         height: '100%',
-        backgroundColor: '#fff',
+        backgroundColor: theme.colors.background,
         elevation: 4,
         zIndex:1,
+        alignContent:'center',
     },
       content: {
         flex: 1,
@@ -581,7 +597,6 @@ const styles2 = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff',
   },
   title: {
     fontSize: 24,
@@ -600,9 +615,11 @@ const styles2 = StyleSheet.create({
     width:'30%',
   },
   row: {
+    marginLeft: 8,
+    marginRight:8,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     marginBottom: 8,
   },
   button: {
