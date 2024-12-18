@@ -49,7 +49,7 @@ const SearchParking = ({ route,navigation }) => {
                         style={styles2.addButton}
                         textStyle={styles.navigationButtonText}
                         onPress={handleNext}
-                        text="🔍"
+                        text="Ir"
                     />
                 </View>
                 <FlatList
@@ -57,7 +57,10 @@ const SearchParking = ({ route,navigation }) => {
                     keyExtractor={(item, index) => index.toString()}
                     renderItem={({ item }) => (
                         <TouchableOpacity onPress={() => handleSuggestionClick(item)}>
-                            <Text style={styles2.suggestion}>{item.display_name}</Text>
+                            <Text style={styles2.suggestion}>
+                            {item.address.name !== item.address.road ? `${item.address.name}, ` : ''}
+                            {item.address.road} {item.address.house_number}, {item.address.city}, {item.address.state}, {item.address.country}
+                            </Text>
                         </TouchableOpacity>
                     )}
                 />
@@ -79,13 +82,13 @@ const styles2 = StyleSheet.create({
         backgroundColor: theme.colors.background,
         zIndex: 1,
         elevation: 5,
-        width: '75%',
+        width: '70%',
     },
     input: {
         height: 40,
         borderRadius: theme.borderRadius.md,
         paddingHorizontal: theme.spacing.sm,
-        backgroundColor: theme.colors.inputBackground,
+        backgroundColor: theme.colors.background,
         color: theme.colors.text,
     },
     suggestion: {
@@ -98,7 +101,7 @@ const styles2 = StyleSheet.create({
         backgroundColor: theme.colors.primary,
         borderRadius: theme.borderRadius.md,
         padding: theme.spacing.sm,
-        width:'15%'
+        width:'20%'
     },
 });
 
