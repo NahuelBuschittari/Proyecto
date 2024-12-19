@@ -11,22 +11,27 @@ const SpecificParkingDetails = ({ route, navigation }) => {
     const [activeSection, setActiveSection] = useState(null);
     const [userLocation, setUserLocation] = useState(null);
 
-    // React.useLayoutEffect(() => {
-    //     navigation.setOptions({
-    //         headerBackTitle: 'Atrás',
-    //         headerLeft: () => (
-    //             <TouchableOpacity
-    //                 onPress={() => {
-    //                     navigation.navigate('Navigation', {
-    //                         selectedParking: parkingData
-    //                     });
-    //                 }}
-    //             >
-    //                 <Text style={styles2.headerBackText}>Atrás</Text>
-    //             </TouchableOpacity>
-    //         ),
-    //     });
-    // }, [navigation, parkingData]);
+    React.useLayoutEffect(() => {
+        navigation.setOptions({
+            headerBackTitle: 'Atrás',
+            headerLeft: () => (
+                <TouchableOpacity
+                    onPress={() => {
+                        const previousScreen = navigation.getState().routes[navigation.getState().routes.length - 2].name;
+                        if (previousScreen === 'ParkingFinder') {
+                            navigation.goBack();
+                        } else {
+                            navigation.navigate('Navigation', {
+                                selectedParking: parkingData
+                            });
+                        }
+                    }}
+                >
+                    <Text style={styles2.headerBackText}>Atrás</Text>
+                </TouchableOpacity>
+            ),
+        });
+    }, [navigation, parkingData]);
 
     useEffect(() => {
         (async () => {

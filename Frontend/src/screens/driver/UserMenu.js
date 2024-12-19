@@ -4,6 +4,12 @@ import { styles } from '../../styles/SharedStyles';
 import { theme } from '../../styles/theme';
 
 const DriverMenu = ({ navigation }) => {
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+        headerLeft: () => null,
+        headerLeftContainerStyle: { width: 0 }
+    });
+}, [navigation]);
   const MenuButton = ({ title, onPress }) => (
     <TouchableOpacity 
       style={[styles.navigationButton, {
