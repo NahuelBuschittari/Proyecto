@@ -29,6 +29,19 @@ const Navigation = ({ navigation, route }) => {
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
     });
+    React.useLayoutEffect(() => {
+        navigation.setOptions({
+            headerLeft: () => (
+                <TouchableOpacity 
+                    style={[styles2.vehicleButton, { marginLeft: 10 }]}  // Agregamos marginLeft para separarlo del borde
+                    onPress={() => navigation.navigate('UserMenu')}
+                >
+                    <Text style={styles2.buttonText}>Atrás</Text>
+                </TouchableOpacity>
+            ),
+        });
+    }, [navigation]);
+
     useEffect(() => {
         let subscription;
 
