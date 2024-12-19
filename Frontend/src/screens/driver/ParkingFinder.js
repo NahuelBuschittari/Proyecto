@@ -21,20 +21,21 @@ import getDay from '../../components/getDay';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371; // Radio de la Tierra en kilómetros
-  const toRadians = (degrees) => degrees * Math.PI / 180;
-  
+  const toRadians = (degree) => degree * (Math.PI / 180);
+  console.log('lat1',lat1);
+  console.log('lon1',lon1);
+  console.log('lat2',lat2);
+  console.log('lon2',lon2);
+  const R = 6371000; // Radio de la Tierra en metros
   const dLat = toRadians(lat2 - lat1);
   const dLon = toRadians(lon2 - lon1);
-  
-  const a = 
+  const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  
-  return R * c * 1000; // Convertir a metros
+  const distance = R * c; // Distancia en metros
+  return distance;
 };
 
 const ParkingFinder = ({ route, navigation }) => {
@@ -134,7 +135,7 @@ const ParkingFinder = ({ route, navigation }) => {
   const clearFilters = useCallback(() => {
     setFilters({
       vehicleType: selectedVehicle,
-      maxDistance: 2000,
+      maxDistance: null,
       isCovered: null,
       has24hSecurity: null,
       hasEVChargers: null,
@@ -172,20 +173,20 @@ const ParkingFinder = ({ route, navigation }) => {
 
       // Filtro de distancia
       if (location && parking.userData.address) {
-        const distance = calculateDistance(
-          location.latitude,
-          location.longitude,
+        const distanceMeters = calculateDistance(
+          location.lat,
+          location.lon,
           parking.userData.address.latitude,
           parking.userData.address.longitude
         );
-        if (distance > filters.maxDistance) return false;
-        // return {
-        //   ...parking,
-        //   distanceInMeters: distance,
-        //   distanceFormatted: distance < 1000 
-        //     ? `${Math.round(distance)} m` 
-        //     : `${(distance / 1000).toFixed(1)} km`
-        // };
+        console.log(distanceMeters)
+        const distanceBlocks = Math.round(parseFloat(distanceMeters / 100));
+        if (distanceBlocks > filters.maxDistance){ 
+          return false;
+        }else{
+          parking.distanceFormatted = distanceBlocks;
+        };
+        
       }
 
       // Filtros de características
@@ -246,18 +247,8 @@ const ParkingFinder = ({ route, navigation }) => {
           break;
     
         case 'distance':
-          const distA = calculateDistance(
-            location.latitude,
-            location.longitude,
-            a.userData.address.latitude,
-            a.userData.address.longitude
-          );
-          const distB = calculateDistance(
-            location.latitude,
-            location.longitude,
-            b.userData.address.latitude,
-            b.userData.address.longitude
-          );
+          const distA = a.distanceFormatted;
+          const distB = b.distanceFormatted;
           comparison = distA - distB;
           break;
     
@@ -376,8 +367,8 @@ const ParkingFinder = ({ route, navigation }) => {
                     style={styles2.input}
                     keyboardType="numeric"
                     value={filters.maxDistance.toString()}
-                    onChangeText={(text) => {
-                      const distance = parseInt(text) || 2000;
+                    setValue={(text) => {
+                      const distance = parseInt(text) || '';
                       setFilters({ ...filters, maxDistance: distance });
                     }}
                   />
@@ -388,7 +379,7 @@ const ParkingFinder = ({ route, navigation }) => {
                     style={styles2.input}
                     keyboardType="numeric"
                     value={filters.maxPrice ? filters.maxPrice.toString() : ''}
-                    onChangeText={(text) => {
+                    setValue={(text) => {
                       const price = parseInt(text) || null;
                       setFilters({ ...filters, maxPrice: price });
                     }}
@@ -643,7 +634,7 @@ const ParkingFinder = ({ route, navigation }) => {
                 <Text>
                   {item.userData.address.street} {item.userData.address.number}
                 </Text>
-                <Text>{item.distanceFormatted}</Text>
+                <Text>Distancia: {item.distanceFormatted} cuadras</Text>
                 <View style={styles.card}>
                 <Text>Tarifas para {selectedVehicle}:</Text>
                 <Text>Fracción: ${item.prices[selectedVehicle].fraccion}</Text>
@@ -651,7 +642,6 @@ const ParkingFinder = ({ route, navigation }) => {
                 <Text>Medio día: ${item.prices[selectedVehicle]['medio dia']}</Text>
                 <Text>Día completo: ${item.prices[selectedVehicle]['dia completo']}</Text>
                 </View>
-                <Text>{item.userData.address.latitude} {item.userData.address.longitude}</Text>
                 {schedule && (
                 <Text>Horarios ({dayToShow}): {schedule.openTime} - {schedule.closeTime}</Text>
                 )} 
