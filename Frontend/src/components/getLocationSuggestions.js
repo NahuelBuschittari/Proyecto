@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_KEY = 'pk.f9d7b4178651e359c7f88955f5fed702'; 
+import {LOCATION_IQ_API_KEY} from '@env';
+const API_KEY = LOCATION_IQ_API_KEY; 
 
 export const getLocationSuggestions = async (query) => {
   try {
