@@ -17,10 +17,9 @@ const SpecificParkingDetails = ({ route, navigation }) => {
             headerLeft: () => (
                 <TouchableOpacity
                     onPress={() => {
-                        // Verificamos si llegamos desde ParkingFinder
                         const previousScreen = navigation.getState().routes[navigation.getState().routes.length - 2].name;
                         if (previousScreen === 'ParkingFinder') {
-                            navigation.goBack(); // Esto vuelve a ParkingFinder
+                            navigation.goBack();
                         } else {
                             navigation.navigate('Navigation', {
                                 selectedParking: parkingData

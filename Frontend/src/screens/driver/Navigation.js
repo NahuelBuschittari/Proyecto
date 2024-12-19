@@ -33,7 +33,7 @@ const Navigation = ({ navigation, route }) => {
         navigation.setOptions({
             headerLeft: () => (
                 <TouchableOpacity 
-                    style={[styles2.vehicleButton, { marginLeft: 10 }]}  // Agregamos marginLeft para separarlo del borde
+                    style={[styles2.vehicleButton, { marginLeft: 10 }]}  
                     onPress={() => navigation.navigate('UserMenu')}
                 >
                     <Text style={styles2.buttonText}>Atrás</Text>
