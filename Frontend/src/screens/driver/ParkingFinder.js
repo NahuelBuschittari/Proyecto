@@ -123,7 +123,7 @@ const ParkingFinder = ({ route, navigation }) => {
 
 
   const openGoogleMaps = (origin, latitude, longitude, vehicle) => {
-    const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${latitude},${longitude}&travelmode=${vehicle}`;
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${latitude},${longitude}&travelmode=driving`;
     Linking.openURL(url);
   };
   const [sortBy, setSortBy] = useState('price');
@@ -308,7 +308,7 @@ const ParkingFinder = ({ route, navigation }) => {
           </View>
         <CustomButton
           onPress={toggleDrawer} 
-          text='filtrar' 
+          text='Filtrar' 
           style={[styles.navigationButton,{width:'25%'}]}
           textStyle={styles.navigationButtonText}
         />
@@ -637,8 +637,6 @@ const ParkingFinder = ({ route, navigation }) => {
             dayToShow = filters.selectedDay;
             schedule = item.schedule[dayToShow];
           }
-          console.log(filters.selectedDay);
-          console.log(currentDay);
             return (
               <View style={styles.card}>
                 <Text style={styles2.parkingTitle}>{item.userData.name}</Text>
@@ -667,7 +665,7 @@ const ParkingFinder = ({ route, navigation }) => {
                   <CustomButton style={styles.navigationButton} textStyle={styles.navigationButtonText} text='Ir con Google Maps'
                    onPress={() => {
                     if (origin) {
-                      openGoogleMaps(origin, item.userData.address.latitude, item.userData.address.longitude, selectedVehicle);
+                      openGoogleMaps(origin, item.userData.address.latitude, item.userData.address.longitude);
                     } else {
                       console.error('Current location not available');
                     }
