@@ -5,7 +5,7 @@ export const dummyParkingData = [
             name: "Estacionamiento Norte", 
             email: "norte@parking.com",
             password: "password123", 
-            address: { street: "San Martín", number: 1123, city: "Rosario", latitude: -32.94722, longitude: -60.63991 }, 
+            address: { street: "Mitre", number: 862, city: "Rosario", latitude: -32.94722, longitude: -60.63991 }, 
         }, 
         capacities: { carCapacity: "30", bikeCapacity: "10", motoCapacity: "5" }, 
         prices: { 
@@ -45,7 +45,7 @@ export const dummyParkingData = [
             name: "Estacionamiento Sur", 
             email: "sur@parking.com",
             password: "securepark2024", 
-            address: { street: "Belgrano", number: 2234, city: "Rosario", latitude: -32.95005, longitude: -60.64077 }, 
+            address: { street: "San Juan", number: 1207, city: "Rosario", latitude: -32.95005, longitude: -60.64077 }, 
         }, 
         capacities: { carCapacity: "0", bikeCapacity: "15", motoCapacity: "8" }, 
         prices: { 
@@ -85,7 +85,7 @@ export const dummyParkingData = [
             name: "Estacionamiento Oeste", 
             email: "oeste@parking.com",
             password: "parkwest123", 
-            address: { street: "Pellegrini", number: 1523, city: "Rosario", latitude: -32.95075, longitude: -60.64129 }, 
+            address: { street: "Entre Rios", number: 1159, city: "Rosario", latitude: -32.950579, longitude: -60.642136 }, 
         }, 
         capacities: { carCapacity: "60", bikeCapacity: "0", motoCapacity: "0" }, 
         prices: { 
@@ -125,7 +125,7 @@ export const dummyParkingData = [
             name: "Estacionamiento Centro", 
             email: "centro@parking.com",
             password: "centralpark2024", 
-            address: { street: "Córdoba", number: 2567, city: "Rosario", latitude: -32.94544, longitude: -60.64012 }, 
+            address: { street: "Santa Fe", number: 1261, city: "Rosario", latitude: -32.944760, longitude: -60.639841 }, 
         }, 
         capacities: { carCapacity: "45", bikeCapacity: "20", motoCapacity: "10" }, 
         prices: { 
@@ -165,7 +165,7 @@ export const dummyParkingData = [
             name: "Estacionamiento Este", 
             email: "este@parking.com",
             password: "eastparking456", 
-            address: { street: "Entre Ríos", number: 1876, city: "Rosario", latitude: -32.95221, longitude: -60.63888 }, 
+            address: { street: "3 de Febrero", number: 1053, city: "Rosario", latitude: -32.952930, longitude: -60.639052 }, 
         }, 
         capacities: { carCapacity: "20", bikeCapacity: "5", motoCapacity: "3" }, 
         prices: { 
@@ -205,7 +205,7 @@ export const dummyParkingData = [
             name: "Estacionamiento Parque", 
             email: "parque@parking.com",
             password: "parklife2024", 
-            address: { street: "Oroño", number: 3245, city: "Rosario", latitude: -32.94901, longitude: -60.64321 }, 
+            address: { street: "Corrientes", number: 1058, city: "Rosario", latitude: -32.94901, longitude: -60.64321 }, 
         }, 
         capacities: { carCapacity: "75", bikeCapacity: "12", motoCapacity: "0" }, 
         prices: { 
@@ -245,7 +245,7 @@ export const dummyParkingData = [
             name: "Estacionamiento Universitario", 
             email: "universitario@parking.com",
             password: "campus2024", 
-            address: { street: "Rioja", number: 1456, city: "Rosario", latitude: -32.94678, longitude: -60.63654 }, 
+            address: { street: "Cordoba", number: 977, city: "Rosario", latitude: -32.94678, longitude: -60.63654 }, 
         }, 
         capacities: { carCapacity: "50", bikeCapacity: "40", motoCapacity: "12" }, 
         prices: { 
@@ -282,10 +282,10 @@ export const dummyParkingData = [
     { 
         userData: {
             id: 8, 
-            name: "Estacionamiento Costanera", 
-            email: "costanera@parking.com",
-            password: "riverside2024", 
-            address: { street: "Av. Belgrano", number: 3876, city: "Rosario", latitude: -32.95432, longitude: -60.64543 }, 
+            name: "Estacionamiento Uteniano", 
+            email: "uteniano@parking.com",
+            password: "uteniano2024", 
+            address: { street: "Zeballos", number: 1477, city: "Rosario", latitude: -32.954131, longitude: -60.645315}, 
         }, 
         capacities: { carCapacity: "40", bikeCapacity: "30", motoCapacity: "7" }, 
         prices: { 
