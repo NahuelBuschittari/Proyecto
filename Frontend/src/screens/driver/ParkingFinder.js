@@ -22,10 +22,6 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const toRadians = (degree) => degree * (Math.PI / 180);
-  console.log('lat1',lat1);
-  console.log('lon1',lon1);
-  console.log('lat2',lat2);
-  console.log('lon2',lon2);
   const R = 6371000; // Radio de la Tierra en metros
   const dLat = toRadians(lat2 - lat1);
   const dLon = toRadians(lon2 - lon1);
@@ -102,7 +98,7 @@ const ParkingFinder = ({ route, navigation }) => {
 
   const [filters, setFilters] = useState({
     vehicleType: selectedVehicle,
-    maxDistance: 2000, // 2 km por defecto
+    maxDistance: null,
     isCovered: null,
     has24hSecurity: null,
     hasEVChargers: null,
@@ -179,10 +175,10 @@ const ParkingFinder = ({ route, navigation }) => {
           parking.userData.address.latitude,
           parking.userData.address.longitude
         );
-        console.log(distanceMeters)
         const distanceBlocks = Math.round(parseFloat(distanceMeters / 100));
-        if (distanceBlocks > filters.maxDistance){ 
-          return false;
+        if(filters.maxDistance !== null){
+          if (distanceBlocks > filters.maxDistance){ 
+            return false;}
         }else{
           parking.distanceFormatted = distanceBlocks;
         };
@@ -362,13 +358,13 @@ const ParkingFinder = ({ route, navigation }) => {
                 </View>
 
                 <View style={styles2.row}>
-                  <Text>Distancia máxima:</Text>
+                  <Text>Distancia máxima(en cuadras):</Text>
                   <CustomInput
                     style={styles2.input}
                     keyboardType="numeric"
-                    value={filters.maxDistance.toString()}
+                    value={filters.maxDistance ? filters.maxDistance.toString(): null}
                     setValue={(text) => {
-                      const distance = parseInt(text) || '';
+                      const distance = parseInt(text) || null;
                       setFilters({ ...filters, maxDistance: distance });
                     }}
                   />
@@ -378,7 +374,7 @@ const ParkingFinder = ({ route, navigation }) => {
                   <CustomInput
                     style={styles2.input}
                     keyboardType="numeric"
-                    value={filters.maxPrice ? filters.maxPrice.toString() : ''}
+                    value={filters.maxPrice ? filters.maxPrice.toString() : null}
                     setValue={(text) => {
                       const price = parseInt(text) || null;
                       setFilters({ ...filters, maxPrice: price });
