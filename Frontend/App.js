@@ -30,7 +30,7 @@ import Review from './src/screens/driver/Review';
 const Stack = createStackNavigator();
 
 const App = () => {
-  const isAuthenticated = true; // Valor provisional
+  const isAuthenticated = true // Valor provisional
   const userRole = 'driver'; // Valor provisional
 
   const renderHeaderLogo = (navigation, homeRoute) => (

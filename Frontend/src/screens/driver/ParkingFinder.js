@@ -194,7 +194,7 @@ const ParkingFinder = ({ route, navigation }) => {
       ];
 
       for (let feature of featureFilters) {
-        if (filters[feature] !== null && parking.features[feature] !== filters[feature]) {
+        if (filters[feature] === true  && parking.features[feature] !== filters[feature]) {
           return false;
         }
       }
