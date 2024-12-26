@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import {
   View,
@@ -9,6 +10,7 @@ import {
 } from 'react-native';
 
 const PasswordSet = ({ route, navigation }) => {
+
  // const { userId, token } = route.params;
   const [passwords, setPasswords] = useState({
     newPassword: '',
@@ -47,8 +49,8 @@ const PasswordSet = ({ route, navigation }) => {
 
     if (passwords.newPassword !== passwords.confirmPassword) {
       newErrors.confirmPassword = 'Las contraseñas no coinciden';
-    }
-
+    }else if (passwords.confirmPassword.length >= 8) {
+      navigation.navigate('Login');}
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

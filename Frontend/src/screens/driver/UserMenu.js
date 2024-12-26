@@ -49,15 +49,15 @@ const DriverMenu = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
       >
         <MenuButton 
-          title="Navegación" 
+          title="Búsqueda inmediata desde el mapa" 
           onPress={() => navigation.navigate('Navigation')}
         />
         <MenuButton 
-          title="Nuevo Viaje" 
+          title="Búsqueda personalizada" 
           onPress={() => navigation.navigate('NewDrive')}
         />
         <MenuButton 
-          title="Perfil" 
+          title="Mi perfil" 
           onPress={() => navigation.navigate('DriverProfile')}
         />
       </ScrollView>
