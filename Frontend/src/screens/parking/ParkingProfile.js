@@ -1,31 +1,92 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, FlatList, TouchableOpacity, Alert } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, ScrollView, FlatList, TouchableOpacity, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { styles } from '../../styles/SharedStyles';
 import { theme } from '../../styles/theme';
+
+// Constantes para la API
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://mi-api.com';
+const API_ENDPOINTS = {
+  parkingDetails: (id) => `/parking/${id}/details`,
+};
 
 const ParkingProfile = ({ parkingId }) => {
   const [parkingInfo, setParkingInfo] = useState({});
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const fetchParkingInfo = useCallback(async (showFullLoading = true) => {
+    try {
+      if (showFullLoading) setLoading(true);
+      setError(null);
+
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.parkingDetails(parkingId)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // Aquí puedes agregar headers adicionales como tokens de autenticación
+          // 'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setParkingInfo(data);
+      setReviews(data.reviews || []);
+    } catch (error) {
+      console.error('Error fetching parking data:', error);
+      
+      if (error.message.includes('Network') && retryCount < 3) {
+        setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+        }, 2000);
+      } else {
+        setError('No se pudo cargar la información del estacionamiento');
+        Alert.alert(
+          'Error',
+          'No se pudo cargar la información del estacionamiento.',
+          [
+            {
+              text: 'Reintentar',
+              onPress: () => {
+                setRetryCount(0);
+                fetchParkingInfo();
+              }
+            }
+          ]
+        );
+      }
+    } finally {
+      if (showFullLoading) setLoading(false);
+    }
+  }, [parkingId, retryCount]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchParkingInfo(false);
+    setRefreshing(false);
+  }, [fetchParkingInfo]);
 
   useEffect(() => {
-    const fetchParkingInfo = async () => {
-      try {
-        // datos de la bd
-        const response = await fetch(`https://mi-api.com/parking/${parkingId}/details`);
-        const data = await response.json();
+    let isMounted = true;
 
-        setParkingInfo(data);
-        setReviews(data.reviews || []);
-      } catch (error) {
-        Alert.alert('Error', 'No se pudo cargar la información del estacionamiento.');
-      } finally {
-        setLoading(false);
+    const loadData = async () => {
+      if (isMounted) {
+        await fetchParkingInfo();
       }
     };
 
-    fetchParkingInfo();
-  }, [parkingId]);
+    loadData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchParkingInfo]);
 
   const renderPriceItem = ({ item }) => (
     <View style={[styles.horizontalContainer, { paddingVertical: theme.spacing.sm }]}>
@@ -34,78 +95,76 @@ const ParkingProfile = ({ parkingId }) => {
     </View>
   );
 
-  const renderReviewItem = (review, index) => (
-    <View key={index} style={styles.card}>
-      <Text style={styles.cardTitle}>{review.user}</Text>
-      <Text style={[styles.label, { marginBottom: theme.spacing.sm }]}>{review.comment}</Text>
-      <Text style={[styles.linkText, { color: theme.colors.secondary }]}>Rating: {review.rating}/5</Text>
+  const renderReviewItem = ({ item }) => (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>{item.user || 'Usuario desconocido'}</Text>
+      <Text style={[styles.label, { marginBottom: theme.spacing.sm }]}>{item.comment || 'Sin comentarios'}</Text>
+      <Text style={[styles.linkText, { color: theme.colors.secondary }]}>Rating: {item.rating || 0}/5</Text>
     </View>
   );
 
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
+
   return (
-    <ScrollView 
+    <ScrollView
       contentContainerStyle={[
-        styles.container, 
-        { paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.lg }
+        styles.container,
+        { paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.lg, flexGrow: 1 }
       ]}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={[theme.colors.primary]}
+        />
+      }
     >
-      
-      <Text style={styles.title}>{parkingInfo.name || "Nombre del Estacionamiento"}</Text>
-      
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Detalles del Estacionamiento</Text>
-        <Text style={styles.label}>Dirección: {parkingInfo.address || "No disponible"}</Text>
-        <Text style={styles.label}>Horario: {parkingInfo.hours || "No disponible"}</Text>
-        <Text style={styles.label}>Capacidad: {parkingInfo.capacity || "No disponible"} espacios</Text>
-      </View>
+      <View style={[styles.container, { padding: theme.spacing.md }]}>
+        <Text style={styles.title}>{parkingInfo.name}</Text>
+        <Text style={styles.subtitle}>{parkingInfo.address}</Text>
+        
+        {/* Detalles del estacionamiento */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Detalles</Text>
+          <Text style={styles.text}>Horario: {parkingInfo.schedule}</Text>
+          <Text style={styles.text}>Espacios: {parkingInfo.spaces}</Text>
+          <Text style={styles.text}>Tipo: {parkingInfo.type}</Text>
+        </View>
 
-      
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Precios</Text>
-        {parkingInfo.prices ? (
+        {/* Precios */}
+        {parkingInfo.prices && parkingInfo.prices.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Precios</Text>
+            <FlatList
+              data={parkingInfo.prices}
+              renderItem={renderPriceItem}
+              keyExtractor={(item, index) => `price-${index}`}
+              scrollEnabled={false}
+            />
+          </View>
+        )}
+
+        {/* Reseñas */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Reseñas</Text>
           <FlatList
-            data={parkingInfo.prices}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={renderPriceItem}
+            data={reviews}
+            renderItem={renderReviewItem}
+            keyExtractor={(item, index) => `review-${index}`}
             scrollEnabled={false}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>No hay reseñas disponibles</Text>
+            }
           />
-        ) : (
-          <Text style={styles.errorText}>No hay información de precios disponible.</Text>
-        )}
+        </View>
       </View>
-
-      
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Disponibilidad</Text>
-        <Text style={styles.label}>
-          Espacios disponibles: {parkingInfo.availability || "Datos no disponibles"}
-        </Text>
-      </View>
-
-      
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Características</Text>
-        {parkingInfo.features ? (
-          parkingInfo.features.map((feature, index) => (
-            <Text key={index} style={styles.label}>• {feature}</Text>
-          ))
-        ) : (
-          <Text style={styles.errorText}>No hay características disponibles.</Text>
-        )}
-      </View>
-
-      
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Reseñas</Text>
-        {reviews.length > 0 ? (
-          reviews.map(renderReviewItem)
-        ) : (
-          <Text style={styles.errorText}>Aún no hay reseñas para este estacionamiento.</Text>
-        )}
-      </View>
-
-      
-      </ScrollView>
+    </ScrollView>
   );
 };
 
