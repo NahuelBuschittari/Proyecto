@@ -20,6 +20,7 @@ import { Picker } from '@react-native-picker/picker';
 import getDay from '../../components/getDay';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
+import { setupNotifications,checkParkingAvailability } from '../../components/Notifications';
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const toRadians = (degree) => degree * (Math.PI / 180);
   const R = 6371000; // Radio de la Tierra en metros
@@ -60,7 +61,7 @@ const ParkingFinder = ({ route, navigation }) => {
         longitude: location.coords.longitude
       });
     };
-
+    setupNotifications();
     fetchDay();
     fetchLocation();
   }, []);
@@ -119,8 +120,9 @@ const ParkingFinder = ({ route, navigation }) => {
   });
 
 
-  const openGoogleMaps = (origin, latitude, longitude, vehicle) => {
+  const openGoogleMaps = (origin, latitude, longitude, capacities, vehicle) => {
     const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${latitude},${longitude}&travelmode=driving`;
+    checkParkingAvailability(1,capacities,vehicle);
     Linking.openURL(url);
   };
   const [sortBy, setSortBy] = useState('price');
@@ -645,13 +647,14 @@ const ParkingFinder = ({ route, navigation }) => {
                   <CustomButton style={styles.navigationButton} textStyle={styles.navigationButtonText} text='Mas info'
                   onPress={() => {
                     navigation.navigate('SpecificParkingDetails', {
-                        parkingData: item
+                        parkingData: item,
+                        selectedVehicle: selectedVehicle,
                     });
                 }}/>  
                   <CustomButton style={styles.navigationButton} textStyle={styles.navigationButtonText} text='Ir con Google Maps'
                    onPress={() => {
                     if (origin) {
-                      openGoogleMaps(origin, item.userData.address.latitude, item.userData.address.longitude);
+                      openGoogleMaps(origin, item.userData.address.latitude, item.userData.address.longitude,item.capacities,selectedVehicle);
                     } else {
                       console.error('Current location not available');
                     }

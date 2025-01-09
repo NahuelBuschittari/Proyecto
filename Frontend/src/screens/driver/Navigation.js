@@ -14,7 +14,7 @@ import getAvailableParkings from '../../components/getAvailableParkings';
 import * as Location from 'expo-location';
 import getDay from '../../components/getDay';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-
+import { setupNotifications,checkParkingAvailability } from '../../components/Notifications';
 const Navigation = ({ navigation, route }) => {
     const [origin, setOrigin] = useState(null);
     const [selectedVehicle, handleVehicleSelect] = useState('car-side');
@@ -69,7 +69,7 @@ const Navigation = ({ navigation, route }) => {
         };
 
         fetchLocation();
-
+        setupNotifications();
         // Limpia el monitoreo cuando el componente se desmonta
         return () => {
             if (subscription) {
@@ -105,6 +105,7 @@ const Navigation = ({ navigation, route }) => {
 
     function openGoogleMaps(origin, latitude, longitude, vehicle) {
         const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${latitude},${longitude}&travelmode=${vehicle}`;
+        checkParkingAvailability(selectedParking.userData.id, selectedParking.capacities, selectedVehicle);
         Linking.openURL(url);
     };
 
@@ -234,7 +235,8 @@ const Navigation = ({ navigation, route }) => {
                                 text='Ver características'
                                 onPress={() => {
                                     navigation.navigate('SpecificParkingDetails', {
-                                        parkingData: selectedParking
+                                        parkingData: selectedParking,
+                                        selectedVehicle: selectedVehicle,
                                     });
                                      setSelectedParking(null);
                                 }}
