@@ -5,12 +5,12 @@ import { theme } from '../../styles/theme';
 import { FontAwesome5 } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import CustomButton from '../../components/CustomButton';
-
+import { setupNotifications,checkParkingAvailability } from '../../components/Notifications';
 const SpecificParkingDetails = ({ route, navigation }) => {
-    const { parkingData } = route.params;
+    const { parkingData, selectedVehicle } = route.params;
     const [activeSection, setActiveSection] = useState(null);
     const [userLocation, setUserLocation] = useState(null);
-
+    console.log("selectedVehicle",selectedVehicle);
     React.useLayoutEffect(() => {
         navigation.setOptions({
             headerBackTitle: 'Atrás',
@@ -44,11 +44,13 @@ const SpecificParkingDetails = ({ route, navigation }) => {
                 });
             }
         })();
+        setupNotifications();
     }, []);
 
     const openGoogleMaps = () => {
         if (!userLocation) return;
         const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.latitude},${userLocation.longitude}&destination=${parkingData.userData.address.latitude},${parkingData.userData.address.longitude}&travelmode=driving`;
+        checkParkingAvailability(parkingData.userData.id,parkingData.capacities, selectedVehicle);
         Linking.openURL(url);
     };
 
