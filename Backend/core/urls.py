@@ -1,15 +1,8 @@
-# urls.py
-
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from users.views import ParkingViewSet, DriverViewSet
-
-router = DefaultRouter()
-router.register(r'parkings', ParkingViewSet, basename='parking')
-router.register(r'drivers', DriverViewSet, basename='driver')
-
+from django.urls import path, include, re_path
+from django.views.generic import TemplateView
 urlpatterns = [
-    path('', include(router.urls)),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.jwt')),
 ]
+
+urlpatterns += [re_path(r'^.*', TemplateView.as_view(template_name='index.html'))]
