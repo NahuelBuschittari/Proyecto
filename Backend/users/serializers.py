@@ -1,62 +1,42 @@
-# serializers.py
-
 from djoser.serializers import UserCreateSerializer
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from .models import Parking, Driver, ParkingPrices, ParkingSchedule, ParkingFeatures
+from .models import Driver, Parking, Prices, Schedule, Features
 
 User = get_user_model()
 
-class UserCreateSerializer(UserCreateSerializer):
+class CustomUserCreateSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
         model = User
-        fields = ('id', 'email', 'name', 'surname', 'birthDate', 'password')
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('id', 'email', 'name', 'surname', 'birthDate')
-
-class ParkingPricesSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ParkingPrices
-        exclude = ('id', 'parking')
-
-class ParkingScheduleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ParkingSchedule
-        exclude = ('id', 'parking')
-
-class ParkingFeaturesSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ParkingFeatures
-        exclude = ('id', 'parking')
-
-class ParkingCreateSerializer(serializers.ModelSerializer):
-    prices = ParkingPricesSerializer()
-    schedule = ParkingScheduleSerializer()
-    features = ParkingFeaturesSerializer()
-    
-    class Meta:
-        model = Parking
-        fields = '__all__'
-        read_only_fields = ('user',)
-
-    def create(self, validated_data):
-        prices_data = validated_data.pop('prices')
-        schedule_data = validated_data.pop('schedule')
-        features_data = validated_data.pop('features')
-        
-        parking = Parking.objects.create(**validated_data)
-        
-        ParkingPrices.objects.create(parking=parking, **prices_data)
-        ParkingSchedule.objects.create(parking=parking, **schedule_data)
-        ParkingFeatures.objects.create(parking=parking, **features_data)
-        
-        return parking
+        fields = ('email', 'password', 'isParking')
 
 class DriverSerializer(serializers.ModelSerializer):
     class Meta:
         model = Driver
-        fields = '__all__'
-        read_only_fields = ('user',)
+        fields = ('nombre', 'apellido', 'fecha_nacimiento')
+
+class PricesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Prices
+        exclude = ('parking',)
+
+class ScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Schedule
+        exclude = ('parking',)
+
+class FeaturesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Features
+        exclude = ('parking',)
+
+class ParkingSerializer(serializers.ModelSerializer):
+    prices = PricesSerializer(read_only=True)
+    schedule = ScheduleSerializer(read_only=True)
+    features = FeaturesSerializer(read_only=True)
+
+    class Meta:
+        model = Parking
+        fields = ('nombre', 'calle', 'numero', 'ciudad', 'latitude', 'longitude',
+                 'carCapacity', 'bikeCapacity', 'motoCapacity', 'prices',
+                 'schedule', 'features')
