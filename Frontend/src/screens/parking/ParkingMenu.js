@@ -2,8 +2,21 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { styles } from '../../styles/SharedStyles';
 import { theme } from '../../styles/theme';
-
+import {useAuth} from '../../context/AuthContext';
 const ParkingMenu = ({ navigation }) => {
+  const { logout } = useAuth();
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // No necesitas hacer navigate ya que el AuthContext se encargará de mostrar 
+      // la pantalla de login cuando user sea null
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        'Hubo un problema al cerrar sesión. Por favor intente nuevamente.'
+      );
+    }
+  };
   const MenuButton = ({ title, onPress }) => (
     <TouchableOpacity 
       style={[styles.navigationButton, {
@@ -68,10 +81,7 @@ const ParkingMenu = ({ navigation }) => {
         />
         <MenuButton 
           title="Cerrar Sesión" 
-          onPress={() => {
-            // No action for now, as requested
-            console.log('Logout button pressed');
-          }}
+          onPress={handleLogout}
         />
       </ScrollView>
     </View>

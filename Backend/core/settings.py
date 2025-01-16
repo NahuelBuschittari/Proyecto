@@ -26,7 +26,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2', '*']
 
 
 # Application definition
@@ -41,11 +41,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'djoser',
+    'corsheaders',
     'users',
 ]
 
 SIMPLE_JWT = {
-   'AUTH_HEADER_TYPES': ('JWT',),
+   'AUTH_HEADER_TYPES': ('JWT','Bearer'),
 }
 
 REST_FRAMEWORK = {
@@ -68,8 +69,8 @@ DJOSER = {
     'ACTIVATION_URL': 'activate/{uid}/{token}',
     'SERIALIZERS': {
         'user_create': 'users.serializers.CustomUserCreateSerializer',
-        'current_user': 'users.serializers.UserSerializer',
-       #'user': 'users.serializers.CustomUserCreateSerializer',
+        'current_user': 'djoser.serializers.UserSerializer',
+        'user': 'djoser.serializers.UserSerializer',
         'user_delete': 'djoser.serializers.UserDeleteSerializer',
     },
     'EMAIL': {
@@ -88,6 +89,7 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # Tu contraseña de corr
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -115,6 +117,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
