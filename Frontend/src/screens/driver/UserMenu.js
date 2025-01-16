@@ -2,10 +2,11 @@ import React,{useState,useEffect,useLayoutEffect} from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { styles } from '../../styles/SharedStyles';
 import { theme } from '../../styles/theme';
-
+import {useAuth} from '../../context/AuthContext';
 const DriverMenu = ({ navigation }) => {
   const [hasPendingReviews, setHasPendingReviews] = useState(true);
   const [showingReviewAlert, setShowingReviewAlert] = useState(false);
+  const { logout } = useAuth();
   useEffect(() => {
     // Verificar si hay reseñas pendientes
     // setHasPendingReviews(true); // Simulación de reseñas pendientes
@@ -20,6 +21,18 @@ const DriverMenu = ({ navigation }) => {
     });
 }, [navigation]);
 
+const handleLogout = async () => {
+  try {
+    await logout();
+    // No necesitas hacer navigate ya que el AuthContext se encargará de mostrar 
+    // la pantalla de login cuando user sea null
+  } catch (error) {
+    Alert.alert(
+      'Error',
+      'Hubo un problema al cerrar sesión. Por favor intente nuevamente.'
+    );
+  }
+};
 const showReviewAlert = () => {
     setShowingReviewAlert(true);
     Alert.alert(
@@ -95,6 +108,10 @@ const showReviewAlert = () => {
         <MenuButton 
           title="Mi perfil" 
           onPress={() => navigation.navigate('DriverProfile')}
+        />
+        <MenuButton 
+          title="Cerrar sesión" 
+          onPress={handleLogout}
         />
       </ScrollView>
     </View>
