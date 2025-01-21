@@ -14,8 +14,7 @@ const UserForm = ({ userData, setUserData, isParking }) => {
     if (type === "set") {
       const currentDate = selectedDate || date;
       setDate(currentDate);
-      const formattedDate = currentDate.toLocaleDateString();
-    handleInputChange('birthDate', formattedDate);
+    handleInputChange('birthDate', currentDate);
     }
     toggleDatepicker();
   };
@@ -56,7 +55,7 @@ const UserForm = ({ userData, setUserData, isParking }) => {
           <Pressable onPress={toggleDatepicker} style={[{width:'100%', alignItems:'center'}]}>
             <TextInput
             placeholder="Introduzca fecha de Nacimiento"
-            value={userData.birthDate}
+            value={userData.birthDate? userData.birthDate.toLocaleDateString(): ""}
             setValue={(value) => handleInputChange('birthDate', value)}
             editable={false}
             onPressIn={toggleDatepicker}
