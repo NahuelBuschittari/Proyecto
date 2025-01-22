@@ -27,7 +27,7 @@ const AddressForm = ({ address, setAddress, navigation }) => {
         setSelectedLocation(location);
         setSuggestions([]);
         setQuery(location.display_name);
-        setAddress(location.display_name);
+        setAddress(location);
     };
 
     return (
