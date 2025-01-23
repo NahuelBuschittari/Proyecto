@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Switch, Alert, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { styles } from '../../styles/SharedStyles';
 import { theme } from '../../styles/theme';
-
+import { useAuth } from '../../context/AuthContext';
+import { API_URL } from '../../context/constants';
 const UpdateCharacteristics = ({ parkingId }) => {
   // Estados para cada característica (mantener igual)
   const [isCovered, setIsCovered] = useState(false);
@@ -17,12 +18,17 @@ const UpdateCharacteristics = ({ parkingId }) => {
   const [hasRestrooms, setHasRestrooms] = useState(false);
   const [hasBreakdownAssistance, setHasBreakdownAssistance] = useState(false);
   const [hasFreeWiFi, setHasFreeWiFi] = useState(false);
-
+  const { user, authTokens } = useAuth();
+  
   // Cargar las características actuales del estacionamiento (igual que antes)
   useEffect(() => {
     const loadCharacteristics = async () => {
       try {
-        const response = await fetch(`https://mi-api.com/parking/${parkingId}/characteristics`);
+        const response = await fetch(`${API_URL}/parking/${user.id}/characteristics`, {
+          headers: {
+            'Authorization': `Bearer ${authTokens.access}`
+          }
+        });
         const data = await response.json();
         
         // Asignar los valores actuales a los estados
@@ -64,8 +70,8 @@ const UpdateCharacteristics = ({ parkingId }) => {
     };
 
     try {
-      const response = await fetch(`https://mi-api.com/parking/${parkingId}/update-characteristics`, {
-        method: 'PUT',
+      const response = await fetch(`${API_URL}/parking/${parkingId}/update-characteristics`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
