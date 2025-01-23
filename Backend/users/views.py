@@ -5,8 +5,11 @@ from django.db import transaction
 from .models import User, Driver, Parking, Prices, Schedule, Features
 from datetime import datetime
 from djoser.conf import settings
+from rest_framework.decorators import api_view
+from django.shortcuts import get_object_or_404
 
 class CustomUserViewSet(UserViewSet):
+
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         # Extraer y validar los datos básicos del usuario
@@ -128,4 +131,29 @@ class CustomUserViewSet(UserViewSet):
             serializer.data, 
             status=status.HTTP_201_CREATED, 
             headers=headers
+        )
+
+@api_view(['GET'])
+def GetParkingCharacteristics(request, parking_id):
+    try:
+        features = Features.objects.get(parking_id=parking_id)
+        data = {
+            'isCovered': features.isCovered,
+            'has24hSecurity': features.has24hSecurity,
+            'hasCCTV': features.hasCCTV,
+            'hasValetService': features.hasValetService,
+            'hasDisabledParking': features.hasDisabledParking,
+            'hasEVChargers': features.hasEVChargers,
+            'hasAutoPayment': features.hasAutoPayment,
+            'hasCardAccess': features.hasCardAccess,
+            'hasCarWash': features.hasCarWash,
+            'hasRestrooms': features.hasRestrooms,
+            'hasBreakdownAssistance': features.hasBreakdownAssistance,
+            'hasFreeWiFi': features.hasFreeWiFi,
+        }
+        return Response(data)
+    except Features.DoesNotExist:
+        return Response(
+            {"error": "Características no encontradas"}, 
+            status=status.HTTP_404_NOT_FOUND
         )
