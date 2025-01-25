@@ -23,6 +23,31 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "newArchEnabled": true
+    "newArchEnabled": true,
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/Parking_icon.png",
+          "color": "#ffffff",
+          "defaultChannel": "default",
+          "enableBackgroundRemoteNotifications": true
+        }        
+      ],
+      [
+        "expo-background-fetch",
+        {
+          "backgroundFetchInterval": 15
+        }
+      ],
+      [
+        "expo-task-manager",
+        {
+          "task-manager": {
+            "task-execution-info-allowed": true
+          }
+        }
+      ]
+    ]
   }
 }

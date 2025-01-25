@@ -2,7 +2,7 @@ import React from 'react';
 import { TouchableOpacity, Image, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { useAuth } from './src/context/AuthContext';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 
 import Login from './src/screens/user/Login';
 import SignUp from './src/screens/user/signup/SignUp';
@@ -29,20 +29,22 @@ import Review from './src/screens/driver/Review';
 
 const Stack = createStackNavigator();
 
-const App = () => {
-  const isAuthenticated = true // Valor provisional
-  const userRole = 'driver'; // Valor provisional
-
+// Separate the navigation logic into a new component
+const NavigationWrapper = () => {
+  const { user, loading } = useAuth();
+  
   const renderHeaderLogo = (navigation, homeRoute) => (
     <TouchableOpacity onPress={() => navigation.navigate(homeRoute)}>
       <Text>Home</Text>
     </TouchableOpacity>
   );
 
+  if (loading) {
+    return null; // Or a loading component
+  }
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        {!isAuthenticated ? (
+    <Stack.Navigator>
+      {!user ? (
           <>
             <Stack.Screen name="Login" component={Login} />
             <Stack.Screen name="SignUp" component={SignUp} />
@@ -51,7 +53,7 @@ const App = () => {
           </>
         ) : (
           <>
-            {userRole === 'parking' ? (
+            {user.isParking === true ? (
               <>
                 <Stack.Screen name="ParkingMenu" component={ParkingMenu}/>
 
@@ -147,8 +149,16 @@ const App = () => {
             )}
           </>
         )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    </Stack.Navigator>
+  );
+};
+const App = () => {
+  return (
+    <AuthProvider>
+      <NavigationContainer>
+        <NavigationWrapper />
+      </NavigationContainer>
+    </AuthProvider>
   );
 };
 

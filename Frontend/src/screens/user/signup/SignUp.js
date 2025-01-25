@@ -11,7 +11,7 @@ import ScheduleForm from './ScheduleForm.js';
 import CapacityForm from './CapacityForm.js';
 import { theme } from '../../../styles/theme.js';
 import { Picker } from '@react-native-picker/picker';
-
+import { API_URL } from '../../../context/constants.js';
 
 const SignUp = ({ navigation }) => {
   const [isParking, setIsParking] = useState(false);
@@ -100,6 +100,99 @@ const SignUp = ({ navigation }) => {
     }
     return false;
   });
+
+  const handleSubmit = async () => {
+    try {
+      // Formatear los datos según la estructura requerida
+      const formattedData = {
+        email: userData.email,
+        password: userData.password,
+        re_password: userData.repeatPassword,
+        isParking: isParking,
+        fecha_nacimiento: userData.birthDate.toISOString().split('T')[0],
+        nombre: userData.name,
+        apellido: userData.surname,
+        // Extraer dirección formateada
+        calle: userData.address.address?.road || '',
+        numero: userData.address.address?.house_number || '',
+        ciudad: userData.address.address?.city || '',
+        // Coordenadas de la ubicación
+        latitude: userData.address?.lat || '',
+        longitude: userData.address?.lon || '',
+        // Capacidades
+        carCapacity: parseInt(capacities.carCapacity),
+        bikeCapacity: parseInt(capacities.bikeCapacity),
+        motoCapacity: parseInt(capacities.motoCapacity),
+        // Precios por vehículo y período
+        auto_fraccion: parseFloat(prices.Auto?.fraccion || 0),
+        auto_hora: parseFloat(prices.Auto?.hora || 0),
+        auto_medio_dia: parseFloat(prices.Auto?.['medio dia'] || 0),
+        auto_dia_completo: parseFloat(prices.Auto?.['dia completo'] || 0),
+        camioneta_fraccion: parseFloat(prices.Camioneta?.fraccion || 0),
+        camioneta_hora: parseFloat(prices.Camioneta?.hora || 0),
+        camioneta_medio_dia: parseFloat(prices.Camioneta?.['medio dia'] || 0),
+        camioneta_dia_completo: parseFloat(prices.Camioneta?.['dia completo'] || 0),
+        moto_fraccion: parseFloat(prices.Moto?.fraccion || 0),
+        moto_hora: parseFloat(prices.Moto?.hora || 0),
+        moto_medio_dia: parseFloat(prices.Moto?.['medio dia'] || 0),
+        moto_dia_completo: parseFloat(prices.Moto?.['dia completo'] || 0),
+        bici_fraccion: parseFloat(prices.Bicicleta?.fraccion || 0),
+        bici_hora: parseFloat(prices.Bicicleta?.hora || 0),
+        bici_medio_dia: parseFloat(prices.Bicicleta?.['medio dia'] || 0),
+        bici_dia_completo: parseFloat(prices.Bicicleta?.['dia completo'] || 0),
+        // Horarios
+        lunes_open: schedule.L.openTime,
+        lunes_close: schedule.L.closeTime,
+        martes_open: schedule.Ma.openTime,
+        martes_close: schedule.Ma.closeTime,
+        miercoles_open: schedule.Mi.openTime,
+        miercoles_close: schedule.Mi.closeTime,
+        jueves_open: schedule.J.openTime,
+        jueves_close: schedule.J.closeTime,
+        viernes_open: schedule.V.openTime,
+        viernes_close: schedule.V.closeTime,
+        sabado_open: schedule.S.openTime,
+        sabado_close: schedule.S.closeTime,
+        domingo_open: schedule.D.openTime,
+        domingo_close: schedule.D.closeTime,
+        feriados_open: schedule.F.openTime,
+        feriados_close: schedule.F.closeTime,
+        // Características
+        ...features
+      };
+      console.log("Es estacionamiento?",isParking);
+      console.log("Datos a enviar:",formattedData);
+      console.log("API:",`${API_URL}/api/users/`);
+      // Realizar la petición al backend
+      const response = await fetch(`${API_URL}/api/users/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formattedData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error en el registro');
+      }
+
+      const data = await response.json();
+      console.log(data);
+      Alert.alert(
+        'Registro exitoso',
+        'Su cuenta ha sido creada exitosamente',
+        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+      );
+
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        'Hubo un error al registrar la cuenta. Por favor, intente nuevamente.',
+        [{ text: 'OK' }]
+      );
+      console.error('Error en el registro:', error);
+    }
+  };
   
 
   const handleNavigation = (direction) => {
@@ -112,10 +205,8 @@ const SignUp = ({ navigation }) => {
     } else if (direction === 'next') {
       if (validateStep()) {
         if (step === 1 && !isParking) {
-          Alert.alert('Registro exitoso', '¡Bienvenido!', [
-            { text: 'OK', onPress: () => navigation.navigate('Login') },
-          ]);
-          return;
+          handleSubmit();
+          return false; // Prevenir la navegación automática
         }
   
         if (step === 4 && vehiculoIndex < filteredVehiculos.length - 1) {
@@ -180,23 +271,21 @@ const validations = {
   },
 
   // Validate age (must be 18 or older)
-  validateAge: (birthDateString) => {
-    // Convertir el formato de fecha local a un objeto Date
-    const dateParts = birthDateString.includes('/') 
-    ? birthDateString.split('/').map(Number)
-    : birthDateString.split('.').map(Number);
-  
-  const [day, month, year] = dateParts;
-    const dob = new Date(year, month - 1, day); // Resta 1 al mes porque en JS los meses son 0-indexed
+  validateAge : (birthDateString) => {
+    // Convertir la cadena de fecha ISO a un objeto Date
+    const dob = new Date(birthDateString); 
     const today = new Date();
   
+    // Calcular la edad
     let age = today.getFullYear() - dob.getFullYear();
     const monthDiff = today.getMonth() - dob.getMonth();
-    
+  
+    // Ajustar si el cumpleaños aún no ha ocurrido este año
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
       age--;
     }
-    
+  
+    console.log("Fecha de nacimiento:", birthDateString);
     return age >= 18;
   },
 
@@ -388,11 +477,8 @@ const validations = {
         }
       }
       if (step === 7) {
-        Alert.alert(
-          'Registro exitoso',
-          isParking ? 'Estacionamiento registrado correctamente.' : '¡Bienvenido!',
-          [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
-        );
+        handleSubmit();
+        return false; // Prevenir la navegación automática
       }
       
     }
@@ -488,7 +574,11 @@ const validations = {
             <Text style={styles.cardTitle}>Información Personal</Text>
             <Text style={styles.label}>Nombre: {userData.name} {userData.surname}</Text>
             <Text style={styles.label}>Email: {userData.email}</Text>
-            <Text style={styles.label}>Dirección: {userData.address}</Text>
+              <Text style={styles.label}>Dirección:</Text>
+              <Text style={[styles.label,{fontSize:theme.typography.fontSize.small}]}>
+                          {userData.address.address.name!=userData.address.address.road ? 
+                          `${userData.address.address.name}, `: ''}{userData.address.address.road} {userData.address.address.house_number}, {userData.address.address.city}, {userData.address.address.state}, {userData.address.address.country}
+              </Text>
           </View>
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Capacidades</Text>
