@@ -1,7 +1,7 @@
 from django.urls import path, include, re_path
 from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
-from users.views import CustomUserViewSet, GetParkingCharacteristics
+from users.views import CustomUserViewSet, GetParkingCharacteristics,NavigationGetParkings, CreateReviewView, GetOpenReviews
 
 router = DefaultRouter()
 router.register('users', CustomUserViewSet, basename='user')
@@ -16,4 +16,7 @@ urlpatterns = [
 
     #update characteristics
     path('parking/<int:parking_id>/characteristics', GetParkingCharacteristics),
+    path('driver/navigation', NavigationGetParkings),
+    path('reviews/create', CreateReviewView),
+    path('reviews/getOpen', GetOpenReviews),
 ]

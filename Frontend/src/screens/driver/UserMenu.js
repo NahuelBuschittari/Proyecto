@@ -6,10 +6,9 @@ import {useAuth} from '../../context/AuthContext';
 const DriverMenu = ({ navigation }) => {
   const [hasPendingReviews, setHasPendingReviews] = useState(true);
   const [showingReviewAlert, setShowingReviewAlert] = useState(false);
-  const { logout } = useAuth();
+  const { logout,user } = useAuth();
   useEffect(() => {
-    // Verificar si hay reseñas pendientes
-    // setHasPendingReviews(true); // Simulación de reseñas pendientes
+    const driver_id=user.id
     if (hasPendingReviews && !showingReviewAlert) {
       showReviewAlert();
     }

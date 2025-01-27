@@ -50,7 +50,10 @@ const SpecificParkingDetails = ({ route, navigation }) => {
     const openGoogleMaps = () => {
         if (!userLocation) return;
         const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.latitude},${userLocation.longitude}&destination=${parkingData.userData.address.latitude},${parkingData.userData.address.longitude}&travelmode=driving`;
-        checkParkingAvailability(parkingData.userData.id,parkingData.capacities, selectedVehicle);
+        space=checkParkingAvailability(parkingData.userData.id,parkingData.capacities, selectedVehicle);
+        if(space){
+            createReview(parkingData.userData.id, user.id, authTokens.access);
+        }
         Linking.openURL(url);
     };
 

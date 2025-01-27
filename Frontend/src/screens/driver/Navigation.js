@@ -1,27 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Image, Modal, ActivityIndicator } from 'react-native';
 import MapView, { Callout, Marker } from 'react-native-maps';
-import MapViewDirections from 'react-native-maps-directions';
-import { GOOGLE_MAPS_KEY } from '@env';
 import { Linking } from 'react-native';
 import CustomButton from '../../components/CustomButton';
 import getLocation from '../../components/getLocation';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import { styles } from '../../styles/SharedStyles';
 import { theme } from '../../styles/theme';
-import { dummyParkingData } from './DUMMY_PARKINGS';
-import getAvailableParkings from '../../components/getAvailableParkings';
 import * as Location from 'expo-location';
 import getDay from '../../components/getDay';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { API_URL } from '../../context/constants';
 import { setupNotifications,checkParkingAvailability } from '../../components/Notifications';
+import { user,useAuth } from '../../context/AuthContext';
+import axios from 'axios';
+import {createReview} from '../../components/createReview'; 
 const Navigation = ({ navigation, route }) => {
     const [origin, setOrigin] = useState(null);
     const [selectedVehicle, handleVehicleSelect] = useState('car-side');
     const [vehicle, setVehicle] = useState('driving');
     const [parkingsDisponibles, setParkingsDisponibles] = useState([]);
     const [loading, setLoading] = useState(true); 
-    const [currentDay, setCurrentDay] = useState(null);
+    const { user, authTokens } = useAuth();
     const [selectedParking, setSelectedParking] = useState(null);
     const [mapRegion, setMapRegion] = useState({
         latitude: -32.9479,
@@ -29,6 +29,7 @@ const Navigation = ({ navigation, route }) => {
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
     });
+    console.log("token:",authTokens.access);
     React.useLayoutEffect(() => {
         navigation.setOptions({
             headerLeft: () => (
@@ -82,30 +83,42 @@ const Navigation = ({ navigation, route }) => {
     useEffect(() => {
         const fetchAvailableParkings = async () => {
             try {
-                const day = await getDay();
-                setCurrentDay(day);
-                const availableParkings = await getAvailableParkings(dummyParkingData, selectedVehicle, day);
-                setParkingsDisponibles(availableParkings);
+                console.log("token:", authTokens.access);
+    
+                const day = await getDay(); // Usa tu función existente
+                const response = await axios.get(`${API_URL}/driver/navigation`, {
+                    params: {
+                        vehicle_type: selectedVehicle,
+                        day: day, // Envía el día (L, Ma, Mi, etc.)
+                    },
+                    headers: {
+                        'Authorization': `Bearer ${authTokens.access}`
+                    },
+                });
+    
+                setParkingsDisponibles(response.data);
+                console.log("parkings:",response.data);
                 setLoading(false);
             } catch (error) {
-                console.error('Error al obtener estacionamientos:', error);
+                console.error('Error al obtener estacionamientos:', error.response || error.message);
                 setLoading(false);
             }
         };
-
+    
         fetchAvailableParkings();
     }, [selectedVehicle]);
-
     useEffect(() => {
         if (route.params?.selectedParking) {
             setSelectedParking(route.params.selectedParking);
         }
     }, [route.params?.selectedParking]);
 
-
     function openGoogleMaps(origin, latitude, longitude, vehicle) {
         const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${latitude},${longitude}&travelmode=${vehicle}`;
-        checkParkingAvailability(selectedParking.userData.id, selectedParking.capacities, selectedVehicle);
+        const space=checkParkingAvailability(selectedParking.userData.id, selectedParking.capacities, selectedVehicle);
+        if(space){
+            createReview(selectedParking.userData.id, user.id, authTokens.access);
+        }
         Linking.openURL(url);
     };
 
@@ -175,9 +188,7 @@ const Navigation = ({ navigation, route }) => {
                         </Text>
                         <Text style={styles.label}>
                             Cierra a las {' '}
-                            {currentDay && selectedParking?.schedule[currentDay]
-                                ? selectedParking.schedule[currentDay].closeTime
-                                : 'Horario no disponible'}
+                            {selectedParking?.schedule?.closeTime || 'Horario no disponible'}
                         </Text>
                         {selectedParking?.prices && (
                             <View style={styles.card}>
