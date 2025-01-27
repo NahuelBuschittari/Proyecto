@@ -42,7 +42,6 @@ const ParkingMenu = ({ navigation }) => {
       </Text>
     </TouchableOpacity>
   );
-logout();
   return (
     <View style={[styles.container, { justifyContent: 'flex-start' }]}>
       <Text style={styles.title}>Menú Principal</Text>

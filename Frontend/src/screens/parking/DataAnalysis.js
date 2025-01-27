@@ -15,12 +15,11 @@ import { theme } from '../../styles/theme';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../context/constants';
 
-// Constantes para la API
-const { user, authTokens } = useAuth();
+
 
 const fetchDataService = async () => {
   try {
-    const response = await fetch(`${API_URL}/api/data?user_id=${user.id}`, {
+    const response = await fetch(`${API_URL}/data?user_id=${user.id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -40,6 +39,8 @@ const fetchDataService = async () => {
 };
 
 const DataAnalysis = () => {
+  // Constantes para la API
+  const { user, authTokens } = useAuth();
   const [selectedChart, setSelectedChart] = useState('price');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);

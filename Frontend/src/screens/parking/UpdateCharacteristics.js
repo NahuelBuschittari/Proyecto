@@ -24,7 +24,7 @@ const UpdateCharacteristics = ({ parkingId }) => {
   useEffect(() => {
     const loadCharacteristics = async () => {
       try {
-        const response = await fetch(`${API_URL}/parking/${user.id}/characteristics`, {
+        const response = await fetch(`${API_URL}/parking/${user.id}/characteristics/get`, {
           headers: {
             'Authorization': `Bearer ${authTokens.access}`
           }
@@ -70,7 +70,7 @@ const UpdateCharacteristics = ({ parkingId }) => {
     };
 
     try {
-      const response = await fetch(`${API_URL}/parking/${user.id}/characteristics`, {
+      const response = await fetch(`${API_URL}/parking/${user.id}/characteristics/post`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -7,6 +7,7 @@ from datetime import datetime
 from djoser.conf import settings
 from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
 
 class CustomUserViewSet(UserViewSet):
 
@@ -157,4 +158,189 @@ def GetParkingCharacteristics(request, parking_id):
             {"error": "Características no encontradas"}, 
             status=status.HTTP_404_NOT_FOUND
         )
+
+@api_view(['POST'])
+def UpdateParkingCharacteristics(request, parking_id):
+    try:
+        features = Features.objects.get(parking_id=parking_id)
+        features.isCovered = request.data.get('isCovered', features.isCovered)
+        features.has24hSecurity = request.data.get('has24hSecurity', features.has24hSecurity)
+        features.hasCCTV = request.data.get('hasCCTV', features.hasCCTV)
+        features.hasValetService = request.data.get('hasValetService', features.hasValetService)
+        features.hasDisabledParking = request.data.get('hasDisabledParking', features.hasDisabledParking)
+        features.hasEVChargers = request.data.get('hasEVChargers', features.hasEVChargers)
+        features.hasAutoPayment = request.data.get('hasAutoPayment', features.hasAutoPayment)
+        features.hasCardAccess = request.data.get('hasCardAccess', features.hasCardAccess)
+        features.hasCarWash = request.data.get('hasCarWash', features.hasCarWash)
+        features.hasRestrooms = request.data.get('hasRestrooms', features.hasRestrooms)
+        features.hasBreakdownAssistance = request.data.get('hasBreakdownAssistance', features.hasBreakdownAssistance)
+        features.hasFreeWiFi = request.data.get('hasFreeWiFi', features.hasFreeWiFi)
+        features.save()
+        return Response({"message": "Características actualizadas correctamente"})
+    except Features.DoesNotExist:
+        return Response({"error": "Estacionamiento no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UpdatePricesView(APIView):
+    def put(self, request):
+        vehicle_type = request.data.get('vehicleType')
+        new_prices = request.data.get('prices')
+
+        if not vehicle_type or not new_prices:
+            return Response(
+                {'error': 'Datos incompletos. Se requiere tipo de vehículo y precios.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            parking = Parking.objects.get(user=request.user)
+            prices = parking.prices
+
+            # Actualizar precios según el tipo de vehículo
+            if vehicle_type == 'Auto':
+                prices.auto_fraccion = new_prices.get('Fracción Auto', prices.auto_fraccion)
+                prices.auto_hora = new_prices.get('Hora Auto', prices.auto_hora)
+                prices.auto_medio_dia = new_prices.get('Medio día Auto', prices.auto_medio_dia)
+                prices.auto_dia_completo = new_prices.get('Día Auto', prices.auto_dia_completo)
+            elif vehicle_type == 'Camioneta':
+                prices.camioneta_fraccion = new_prices.get('Fracción Camioneta', prices.camioneta_fraccion)
+                prices.camioneta_hora = new_prices.get('Hora Camioneta', prices.camioneta_hora)
+                prices.camioneta_medio_dia = new_prices.get('Medio día Camioneta', prices.camioneta_medio_dia)
+                prices.camioneta_dia_completo = new_prices.get('Día Camioneta', prices.camioneta_dia_completo)
+            elif vehicle_type == 'Moto':
+                prices.moto_fraccion = new_prices.get('Fracción Moto', prices.moto_fraccion)
+                prices.moto_hora = new_prices.get('Hora Moto', prices.moto_hora)
+                prices.moto_medio_dia = new_prices.get('Medio día Moto', prices.moto_medio_dia)
+                prices.moto_dia_completo = new_prices.get('Día Moto', prices.moto_dia_completo)
+            elif vehicle_type == 'Bicicleta':
+                prices.bici_fraccion = new_prices.get('Fracción Bicicleta', prices.bici_fraccion)
+                prices.bici_hora = new_prices.get('Hora Bicicleta', prices.bici_hora)
+                prices.bici_medio_dia = new_prices.get('Medio día Bicicleta', prices.bici_medio_dia)
+                prices.bici_dia_completo = new_prices.get('Día Bicicleta', prices.bici_dia_completo)
+
+            prices.save()
+
+            return Response({'message': 'Precios actualizados correctamente.'}, status=status.HTTP_200_OK)
+
+        except Parking.DoesNotExist:
+            return Response(
+                {'error': 'No se encontró un estacionamiento asociado al usuario.'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Ocurrió un error: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+@api_view(['GET'])
+def GetParkingDetails(request, parking_id):
+    try:
+        parking = Parking.objects.get(id=parking_id)
+        prices = parking.prices
+        schedule = parking.schedule
+        
+        # Obtener características
+        features = Features.objects.get(parking_id=parking_id)
+
+        data = {
+            'name': parking.nombre,
+            'address': f"{parking.calle} {parking.numero}, {parking.ciudad}",
+            'carCapacity': parking.carCapacity,
+            'bikeCapacity': parking.bikeCapacity,
+            'motoCapacity': parking.motoCapacity,
+            'prices': {
+                'auto_fraccion': prices.auto_fraccion,
+                'auto_hora': prices.auto_hora,
+                'auto_medio_dia': prices.auto_medio_dia,
+                'auto_dia_completo': prices.auto_dia_completo,
+                'camioneta_fraccion': prices.camioneta_fraccion,
+                'camioneta_hora': prices.camioneta_hora,
+                'camioneta_medio_dia': prices.camioneta_medio_dia,
+                'camioneta_dia_completo': prices.camioneta_dia_completo,
+                'moto_fraccion': prices.moto_fraccion,
+                'moto_hora': prices.moto_hora,
+                'moto_medio_dia': prices.moto_medio_dia,
+                'moto_dia_completo': prices.moto_dia_completo,
+                'bici_fraccion': prices.bici_fraccion,
+                'bici_hora': prices.bici_hora,
+                'bici_medio_dia': prices.bici_medio_dia,
+                'bici_dia_completo': prices.bici_dia_completo
+            },
+            'schedule': {
+                'monday': {'open': schedule.lunes_open, 'close': schedule.lunes_close},
+                'tuesday': {'open': schedule.martes_open, 'close': schedule.martes_close},
+                'wednesday': {'open': schedule.miercoles_open, 'close': schedule.miercoles_close},
+                'thursday': {'open': schedule.jueves_open, 'close': schedule.jueves_close},
+                'friday': {'open': schedule.viernes_open, 'close': schedule.viernes_close},
+                'saturday': {'open': schedule.sabado_open, 'close': schedule.sabado_close},
+                'sunday': {'open': schedule.domingo_open, 'close': schedule.domingo_close},
+                'holidays': {'open': schedule.feriados_open, 'close': schedule.feriados_close}
+            },
+            'features': {
+                'isCovered': features.isCovered,
+                'has24hSecurity': features.has24hSecurity,
+                'hasCCTV': features.hasCCTV,
+                'hasValetService': features.hasValetService,
+                'hasDisabledParking': features.hasDisabledParking,
+                'hasEVChargers': features.hasEVChargers,
+                'hasAutoPayment': features.hasAutoPayment,
+                'hasCardAccess': features.hasCardAccess,
+                'hasCarWash': features.hasCarWash,
+                'hasRestrooms': features.hasRestrooms,
+                'hasBreakdownAssistance': features.hasBreakdownAssistance,
+                'hasFreeWiFi': features.hasFreeWiFi
+            }
+        }
+
+        return Response(data)
+
+    except Parking.DoesNotExist:
+        return Response({"error": "Estacionamiento no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def GetParkingReviews(request, parking_id):
+    try:
+        parking = Parking.objects.get(id=parking_id)
+        reviews = parking.reviews.all()
+        
+        review_data = []
+        for review in reviews:
+            review_data.append({
+                'user': review.user.username,
+                'comment': review.comment,
+                'rating': review.rating
+            })
+
+        return Response(review_data)
+
+    except Parking.DoesNotExist:
+        return Response({"error": "Estacionamiento no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def GetDataAnalysis(request):
+    user_id = request.query_params.get('user_id')
+
+    if not user_id:
+        return Response({"error": "user_id no proporcionado"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        price_evolution = get_price_evolution(user_id)
+        capacity_utilization = get_capacity_utilization(user_id)
+        hourly_demand = get_hourly_demand(user_id)
+        vehicle_type_occupancy = get_vehicle_type_occupancy(user_id)
+
+        data = {
+            'priceEvolution': price_evolution,
+            'capacityUtilization': capacity_utilization,
+            'hourlyDemand': hourly_demand,
+            'vehicleTypeOccupancy': vehicle_type_occupancy,
+        }
+
+        return Response(data)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

@@ -1,7 +1,7 @@
 from django.urls import path, include, re_path
 from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
-from users.viewsCele import CustomUserViewSet, GetParkingCharacteristics, UpdatePricesView, UpdateParkingCharacteristics, GetParkingDetails, GetParkingReviews, GetDataAnalysis
+from users.views import CustomUserViewSet, GetParkingCharacteristics, UpdatePricesView, UpdateParkingCharacteristics, GetParkingDetails, GetParkingReviews, GetDataAnalysis
 
 router = DefaultRouter()
 router.register('users', CustomUserViewSet, basename='user')
