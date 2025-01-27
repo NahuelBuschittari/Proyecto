@@ -12,22 +12,19 @@ import {
 import { LineChart, PieChart, StackedBarChart } from 'react-native-chart-kit';
 import { styles } from '../../styles/SharedStyles';
 import { theme } from '../../styles/theme';
+import { useAuth } from '../../context/AuthContext';
+import { API_URL } from '../../context/constants';
 
 // Constantes para la API
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://tu-backend-api.com';
-const API_ENDPOINTS = {
-  data: '/api/data',
-};
+const { user, authTokens } = useAuth();
 
-// Servicio para manejar las llamadas a la API
 const fetchDataService = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.data}`, {
+    const response = await fetch(`${API_URL}/api/data?user_id=${user.id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        // Aquí puedes agregar headers adicionales como tokens de autenticación
-        // 'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${authTokens.access}`,
       },
     });
 
@@ -72,18 +69,23 @@ const DataAnalysis = () => {
     try {
       setLoading(true);
       setError(null);
+
+
+      if (!authTokens.access || !user.id) {
+        throw new Error('No se encontró el token de autenticación o el ID de usuario');
+      }
+
       const result = await fetchDataService();
-      
-      // Validación básica de datos
+
       if (!result || !result.priceEvolution || !result.capacityUtilization || 
           !result.hourlyDemand || !result.vehicleTypeOccupancy) {
         throw new Error('Datos incompletos o en formato incorrecto');
       }
-      
+
       setData(result);
     } catch (err) {
       console.error('Error loading data:', err);
-      
+
       if (retryCount < MAX_RETRIES) {
         setTimeout(() => {
           setRetryCount(prev => prev + 1);
@@ -94,16 +96,8 @@ const DataAnalysis = () => {
           'Error de conexión',
           'No se pudieron cargar los datos. ¿Desea intentar nuevamente?',
           [
-            {
-              text: 'Cancelar',
-              style: 'cancel',
-            },
-            {
-              text: 'Reintentar',
-              onPress: () => {
-                setRetryCount(0);
-              },
-            },
+            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Reintentar', onPress: () => setRetryCount(0) },
           ]
         );
       }
@@ -111,7 +105,7 @@ const DataAnalysis = () => {
       setLoading(false);
     }
   };
-
+  
   useEffect(() => {
     loadData();
   }, [retryCount]);

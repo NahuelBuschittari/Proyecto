@@ -2,12 +2,11 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, FlatList, TouchableOpacity, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { styles } from '../../styles/SharedStyles';
 import { theme } from '../../styles/theme';
+import { useAuth } from '../../context/AuthContext';
+import { API_URL } from '../../context/constants';
 
 // Constantes para la API
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://mi-api.com';
-const API_ENDPOINTS = {
-  parkingDetails: (id) => `/parking/${id}/details`,
-};
+const { user, authTokens } = useAuth();
 
 const ParkingProfile = ({ parkingId }) => {
   const [parkingInfo, setParkingInfo] = useState({});
@@ -22,12 +21,11 @@ const ParkingProfile = ({ parkingId }) => {
       if (showFullLoading) setLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.parkingDetails(parkingId)}`, {
+      const response = await fetch(`${API_URL}/parking/${user.id}/details`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          // Aquí puedes agregar headers adicionales como tokens de autenticación
-          // 'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${authTokens.access}`
         },
       });
 
@@ -65,6 +63,27 @@ const ParkingProfile = ({ parkingId }) => {
       if (showFullLoading) setLoading(false);
     }
   }, [parkingId, retryCount]);
+
+  const fetchReviews = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_URL}/parking/${parkingId}/reviews`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      }
+  
+      const data = await response.json();
+      setReviews(data);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    }
+  }, [parkingId]);
+  
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

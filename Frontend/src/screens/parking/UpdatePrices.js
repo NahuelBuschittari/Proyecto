@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, Alert,} from 'react-native';
 import { styles } from '../../styles/SharedStyles'; 
 import { theme } from '../../styles/theme';
-import {Picker} from '@react-native-picker/picker'
+import {Picker} from '@react-native-picker/picker';
+import { useAuth } from '../../context/AuthContext';
+import { API_URL } from '../../context/constants';
 
 const UpdatePrices = () => {
   const vehicles = {
@@ -11,7 +13,7 @@ const UpdatePrices = () => {
     Moto: ['Fracción Moto', 'Hora Moto', 'Medio día Moto', 'Día Moto'],
     Bicicleta: ['Fracción Bicicleta', 'Hora Bicicleta', 'Medio día Bicicleta', 'Día Bicicleta'],
   };
-
+  const { user, authTokens } = useAuth();
   const [selectedVehicle, setSelectedVehicle] = useState('Auto');
   const [prices, setPrices] = useState({
     'Fracción Auto': 0,
@@ -26,11 +28,10 @@ const UpdatePrices = () => {
     setPrices({ ...prices, [key]: numericValue });
   };
 
-  const handleSave = () => {
-    // Validar que todos los precios sean mayores que 0
+  const handleSave = async () => {
     const invalidPrices = Object.entries(prices)
       .filter(([_, value]) => parseFloat(value) <= 0);
-
+  
     if (invalidPrices.length > 0) {
       Alert.alert(
         'Error de Validación', 
@@ -39,17 +40,43 @@ const UpdatePrices = () => {
       );
       return;
     }
-
-    // Simular guardado (reemplazar con llamada a API real)
-    Alert.alert(
-      'Precios Actualizados', 
-      `Precios para ${selectedVehicle} actualizados exitosamente.`, 
-      [{ text: 'OK' }]
-    );
-
-    // Aquí iría la lógica real de guardado, por ejemplo:
-    // await updatePricesInBackend(selectedVehicle, prices);
+  
+    try {
+      const response = await fetch(`${API_URL}/parking/${user.id}/prices`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authTokens.token}`,
+        },
+        body: JSON.stringify({
+          vehicleType: selectedVehicle,
+          prices,
+        }),
+      });
+  
+      if (response.ok) {
+        Alert.alert(
+          'Precios Actualizados', 
+          `Precios para ${selectedVehicle} actualizados exitosamente.`, 
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert(
+          'Error', 
+          'No se pudieron actualizar los precios. Intenta nuevamente.', 
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      console.error('Error al actualizar precios:', error);
+      Alert.alert(
+        'Error', 
+        'Ocurrió un error inesperado. Intenta nuevamente.', 
+        [{ text: 'OK' }]
+      );
+    }
   };
+  
 
   return (
     <>

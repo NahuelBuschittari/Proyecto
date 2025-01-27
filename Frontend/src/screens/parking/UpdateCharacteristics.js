@@ -70,10 +70,11 @@ const UpdateCharacteristics = ({ parkingId }) => {
     };
 
     try {
-      const response = await fetch(`${API_URL}/parking/${parkingId}/update-characteristics`, {
+      const response = await fetch(`${API_URL}/parking/${user.id}/characteristics`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authTokens.access}`,
         },
         body: JSON.stringify(updatedCharacteristics),
       });

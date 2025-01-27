@@ -157,3 +157,4 @@ def GetParkingCharacteristics(request, parking_id):
             {"error": "Características no encontradas"}, 
             status=status.HTTP_404_NOT_FOUND
         )
+
