@@ -3,57 +3,84 @@ import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { styles } from '../../styles/SharedStyles';
 import { theme } from '../../styles/theme';
 import {useAuth} from '../../context/AuthContext';
+import { API_URL } from '../../context/constants';
+import axios from 'axios';
 const DriverMenu = ({ navigation }) => {
   const [hasPendingReviews, setHasPendingReviews] = useState(true);
   const [showingReviewAlert, setShowingReviewAlert] = useState(false);
-  const { logout,user } = useAuth();
-  useEffect(() => {
-    const driver_id=user.id
-    if (hasPendingReviews && !showingReviewAlert) {
-      showReviewAlert();
-    }
-  }, [hasPendingReviews]);
-  useLayoutEffect(() => {
-    navigation.setOptions({
-        headerLeft: () => null,
-        headerLeftContainerStyle: { width: 0 }
-    });
-}, [navigation]);
+  const { logout,user,authTokens} = useAuth();
 
-const handleLogout = async () => {
-  try {
-    await logout();
-    // No necesitas hacer navigate ya que el AuthContext se encargará de mostrar 
-    // la pantalla de login cuando user sea null
-  } catch (error) {
-    Alert.alert(
-      'Error',
-      'Hubo un problema al cerrar sesión. Por favor intente nuevamente.'
-    );
-  }
-};
-const showReviewAlert = () => {
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // No necesitas hacer navigate ya que el AuthContext se encargará de mostrar 
+      // la pantalla de login cuando user sea null
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        'Hubo un problema al cerrar sesión. Por favor intente nuevamente.'
+      );
+    }
+  };
+  useEffect(() => {
+    const fetchPendingReviews = async () => {
+      try {
+        const response = await axios.get(
+          `${API_URL}/reviews/getOpen?driver_id=${user.id}`,{
+            headers: {
+              'Authorization': `Bearer ${authTokens.access}`
+            },
+        });
+
+        if (response.data) {
+          setHasPendingReviews(true);
+          // Guardar detalles de la reseña para usar después
+          const reviewData = response.data;
+          showReviewAlert(reviewData);
+        }
+      } catch (error) {
+        console.log("Error al obtener reseñas abiertas:", error);
+      }
+    };
+
+    fetchPendingReviews();
+  }, []);
+
+  const handleNoReview = async (reviewId) => {
+    setHasPendingReviews(false);
+    try {
+      // Realizar una solicitud a la API para marcar la reseña como no aplicable
+      await axios.delete(`${API_URL}/reviews/${reviewId}/discard`,{
+        headers: {
+          'Authorization': `Bearer ${authTokens.access}`
+        },
+      });
+    } catch (error) {
+      console.error("Error al descartar la reseña:", error);
+    }
+  };
+
+  const showReviewAlert = (review) => {
     setShowingReviewAlert(true);
     Alert.alert(
-      "¿Estacionaste en este parking?",
+      `¿Estacionaste en ${review.parking.nombre}?`,
       "Deja una reseña para ayudar a otros usuarios a encontrar el mejor lugar para estacionar.",
       [
-      {
-        text: "No",
-        onPress: () => {
-        setShowingReviewAlert(false);
-        setHasPendingReviews(false);
-        // Llamada a la API para marcar la reseña como no aplicable
+        {
+          text: "No",
+          onPress: () => {
+            setShowingReviewAlert(false);
+            handleNoReview(review.id);
+          },
+          style: "cancel"
         },
-        style: "cancel"
-      },
-      {
-        text: "Realizar Review",
-        onPress: () => {
-        setShowingReviewAlert(false);
-        navigation.navigate('Review'); // Navegar a la pantalla de reseñas
+        {
+          text: "Realizar Review",
+          onPress: () => {
+            setShowingReviewAlert(false);
+            navigation.navigate('Review', { reviewId: review.id });
+          }
         }
-      }
       ],
       { cancelable: false }
     );

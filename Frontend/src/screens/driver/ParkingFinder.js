@@ -121,7 +121,12 @@ const ParkingFinder = ({ route, navigation }) => {
 
 
   const openGoogleMaps = (origin, latitude, longitude, capacities, vehicle) => {
-    const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${latitude},${longitude}&travelmode=driving`;
+    let travelmode= 'driving'
+    if(vehicle==='Moto'){
+      travelmode='two-wheeler';}
+    else if(vehicle==='Bicicleta') {
+      travelmode='bicycling';}
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${latitude},${longitude}&travelmode=${travelmode}`;
     checkParkingAvailability(1,capacities,vehicle);
     Linking.openURL(url);
   };
@@ -654,7 +659,7 @@ const ParkingFinder = ({ route, navigation }) => {
                   <CustomButton style={styles.navigationButton} textStyle={styles.navigationButtonText} text='Ir con Google Maps'
                    onPress={() => {
                     if (origin) {
-                      openGoogleMaps(origin, item.userData.address.latitude, item.userData.address.longitude,item.capacities,selectedVehicle);
+                      openGoogleMaps(item.userData.id,origin, item.userData.address.latitude, item.userData.address.longitude,item.capacities,selectedVehicle);
                     } else {
                       console.error('Current location not available');
                     }

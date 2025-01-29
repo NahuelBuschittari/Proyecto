@@ -109,21 +109,27 @@ export const AuthProvider = ({ children }) => {
 
   const refreshToken = async () => {
     try {
-      console.log('Refreshing token');
+      console.log('Refreshing token with:', authTokens?.refresh);
+      if (!authTokens?.refresh) {
+        throw new Error('No refresh token available');
+      }
+  
       const response = await axios.post(`${API_URL}/auth/jwt/refresh/`, {
-        refresh: authTokens?.refresh
+        refresh: authTokens.refresh
       });
-
+  
+      const newToken = response.data.access;
+      console.log('Received new token:', newToken);
+  
       const tokens = {
         ...authTokens,
-        access: response.data.access
+        access: newToken
       };
-
+  
       await storeAuthData(tokens, user);
       setAuthTokens(tokens);
-
-      console.log('Token refresh successful');
-      return tokens.access;
+  
+      return newToken;
     } catch (error) {
       console.error('Token refresh error:', error.response?.data || error.message);
       await logout();
@@ -139,40 +145,61 @@ export const AuthProvider = ({ children }) => {
   // Set up axios interceptors
   useEffect(() => {
     const requestIntercept = axios.interceptors.request.use(
-      config => {
-        if (authTokens?.access) {
-          config.headers.Authorization = `Bearer ${authTokens.access}`;
+      (config) => {
+        // Obtener el token más reciente del estado
+        const currentToken = authTokens?.access;
+        if (currentToken) {
+          config.headers.Authorization = `Bearer ${currentToken}`;
+          console.log('Using token in request:', currentToken); // Para debugging
         }
         return config;
       },
-      error => Promise.reject(error)
+      (error) => Promise.reject(error)
     );
-
+  
     const responseIntercept = axios.interceptors.response.use(
-      response => response,
-      async error => {
-        if (error.response?.status === 401) {
-          const originalRequest = error.config;
-          
-          if (!originalRequest._retry) {
-            originalRequest._retry = true;
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+  
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+  
+          try {
             const newToken = await refreshToken();
-            
             if (newToken) {
+              // Actualizar la solicitud original con el nuevo token
               originalRequest.headers.Authorization = `Bearer ${newToken}`;
+              console.log('Retrying with new token:', newToken); // Para debugging
               return axios(originalRequest);
             }
+          } catch (refreshError) {
+            console.error('Error during token refresh:', refreshError);
+            await logout();
           }
         }
         return Promise.reject(error);
       }
     );
-
+  
+    // Refresh  cada 4 minutos
+    const refreshInterval = setInterval(async () => {
+      if (authTokens?.refresh) {
+        try {
+          await refreshToken();
+        } catch (error) {
+          console.error('Error in periodic refresh:', error);
+        }
+      }
+    }, 240000);
+  
     return () => {
       axios.interceptors.request.eject(requestIntercept);
       axios.interceptors.response.eject(responseIntercept);
+      clearInterval(refreshInterval);
     };
   }, [authTokens]);
+  
 
   const contextValue = {
     user,

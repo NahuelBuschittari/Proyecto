@@ -14,7 +14,7 @@ import { API_URL } from '../../context/constants';
 import { setupNotifications,checkParkingAvailability } from '../../components/Notifications';
 import { user,useAuth } from '../../context/AuthContext';
 import axios from 'axios';
-import {createReview} from '../../components/createReview'; 
+import createReview from '../../components/createReview'; 
 const Navigation = ({ navigation, route }) => {
     const [origin, setOrigin] = useState(null);
     const [selectedVehicle, handleVehicleSelect] = useState('car-side');
@@ -116,6 +116,7 @@ const Navigation = ({ navigation, route }) => {
     function openGoogleMaps(origin, latitude, longitude, vehicle) {
         const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${latitude},${longitude}&travelmode=${vehicle}`;
         const space=checkParkingAvailability(selectedParking.userData.id, selectedParking.capacities, selectedVehicle);
+        console.log("space",space)
         if(space){
             createReview(selectedParking.userData.id, user.id, authTokens.access);
         }

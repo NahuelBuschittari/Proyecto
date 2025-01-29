@@ -167,8 +167,7 @@ def NavigationGetParkings(request):
     try:
         # Get query parameters
         vehicle_type = request.query_params.get('vehicle_type')  # Tipo de vehículo
-        #current_day = request.query_params.get('day')  # Día que viene del frontend
-        current_day="L"
+        current_day = request.query_params.get('day')  # Día que viene del frontend
         print("vehicle_type", vehicle_type)
         print("current_day", current_day)
         hora_actual = datetime.now().time()
@@ -283,17 +282,17 @@ def NavigationGetParkings(request):
         )
 
 @api_view(['GET'])
-def GetOpenReviews(request):
+def GetOpenReview(request):
     driver_id = request.query_params.get('driver_id')
     try:
-        # Utilizamos select_related para hacer el join con Parking
-        reviews = Review.objects.filter(
+        # Utilizamos select_related para optimizar el join con Parking
+        review = Review.objects.filter(
             driver_id=driver_id, 
             isClosed=False
-        ).select_related('parking')
+        ).select_related('parking').first()
         
-        data = [
-            {
+        if review:
+            data = {
                 "id": review.id,
                 "parking": {
                     "id": review.parking_id,
@@ -303,9 +302,12 @@ def GetOpenReviews(request):
                     "ciudad": review.parking.ciudad
                 }
             }
-            for review in reviews
-        ]
-        return Response(data)
+            return Response(data)
+        else:
+            return Response(
+                {"message": "No se encontraron reseñas abiertas para este conductor."},
+                status=status.HTTP_404_NOT_FOUND
+            )
     except Exception as e:
         return Response(
             {"error": f"Error al obtener las reseñas: {str(e)}"},
@@ -339,6 +341,27 @@ def CreateReviewView(request):
         "cleanliness": review.cleanliness,
         "lighting": review.lighting,
         "accessibility": review.accessibility,
-        "service": review.service,
+        "service": review.service,  
         "comment": review.comment
     }, status=status.HTTP_201_CREATED)
+
+@api_view(['DELETE'])
+def DiscardReview(request,review_id):
+    try:
+        # Intentar obtener la reseña por su ID
+        review = Review.objects.get(id=review_id)
+        review.delete()  # Eliminar la reseña de la base de datos
+        return Response(
+            {"message": "La reseña ha sido eliminada con éxito."},
+            status=status.HTTP_200_OK
+        )
+    except Review.DoesNotExist:
+        return Response(
+            {"error": "Reseña no encontrada."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {"error": f"Error al eliminar la reseña: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

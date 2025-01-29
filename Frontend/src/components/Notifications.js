@@ -100,7 +100,7 @@ export const checkParkingAvailability = async (parkingId,capacities, vehicleType
 
     if (availableSpaces <= 5) {
       // Generar un número aleatorio entre 1 y 6
-      const randomNumber = Math.floor(Math.random() * 6) + 1;
+      const randomNumber = 2;
       // Verificar si el número aleatorio es divisible por 3
       if (randomNumber % 3 === 0) {
         // Solo intentar enviar la notificación si tenemos permisos
