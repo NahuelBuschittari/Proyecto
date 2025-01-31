@@ -1,7 +1,7 @@
 from django.urls import path, include, re_path
 from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
-from users.views import CustomUserViewSet, GetParkingCharacteristics, UpdatePricesView, UpdateParkingCharacteristics, GetParkingDetails, GetParkingReviews, GetDataAnalysis
+from users.views import CustomUserViewSet, GetParkingPrices, GetParkingCharacteristics, UpdateParkingPrices, UpdateParkingCharacteristics, GetParkingDetails, GetParkingReviews, GetDataAnalysis, GetParkingCapacities, UpdateParkingCapacities
 
 router = DefaultRouter()
 router.register('users', CustomUserViewSet, basename='user')
@@ -19,15 +19,20 @@ urlpatterns = [
     path('parking/<int:parking_id>/characteristics/update', UpdateParkingCharacteristics, name='post-parking-characteristics'),
 
     #update prices
-    path('api/prices/', UpdatePricesView.as_view(), name='update-prices'),
+    path('parking/<int:parking_id>/prices/get', GetParkingPrices, name='get-parking-prices'),
+    path('parking/<int:parking_id>/prices/update', UpdateParkingPrices, name='update-parking-prices'),
 
     #details
-    path('parking/<int:parking_id>/details/', GetParkingDetails, name='get_parking_details'),
+    path('parking/<int:parking_id>/details', GetParkingDetails, name='get_parking_details'),
 
     # get reseñas
-    path('parking/<int:parking_id>/reviews/', GetParkingReviews, name='get_parking_reviews'),
+    path('parking/<int:parking_id>/reviews', GetParkingReviews, name='get_parking_reviews'),
 
     #Análisis de datos
-    path('data/', GetDataAnalysis, name='get_data_analysis'),
+    path('parking/<int:parking_id>/data', GetDataAnalysis, name='get_data_analysis'),
+
+    #Actualizar Espacios
+    path('parking/<int:parking_id>/spaces/get', GetParkingCapacities, name='get-parking-capacities'),
+    path('parking/<int:parking_id>/spaces/update', UpdateParkingCapacities, name='post-parking-capacities'),
 
 ]
