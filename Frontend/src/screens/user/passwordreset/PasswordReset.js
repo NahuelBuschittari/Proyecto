@@ -1,14 +1,29 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text,Alert} from 'react-native';
 import CustomInput from '../../../components/CustomInput';
 import CustomButton from '../../../components/CustomButton';
-
-const PasswordReset = ({ navigation }) => {
+import axios from 'axios';
+import {styles} from '../../../styles/SharedStyles';
+import { API_URL } from '../../../context/constants';
+const PasswordReset = () => {
   const [email, setEmail] = useState('');
 
-  const onSignInPressed = () => {
-    navigation.navigate('PasswordSet');
+  const onSendPressed = async (email) => {
+    try {
+      email = email.toLowerCase();
+      console.log("Email: ", email); // Verifica si este log aparece
+  
+      const response = await axios.post(`${API_URL}/auth/users/reset_password/`, { email });
+  
+      if (response.status === 204) {
+        Alert.alert("Revise su casilla de correo para restablecer la contraseña.");
+      }
+    } catch (error) {
+      console.log("Error en la solicitud:", error);
+      Alert.alert("Hubo un error al enviar el correo. Inténtelo de nuevo.");
+    }
   };
+  
 
   return (
     <View style={styles.container}>
@@ -22,37 +37,10 @@ const PasswordReset = ({ navigation }) => {
 
       <CustomButton 
         text="Enviar e-mail" 
-        onPress={onSignInPressed} 
+        onPress={() => onSendPressed(email)} 
       />
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#f5f5f5', // Wild Sand
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#0a0a0a', // Black
-    marginBottom: 20,
-  },
-  forgotPassword: {
-    color: '#394c74', // East Bay
-    marginVertical: 10,
-    textDecorationLine: 'underline',
-  },
-  signupButton: {
-    backgroundColor: '#8ba4c1', // Nepal
-  },
-  signupButtonText: {
-    color: '#0a0a0a', // Black
-  },
-});
 
 export default PasswordReset;

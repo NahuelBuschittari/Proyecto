@@ -1,12 +1,16 @@
+import os
 from djoser.views import UserViewSet
 from rest_framework import status
+import requests
 from rest_framework.response import Response
 from django.db import transaction
+from django.views import View
 from .models import User, Driver, Parking, Prices, Schedule, Features, Review
 from datetime import datetime
 from djoser.conf import settings
 from rest_framework.decorators import api_view
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
+from django.http import JsonResponse
 
 class CustomUserViewSet(UserViewSet):
 
@@ -281,6 +285,7 @@ def NavigationGetParkings(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+
 @api_view(['GET'])
 def GetOpenReview(request):
     driver_id = request.query_params.get('driver_id')
@@ -365,3 +370,63 @@ def DiscardReview(request,review_id):
             {"error": f"Error al eliminar la reseña: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+class ActivationRedirectView(View):
+    def get(self, request, uid, token):
+        api_url = os.getenv('API_URL', '')
+        # URL del endpoint de activación de djoser
+        activation_endpoint = f'{api_url}/auth/users/activation/' #Cambiar por url en constants.js
+        
+        # Datos para la activación
+        activation_data = {
+            'uid': uid,
+            'token': token
+        }
+        
+        try:
+            # Realizar la petición POST al endpoint de activación
+            response = requests.post(activation_endpoint, json=activation_data)
+            
+            if response.status_code == 204:
+                # Redirigir a una página de éxito
+                return render(request,'activation-success.html')
+            else:
+                # Redirigir a una página de error
+                return render(request,'activation-error.html')
+                
+        except requests.RequestException:
+            return render(request,'activation-error.html')
+        
+class PasswordResetConfirmView(View):
+    
+    def get(self, request, uid, token):
+        api_url = os.getenv('API_URL', '')
+        return render(request, 'password_reset_form.html', {'uid': uid, 'token': token, 'api_url': api_url})
+
+    def post(self, request, uid, token):
+        api_url = os.getenv('API_URL', '')
+        """ Maneja la solicitud de restablecimiento de contraseña """
+        new_password = request.POST.get('new_password')
+        re_new_password = request.POST.get('re_new_password')
+
+        reset_endpoint = f'{api_url}/auth/users/reset_password_confirm/'
+
+        data = {
+            'uid': uid,
+            'token': token,
+            'new_password': new_password,
+            're_new_password': re_new_password
+        }
+
+        try:
+            response = requests.post(reset_endpoint, json=data)
+
+            if response.status_code == 204:  # Éxito
+                return render(request, 'password_reset_success.html')
+
+            elif response.status_code == 400:  # Error
+                error_message = response.json()
+                return render(request, 'password_reset_form.html', {'uid': uid, 'token': token, 'error': error_message})
+
+        except requests.RequestException:
+            return render(request, 'password_reset_form.html', {'uid': uid, 'token': token, 'error': 'Error en la conexión con el servidor.'})
