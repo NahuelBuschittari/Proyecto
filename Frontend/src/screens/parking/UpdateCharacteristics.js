@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Switch, Alert, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, Switch, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { styles } from '../../styles/SharedStyles';
 import { theme } from '../../styles/theme';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../context/constants';
+
 const UpdateCharacteristics = ({ parkingId }) => {
-  // Estados para cada característica (mantener igual)
   const [isCovered, setIsCovered] = useState(false);
   const [has24hSecurity, setHas24hSecurity] = useState(false);
   const [hasCCTV, setHasCCTV] = useState(false);
@@ -19,19 +19,20 @@ const UpdateCharacteristics = ({ parkingId }) => {
   const [hasBreakdownAssistance, setHasBreakdownAssistance] = useState(false);
   const [hasFreeWiFi, setHasFreeWiFi] = useState(false);
   const { user, authTokens } = useAuth();
-  
-  // Cargar las características actuales del estacionamiento (igual que antes)
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
   useEffect(() => {
     const loadCharacteristics = async () => {
       try {
         const response = await fetch(`${API_URL}/parking/${user.id}/characteristics/get`, {
           headers: {
-            'Authorization': `Bearer ${authTokens.access}`
-          }
+            Authorization: `Bearer ${authTokens.access}`,
+          },
         });
         const data = await response.json();
-        
-        // Asignar los valores actuales a los estados
+
         setIsCovered(data.isCovered);
         setHas24hSecurity(data.has24hSecurity);
         setHasCCTV(data.hasCCTV);
@@ -45,15 +46,17 @@ const UpdateCharacteristics = ({ parkingId }) => {
         setHasBreakdownAssistance(data.hasBreakdownAssistance);
         setHasFreeWiFi(data.hasFreeWiFi);
       } catch (error) {
-        Alert.alert('Error', 'Hubo un error al cargar las características.');
+        setSuccessMessage('Error al cargar las características.');
       }
     };
 
     loadCharacteristics();
   }, [parkingId]);
 
-  // Actualizar las características (igual que antes)
   const handleUpdate = async () => {
+    setIsLoading(true);
+    setSuccessMessage('');
+
     const updatedCharacteristics = {
       isCovered,
       has24hSecurity,
@@ -66,99 +69,115 @@ const UpdateCharacteristics = ({ parkingId }) => {
       hasCarWash,
       hasRestrooms,
       hasBreakdownAssistance,
-      hasFreeWiFi
+      hasFreeWiFi,
     };
 
     try {
-      const response = await fetch(`${API_URL}/parking/${user.id}/characteristics/post`, {
+      const response = await fetch(`${API_URL}/parking/${user.id}/characteristics/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authTokens.access}`,
+          Authorization: `Bearer ${authTokens.access}`,
         },
         body: JSON.stringify(updatedCharacteristics),
       });
 
       if (response.ok) {
-        Alert.alert('Éxito', 'Las características se actualizaron correctamente.');
+        setSuccessMessage('¡Cambios guardados con éxito!');
       } else {
-        Alert.alert('Error', 'Hubo un error al actualizar las características.');
+        setSuccessMessage('Error al guardar los cambios.');
       }
     } catch (error) {
-      Alert.alert('Error', 'No se pudo conectar con el servidor.');
+      setSuccessMessage('No se pudo conectar con el servidor.');
+    } finally {
+      setIsLoading(false);
+      setTimeout(() => setSuccessMessage(''), 5000); // Elimina el mensaje después de 3 segundos
     }
   };
 
-  // Lista de características con su estado y función de actualización
   const features = [
-    { label: "¿Está techado?", state: isCovered, setState: setIsCovered },
-    { label: "¿Tiene seguridad 24 horas?", state: has24hSecurity, setState: setHas24hSecurity },
-    { label: "¿Cuenta con cámaras de vigilancia?", state: hasCCTV, setState: setHasCCTV },
-    { label: "¿Ofrece servicio de valet?", state: hasValetService, setState: setHasValetService },
-    { label: "¿Estacionamiento para discapacitados?", state: hasDisabledParking, setState: setHasDisabledParking },
-    { label: "¿Cargadores para vehículos eléctricos?", state: hasEVChargers, setState: setHasEVChargers },
-    { label: "¿Ofrece sistema de pago automático?", state: hasAutoPayment, setState: setHasAutoPayment },
-    { label: "¿Tiene acceso con tarjeta/ticket?", state: hasCardAccess, setState: setHasCardAccess },
-    { label: "¿Ofrece lavado de autos?", state: hasCarWash, setState: setHasCarWash },
-    { label: "¿Tiene baños disponibles?", state: hasRestrooms, setState: setHasRestrooms },
-    { label: "¿Ofrece asistencia para averías?", state: hasBreakdownAssistance, setState: setHasBreakdownAssistance },
-    { label: "¿Cuenta con cobertura WiFi gratuita?", state: hasFreeWiFi, setState: setHasFreeWiFi },
+    { label: '¿Está techado?', state: isCovered, setState: setIsCovered },
+    { label: '¿Tiene seguridad 24 horas?', state: has24hSecurity, setState: setHas24hSecurity },
+    { label: '¿Cuenta con cámaras de vigilancia?', state: hasCCTV, setState: setHasCCTV },
+    { label: '¿Ofrece servicio de valet?', state: hasValetService, setState: setHasValetService },
+    { label: '¿Estacionamiento para discapacitados?', state: hasDisabledParking, setState: setHasDisabledParking },
+    { label: '¿Cargadores para vehículos eléctricos?', state: hasEVChargers, setState: setHasEVChargers },
+    { label: '¿Ofrece sistema de pago automático?', state: hasAutoPayment, setState: setHasAutoPayment },
+    { label: '¿Tiene acceso con tarjeta/ticket?', state: hasCardAccess, setState: setHasCardAccess },
+    { label: '¿Ofrece lavado de autos?', state: hasCarWash, setState: setHasCarWash },
+    { label: '¿Tiene baños disponibles?', state: hasRestrooms, setState: setHasRestrooms },
+    { label: '¿Ofrece asistencia para averías?', state: hasBreakdownAssistance, setState: setHasBreakdownAssistance },
+    { label: '¿Cuenta con cobertura WiFi gratuita?', state: hasFreeWiFi, setState: setHasFreeWiFi },
   ];
 
-  // Obtener altura de la pantalla
   const screenHeight = Dimensions.get('window').height;
 
   return (
-    <View style={[
-      styles.container, 
-      { 
-        paddingHorizontal: theme.spacing.lg,
-        paddingTop: theme.spacing.md,
-        // Establecer altura máxima para forzar scroll
-        maxHeight: screenHeight * 0.9, // 90% de altura de pantalla
-      }
-    ]}>
-      <Text style={[
-        styles.title, 
-        { 
-          color: theme.colors.primary,
-          marginBottom: theme.spacing.lg 
-        }
-      ]}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingHorizontal: theme.spacing.lg,
+          paddingTop: theme.spacing.md,
+          maxHeight: screenHeight * 0.9,
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.title,
+          {
+            color: theme.colors.primary,
+            marginBottom: theme.spacing.lg,
+          },
+        ]}
+      >
         Actualizar Características del Estacionamiento
       </Text>
 
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={true}
         contentContainerStyle={{
-          paddingBottom: theme.spacing.lg
+          paddingBottom: theme.spacing.lg,
         }}
       >
         {features.map((feature, index) => (
-          <FeatureToggle 
-            key={index}
-            label={feature.label} 
-            value={feature.state} 
-            onValueChange={feature.setState} 
-          />
+          <FeatureToggle key={index} label={feature.label} value={feature.state} onValueChange={feature.setState} />
         ))}
       </ScrollView>
 
-      <TouchableOpacity 
+      {successMessage !== '' && (
+        <Text
+          style={{
+            textAlign: 'center',
+            color: theme.colors.success,
+            marginBottom: theme.spacing.md,
+          }}
+        >
+          {successMessage}
+        </Text>
+      )}
+
+      <TouchableOpacity
         style={[
-          styles.navigationButton, 
-          { 
-            backgroundColor: theme.colors.primary,
-            marginTop: theme.spacing.lg,
-            width: '100%' 
-          }
+          styles.navigationButton,
+          {
+            backgroundColor: isLoading ? theme.colors.disabled : theme.colors.primary,
+            marginTop: theme.spacing,
+            width: '100%',
+          },
         ]}
         onPress={handleUpdate}
+        disabled={isLoading}
       >
-        <Text style={[
-          styles.navigationButtonText, 
-          { color: 'white' }
-        ]}>
+        <Text
+          style={[
+            styles.navigationButtonText,
+            {
+              color: 'white',
+            },
+          ]}
+        >
           Guardar Cambios
         </Text>
       </TouchableOpacity>
@@ -168,31 +187,35 @@ const UpdateCharacteristics = ({ parkingId }) => {
 
 const FeatureToggle = ({ label, value, onValueChange }) => {
   return (
-    <View style={[
-      styles.switchContainer, 
-      { 
-        borderBottomWidth: 1, 
-        borderBottomColor: theme.colors.border,
-        paddingVertical: theme.spacing.sm 
-      }
-    ]}>
-      <Text style={[
-        styles.label, 
-        { 
-          flex: 1, 
-          color: theme.colors.text,
-          flexWrap: 'wrap', // Permite que el texto se ajuste
-          marginRight: theme.spacing.sm // Añade un poco de margen
-        }
-      ]}>
+    <View
+      style={[
+        styles.switchContainer,
+        {
+          borderBottomWidth: 1,
+          borderBottomColor: theme.colors.border,
+          paddingVertical: theme.spacing.sm,
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.label,
+          {
+            flex: 1,
+            color: theme.colors.text,
+            flexWrap: 'wrap',
+            marginRight: theme.spacing.sm,
+          },
+        ]}
+      >
         {label}
       </Text>
-      <Switch 
-        value={value} 
+      <Switch
+        value={value}
         onValueChange={onValueChange}
         trackColor={{
           false: theme.colors.secondary,
-          true: theme.colors.primary
+          true: theme.colors.primary,
         }}
       />
     </View>

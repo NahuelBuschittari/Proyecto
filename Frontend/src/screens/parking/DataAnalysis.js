@@ -1,322 +1,442 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  ScrollView, 
-  TouchableOpacity, 
-  Dimensions, 
-  ActivityIndicator, 
-  Alert,
-  RefreshControl
-} from 'react-native';
-import { LineChart, PieChart, StackedBarChart } from 'react-native-chart-kit';
-import { styles } from '../../styles/SharedStyles';
-import { theme } from '../../styles/theme';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ActivityIndicator, ScrollView, Dimensions, StyleSheet, SafeAreaView } from 'react-native';
+import { BarChart, LineChart } from 'react-native-chart-kit';
+import { Picker } from '@react-native-picker/picker';
+import { Card } from '@rneui/themed';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../context/constants';
 
-
-
-const fetchDataService = async () => {
-  try {
-    const response = await fetch(`${API_URL}/data?user_id=${user.id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authTokens.access}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    throw new Error(`Error fetching data: ${error.message}`);
-  }
-};
-
 const DataAnalysis = () => {
-  // Constantes para la API
   const { user, authTokens } = useAuth();
-  const [selectedChart, setSelectedChart] = useState('price');
-  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [retryCount, setRetryCount] = useState(0);
-
-  const screenWidth = Dimensions.get('window').width - 20;
-  const screenHeight = Math.min(Dimensions.get('window').height * 0.45, 300);
-
-  const MAX_RETRIES = 3;
-  const RETRY_DELAY = 2000; // 2 segundos
-
-  const chartConfig = {
-    backgroundGradientFrom: theme.colors.background,
-    backgroundGradientTo: theme.colors.background,
-    decimalPlaces: 1,
-    color: (opacity = 1) => theme.colors.text,
-    labelColor: () => theme.colors.text,
-    propsForDots: {
-      r: '4',
-      strokeWidth: '2',
-      stroke: theme.colors.primary,
-    },
+  const [priceHistory, setPriceHistory] = useState([]);
+  const [occupancyData, setOccupancyData] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [selectedChart, setSelectedChart] = useState('price');
+  const [selectedOccupancy, setSelectedOccupancy] = useState('car_occupied');
+  const [selectedPriceType, setSelectedPriceType] = useState('fraccion');
+  const [averageRatings, setAverageRatings] = useState({
+    Seguridad: 0,
+    Limpieza: 0,
+    Iluminación: 0,
+    Accesibilidad: 0,
+    Servicio: 0
+  });
+  const priceTypes = {
+    fraccion: 'Fracción',
+    hora: 'Por Hora',
+    medio_dia: 'Medio Día',
+    dia_completo: 'Día Completo'
   };
 
-  const loadData = async () => {
+  const getPriceDataByType = (data, type) => {
+    return {
+      labels: data.map(item => item.fecha),
+      datasets: [
+        {
+          data: data.map(item => item[`auto_${type}`]),
+          color: () => vehicleColors.auto,
+        },
+        {
+          data: data.map(item => item[`camioneta_${type}`]),
+          color: () => vehicleColors.camioneta,
+        },
+        {
+          data: data.map(item => item[`moto_${type}`]),
+          color: () => vehicleColors.moto,
+        },
+        {
+          data: data.map(item => item[`bici_${type}`]),
+          color: () => vehicleColors.bici,
+        }
+      ],
+      legend: ['Auto', 'Camioneta', 'Moto', 'Bicicleta']
+    };
+  };
+
+
+  const screenWidth = Dimensions.get('window').width;
+
+  const loadAnalysisData = async () => {
     try {
       setLoading(true);
       setError(null);
 
+      const response = await fetch(`${API_URL}/parking/${user.id}/data`, {
+        headers: {
+          'Authorization': `Bearer ${authTokens.access}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-      if (!authTokens.access || !user.id) {
-        throw new Error('No se encontró el token de autenticación o el ID de usuario');
+      if (!response.ok) {
+        throw new Error('Error al cargar los datos de análisis');
       }
 
-      const result = await fetchDataService();
+      const data = await response.json();
 
-      if (!result || !result.priceEvolution || !result.capacityUtilization || 
-          !result.hourlyDemand || !result.vehicleTypeOccupancy) {
-        throw new Error('Datos incompletos o en formato incorrecto');
+      if (data.price_history && Array.isArray(data.price_history)) {
+        setPriceHistory(data.price_history);
       }
 
-      setData(result);
-    } catch (err) {
-      console.error('Error loading data:', err);
-
-      if (retryCount < MAX_RETRIES) {
-        setTimeout(() => {
-          setRetryCount(prev => prev + 1);
-        }, RETRY_DELAY);
-      } else {
-        setError('No se pudieron cargar los datos. Por favor, intente más tarde.');
-        Alert.alert(
-          'Error de conexión',
-          'No se pudieron cargar los datos. ¿Desea intentar nuevamente?',
-          [
-            { text: 'Cancelar', style: 'cancel' },
-            { text: 'Reintentar', onPress: () => setRetryCount(0) },
-          ]
-        );
+      if (data.space_history && Array.isArray(data.space_history)) {
+        setOccupancyData(data.space_history);
       }
+    } catch (error) {
+      console.error('Error:', error);
+      setError('No se pudieron cargar los datos de análisis');
+    }
+  };
+
+  const loadReviews = async () => {
+    try {
+      const response = await fetch(`${API_URL}/parking/${user.id}/reviews`, {
+        headers: {
+          'Authorization': `Bearer ${authTokens.access}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al cargar las reseñas');
+      }
+
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        setReviews(data);
+
+        const ratings = data.reduce((acc, review) => {
+          const keys = ['Seguridad', 'Limpieza', 'Iluminación', 'Accesibilidad', 'Servicio'];
+          keys.forEach(key => {
+            if (!acc[key]) acc[key] = [];
+            if (review[key] !== undefined) {
+              acc[key].push(review[key]);
+            }
+          });
+          return acc;
+        }, {});
+
+        const averages = Object.entries(ratings).reduce((acc, [key, values]) => {
+          acc[key] = values.length > 0
+            ? values.reduce((sum, val) => sum + val, 0) / values.length
+            : 0;
+          return acc;
+        }, {});
+
+        setAverageRatings(averages);
+      }
+    } catch (error) {
+      console.error('Error loading reviews:', error);
+      setError('Error al cargar las reseñas');
     } finally {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
-    loadData();
-  }, [retryCount]);
+    loadAnalysisData();
+    loadReviews();
+  }, []);
 
-  const renderChart = () => {
-    if (loading) {
-      return <ActivityIndicator size="large" color={theme.colors.primary} />;
-    }
-    if (error) {
-      return <Text style={{ color: 'red', textAlign: 'center' }}>{error}</Text>;
-    }
-
-    switch (selectedChart) {
-      case 'price':
-        return (
-          <LineChart
-            data={{
-              labels: data.priceEvolution.map((p) => p.week),
-              datasets: [
-                {
-                  data: data.priceEvolution.map((p) => p.price),
-                  color: () => theme.colors.primary,
-                  strokeWidth: 2,
-                },
-              ],
-            }}
-            width={screenWidth}
-            height={screenHeight}
-            yAxisLabel="$"
-            chartConfig={chartConfig}
-            bezier
-          />
-        );
-      case 'capacity':
-        return (
-          <View style={{ alignItems: 'center' }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 10 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 20 }}>
-                <View style={{ width: 20, height: 20, backgroundColor: theme.colors.secondary }} />
-                <Text style={{ marginLeft: 5 }}>Disponible</Text>
-              </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <View style={{ width: 20, height: 20, backgroundColor: theme.colors.primary }} />
-                <Text style={{ marginLeft: 5 }}>Ocupado</Text>
-              </View>
-            </View>
-            <StackedBarChart
-              data={{
-                labels: data.capacityUtilization.map((c) => c.month),
-                legend: [],
-                data: data.capacityUtilization.map((c) => [c.available, c.occupied]),
-                barColors: [theme.colors.secondary, theme.colors.primary],
-              }}
-              width={screenWidth}
-              height={screenHeight}
-              chartConfig={{
-                ...chartConfig,
-                legendPosition: 'bottom',
-                barPercentage: 0.5,
-                decimalPlaces: 0,
-              }}
-              hideLegend={true}
-              fromZero
-            />
-          </View>
-        );
-      case 'hourly':
-        return (
-          <LineChart
-            data={{
-              labels: data.hourlyDemand.map((h) => h.hour),
-              datasets: [
-                {
-                  data: data.hourlyDemand.map((h) => h.vehicles),
-                  color: () => theme.colors.primary,
-                  strokeWidth: 2,
-                },
-              ],
-            }}
-            width={screenWidth}
-            height={screenHeight}
-            yAxisLabel=""
-            yAxisSuffix=" veh"
-            chartConfig={chartConfig}
-            bezier
-          />
-        );
-      case 'vehicle-types':
-        return (
-          <PieChart
-            data={data.vehicleTypeOccupancy.map((v) => ({
-              name: v.type,
-              population: v.percentage,
-              color: v.color,
-              legendFontColor: theme.colors.text,
-              legendFontSize: 12,
-            }))}
-            width={screenWidth}
-            height={screenHeight * 0.7}
-            chartConfig={chartConfig}
-            accessor="population"
-            backgroundColor="transparent"
-            paddingLeft="15"
-            center={[0, 0]}
-            absolute
-          />
-        );
-    }
+  const chartConfig = {
+    backgroundColor: '#ffffff',
+    backgroundGradientFrom: '#ffffff',
+    backgroundGradientTo: '#ffffff',
+    decimalPlaces: 2,
+    color: (opacity = 1) => `rgba(57, 76, 116, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+    style: {
+      borderRadius: 16,
+    },
+    propsForLabels: {
+      fontSize: 12,
+    },
   };
 
-  const chartOptions = [
-    { key: 'price', label: 'Evolución de Precios' },
-    { key: 'capacity', label: 'Uso de Capacidad' },
-    { key: 'hourly', label: 'Demanda Horaria' },
-    { key: 'vehicle-types', label: 'Tipos de Vehículos' },
-  ];
+  const vehicleColors = {
+    auto: '#4CAF50',      // Verde
+    camioneta: '#2196F3', // Azul
+    moto: '#FFC107',      // Amarillo
+    bici: '#F44336'       // Rojo
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#394c74" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <ScrollView
-      contentContainerStyle={[
-        styles.fullScreenContainer,
-        {
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingHorizontal: 10,
-          paddingBottom: 20,
-        },
-      ]}
-      refreshControl={
-        <RefreshControl
-          refreshing={loading}
-          onRefresh={loadData}
-          colors={[theme.colors.primary]}
-        />
-      }
-    >
-      <View
-        style={[
-          styles.container,
-          {
-            width: '100%',
-            alignItems: 'center',
-            paddingTop: 20,
-          },
-        ]}
+    <SafeAreaView style={styles.container}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={true}
       >
-        <Text
-          style={[
-            styles.title,
-            {
-              textAlign: 'center',
-              marginBottom: 20,
-            },
-          ]}
-        >
-          Análisis de Datos
-        </Text>
-        <ScrollView
-          horizontal
-          contentContainerStyle={{
-            flexWrap: 'wrap',
-            flexDirection: 'row',
-            justifyContent: 'center',
-            marginBottom: 20,
-          }}
-        >
-          {chartOptions.map((option) => (
-            <TouchableOpacity
-              key={option.key}
-              onPress={() => setSelectedChart(option.key)}
-              style={[
-                styles.navigationButton,
-                {
-                  margin: 5,
-                  backgroundColor:
-                    selectedChart === option.key
-                      ? theme.colors.primary
-                      : theme.colors.secondary,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                },
-              ]}
+        <Card containerStyle={styles.card}>
+          <Text style={styles.cardTitle}>Análisis de Datos</Text>
+          
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={selectedChart}
+              onValueChange={(itemValue) => setSelectedChart(itemValue)}
+              style={styles.picker}
             >
-              <Text
-                style={[
-                  styles.navigationButtonText,
-                  {
-                    color: selectedChart === option.key ? 'white' : theme.colors.text,
-                    textAlign: 'center',
-                  },
-                ]}
+              <Picker.Item label="Historial de Precios" value="price" />
+              <Picker.Item label="Ocupación" value="occupancy" />
+              <Picker.Item label="Calificaciones" value="ratings" />
+            </Picker>
+          </View>
+
+          {selectedChart === 'price' && (
+            <View style={styles.chartWrapper}>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={selectedPriceType}
+                  onValueChange={(itemValue) => setSelectedPriceType(itemValue)}
+                  style={styles.picker}
+                >
+                  {Object.entries(priceTypes).map(([value, label]) => (
+                    <Picker.Item key={value} label={label} value={value} />
+                  ))}
+                </Picker>
+              </View>
+
+              {priceHistory.length > 0 ? (
+                <View style={styles.chartContainer}>
+                  <LineChart
+                    data={getPriceDataByType(priceHistory, selectedPriceType)}
+                    width={screenWidth - 40}
+                    height={220}
+                    chartConfig={chartConfig}
+                    bezier
+                    style={styles.chart}
+                    yAxisLabel="$"
+                    legend
+                  />
+                </View>
+              ) : (
+                <Text style={styles.noDataText}>No hay datos de precios disponibles</Text>
+              )}
+            </View>
+          )}
+
+          {selectedChart === 'occupancy' && (
+            <View style={styles.chartWrapper}>
+              <Picker
+                selectedValue={selectedOccupancy}
+                onValueChange={(itemValue) => setSelectedOccupancy(itemValue)}
+                style={styles.picker}
               >
-                {option.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-        <View
-          style={{
-            width: '100%',
-            height: screenHeight,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {renderChart()}
+                <Picker.Item label="Ocupación de Autos" value="car_occupied" />
+                <Picker.Item label="Ocupación de Motos" value="moto_occupied" />
+                <Picker.Item label="Ocupación de Bicicletas" value="bike_occupied" />
+              </Picker>
+
+              {occupancyData.length > 0 ? (
+                <View style={styles.chartContainer}>
+                  <LineChart
+                    data={{
+                      labels: occupancyData.map(item => item.fecha),
+                      datasets: [{
+                        data: occupancyData.map(item => item[selectedOccupancy]),
+                        color: () => '#394c74',
+                      }],
+                    }}
+                    width={screenWidth - 40}
+                    height={220}
+                    chartConfig={chartConfig}
+                    bezier
+                    style={styles.chart}
+                    yAxisLabel="%"
+                  />
+                </View>
+              ) : (
+                <Text style={styles.noDataText}>No hay datos de ocupación disponibles</Text>
+              )}
+            </View>
+          )}
+
+          {selectedChart === 'ratings' && (
+            <View style={styles.chartWrapper}>
+              {Object.keys(averageRatings).length > 0 ? (
+                <View style={styles.chartContainer}>
+                  <BarChart
+                    data={{
+                      labels: Object.keys(averageRatings),
+                      datasets: [{
+                        data: Object.values(averageRatings)
+                      }]
+                    }}
+                    width={screenWidth - 40}
+                    height={220}
+                    chartConfig={{
+                      ...chartConfig,
+                      color: (opacity = 1) => `rgba(255, 99, 132, ${opacity})`
+                    }}
+                    style={styles.chart}
+                    showValuesOnTopOfBars
+                    yAxisLabel=""
+                    yAxisSuffix=""
+                  />
+                </View>
+              ) : (
+                <Text style={styles.noDataText}>No hay datos de calificaciones disponibles</Text>
+              )}
+            </View>
+          )}
+        </Card>
+
+<Card containerStyle={styles.card}>
+  <Text style={styles.cardTitle}>Últimas Reseñas</Text>
+  <ScrollView 
+    style={styles.reviewsContainer}
+    nestedScrollEnabled={true}
+  >
+    {reviews.length > 0 ? (
+      reviews.map((review, index) => (
+        <View key={index} style={styles.reviewCard}>
+          <Text style={styles.reviewName}>
+            {review.Usuario || 'Usuario Anónimo'}
+          </Text>
+          <Text style={styles.reviewComment}>
+            {review.Comentario || 'Sin comentario'}
+          </Text>
+          <Text style={styles.reviewRating}>
+            Calificación general: {(
+              (Number(review.Seguridad || 0) +
+               Number(review.Limpieza || 0) +
+               Number(review.Iluminación || 0) +
+               Number(review.Accesibilidad || 0) +
+               Number(review.Servicio || 0)) / 5
+            ).toFixed(1)}/5
+          </Text>
         </View>
-      </View>
-    </ScrollView>
-  );
+      ))
+    ) : (
+      <Text style={styles.noDataText}>No hay reseñas disponibles</Text>
+    )}
+  </ScrollView>
+</Card>
+</ScrollView>
+</SafeAreaView>
+);
 };
+
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F6F8',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 40, // Aumentado el padding inferior
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#F44336',
+    textAlign: 'center',
+  },
+  card: {
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    padding: 16,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#394c74',
+    marginBottom: 16,
+  },
+  pickerContainer: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    marginBottom: 16,
+    zIndex: 1,
+  },
+  picker: {
+    height: 50,
+    width: '100%',
+  },
+  chartWrapper: {
+    marginTop: 8,
+  },
+  chartContainer: {
+    marginTop: 16,
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 8,
+  },
+  chart: {
+    marginVertical: 8,
+    borderRadius: 16,
+  },
+  noDataText: {
+    textAlign: 'center',
+    color: '#666666',
+    fontStyle: 'italic',
+    marginVertical: 20,
+  },
+  reviewsContainer: {
+    maxHeight: 400, // Aumentado de 300 a 400
+    flexGrow: 0,
+  },
+  reviewCard: {
+    backgroundColor: '#F8F9FA',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  reviewName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#394c74',
+    marginBottom: 8,
+  },
+  reviewComment: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 8,
+    fontStyle: 'italic',
+  },
+  reviewRating: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#394c74',
+  },
+});
 
 export default DataAnalysis;
