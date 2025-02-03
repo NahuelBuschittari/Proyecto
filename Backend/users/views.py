@@ -387,7 +387,7 @@ def GetParkingReviews(request, parking_id):
                 'Seguridad': review.security,
                 'Limpieza': review.cleanliness,
                 'Iluminación': review.lighting,
-                'Accesibilidad': review.accessibility,
+                'Acces': review.accessibility,
                 'Servicio': review.service
             })
 
