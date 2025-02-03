@@ -5,11 +5,11 @@ import { theme } from '../../styles/theme';
 
 const PaymentScreen = () => {
   const paymentInfo = {
-    bankName: 'Banco Nacional',
-    accountHolder: 'Estacionamiento S.A.',
+    bankName: 'Banco Nación',
+    accountHolder: 'EstacionApp',
     accountNumber: '123456789',
     cbu: '0123456789012345678901',
-    alias: 'PARKING.PAGO.SA',
+    alias: 'EstacionApp.Gestion.NFC',
     currency: 'Pesos Argentinos',
   };
 

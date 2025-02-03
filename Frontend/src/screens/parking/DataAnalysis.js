@@ -20,7 +20,7 @@ const DataAnalysis = () => {
     Seguridad: 0,
     Limpieza: 0,
     Iluminación: 0,
-    Accesibilidad: 0,
+    Acces: 0,
     Servicio: 0
   });
   const priceTypes = {
@@ -54,7 +54,6 @@ const DataAnalysis = () => {
       legend: ['Auto', 'Camioneta', 'Moto', 'Bicicleta']
     };
   };
-
 
   const screenWidth = Dimensions.get('window').width;
 
@@ -107,7 +106,7 @@ const DataAnalysis = () => {
         setReviews(data);
 
         const ratings = data.reduce((acc, review) => {
-          const keys = ['Seguridad', 'Limpieza', 'Iluminación', 'Accesibilidad', 'Servicio'];
+          const keys = ['Seguridad', 'Limpieza', 'Iluminación', 'Acces', 'Servicio'];
           keys.forEach(key => {
             if (!acc[key]) acc[key] = [];
             if (review[key] !== undefined) {
@@ -160,6 +159,17 @@ const DataAnalysis = () => {
     moto: '#FFC107',      // Amarillo
     bici: '#F44336'       // Rojo
   };
+
+  const filteredReviews = reviews.filter((review) => {
+    const averageRating = (
+      (Number(review.Seguridad || 0) +
+        Number(review.Limpieza || 0) +
+        Number(review.Iluminación || 0) +
+        Number(review.Acces || 0) +
+        Number(review.Servicio || 0)) / 5
+    ).toFixed(1);
+    return averageRating > 0;
+  });
 
   if (loading) {
     return (
@@ -262,7 +272,7 @@ const DataAnalysis = () => {
                     chartConfig={chartConfig}
                     bezier
                     style={styles.chart}
-                    yAxisLabel="%"
+                    yAxisLabel=" "
                   />
                 </View>
               ) : (
@@ -279,19 +289,26 @@ const DataAnalysis = () => {
                     data={{
                       labels: Object.keys(averageRatings),
                       datasets: [{
-                        data: Object.values(averageRatings)
+                        data: Object.values(averageRatings).map(rating => parseFloat(rating.toFixed(1)))
                       }]
                     }}
                     width={screenWidth - 40}
                     height={220}
                     chartConfig={{
                       ...chartConfig,
-                      color: (opacity = 1) => `rgba(255, 99, 132, ${opacity})`
+                      color: (opacity = 1) => `rgba(255, 99, 132, ${opacity})`,
+                      labelSize: 8,
+                      verticalLabelRotation: 30,
+                      horizontalLabelRotation: 30,
+                      xAxisInterval: 1
                     }}
                     style={styles.chart}
                     showValuesOnTopOfBars
                     yAxisLabel=""
                     yAxisSuffix=""
+                    fromZero={true}
+                    withHorizontalLabels={true}
+                    withVerticalLabels={true} 
                   />
                 </View>
               ) : (
@@ -300,43 +317,10 @@ const DataAnalysis = () => {
             </View>
           )}
         </Card>
-
-<Card containerStyle={styles.card}>
-  <Text style={styles.cardTitle}>Últimas Reseñas</Text>
-  <ScrollView 
-    style={styles.reviewsContainer}
-    nestedScrollEnabled={true}
-  >
-    {reviews.length > 0 ? (
-      reviews.map((review, index) => (
-        <View key={index} style={styles.reviewCard}>
-          <Text style={styles.reviewName}>
-            {review.Usuario || 'Usuario Anónimo'}
-          </Text>
-          <Text style={styles.reviewComment}>
-            {review.Comentario || 'Sin comentario'}
-          </Text>
-          <Text style={styles.reviewRating}>
-            Calificación general: {(
-              (Number(review.Seguridad || 0) +
-               Number(review.Limpieza || 0) +
-               Number(review.Iluminación || 0) +
-               Number(review.Accesibilidad || 0) +
-               Number(review.Servicio || 0)) / 5
-            ).toFixed(1)}/5
-          </Text>
-        </View>
-      ))
-    ) : (
-      <Text style={styles.noDataText}>No hay reseñas disponibles</Text>
-    )}
-  </ScrollView>
-</Card>
-</ScrollView>
-</SafeAreaView>
-);
+      </ScrollView>
+    </SafeAreaView>
+  );
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -345,7 +329,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 40, // Aumentado el padding inferior
+    paddingBottom: 80, // Increased bottom padding for better scrolling
   },
   loadingContainer: {
     flex: 1,
@@ -411,14 +395,19 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   reviewsContainer: {
-    maxHeight: 400, // Aumentado de 300 a 400
-    flexGrow: 0,
+    maxHeight: 400, 
+    width: '100%',
+  },
+  reviewsContentContainer: {
+    flexGrow: 1,
+    paddingBottom: 20, // Add some extra padding at the bottom
   },
   reviewCard: {
     backgroundColor: '#F8F9FA',
     padding: 16,
     borderRadius: 8,
     marginBottom: 12,
+    width: '100%',
   },
   reviewName: {
     fontSize: 16,

@@ -150,8 +150,8 @@ const ParkingProfile = () => {
                 <Text style={styles.ratingValue}>{review.Iluminación}/5</Text>
               </View>
               <View style={styles.ratingItem}>
-                <Text style={styles.ratingLabel}>Accesibilidad</Text>
-                <Text style={styles.ratingValue}>{review.Accesibilidad}/5</Text>
+                <Text style={styles.ratingLabel}>Acces</Text>
+                <Text style={styles.ratingValue}>{review.Acces}/5</Text>
               </View>
               <View style={styles.ratingItem}>
                 <Text style={styles.ratingLabel}>Servicio</Text>
