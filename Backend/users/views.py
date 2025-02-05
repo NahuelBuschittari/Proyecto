@@ -451,3 +451,37 @@ def UpdateReviewView(request):
         return Response({"error": "Review no encontrada"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def GetDriverProfile(request, driver_id):
+    try:
+        driver = Driver.objects.get(user_id=driver_id)
+        data = {
+            'nombre': driver.nombre,
+            'apellido': driver.apellido,
+            'fecha_nacimiento': driver.fecha_nacimiento,
+            'email': driver.user.email
+        }
+        return Response(data)
+    except Driver.DoesNotExist:
+        return Response(
+            {"error": "Conductor no encontrado"}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+
+@api_view(['PUT'])
+def UpdateDriverProfile(request, driver_id):
+    try:
+        driver = Driver.objects.get(user_id=driver_id)
+        driver.nombre = request.data.get('nombre', driver.nombre)
+        driver.apellido = request.data.get('apellido', driver.apellido)
+        driver.fecha_nacimiento = request.data.get('fecha_nacimiento', driver.fecha_nacimiento)
+        driver.save()
+        return Response({"message": "Perfil actualizado correctamente"})
+    except Driver.DoesNotExist:
+        return Response(
+            {"error": "Conductor no encontrado"}, 
+            status=status.HTTP_404_NOT_FOUND
+        )

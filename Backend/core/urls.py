@@ -1,7 +1,7 @@
 from django.urls import path, include, re_path
 from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
-from users.views import CustomUserViewSet, GetParkingCharacteristics,NavigationGetParkings, CreateReviewView, GetOpenReview, DiscardReview, UpdateReviewView
+from users.views import CustomUserViewSet, GetParkingCharacteristics,NavigationGetParkings, CreateReviewView, GetOpenReview, DiscardReview, ActivationRedirectView, PasswordResetConfirmView, UpdateReviewView, GetDriverProfile, UpdateDriverProfile
 
 
 router = DefaultRouter()
@@ -22,4 +22,6 @@ urlpatterns = [
     path('reviews/getOpen', GetOpenReview),
     path('reviews/<int:review_id>/discard', DiscardReview),
     path('reviews/update', UpdateReviewView),
+    path('driver/<int:driver_id>/profile', GetDriverProfile),
+    path('driver/<int:driver_id>/profile/update', UpdateDriverProfile),
 ]
