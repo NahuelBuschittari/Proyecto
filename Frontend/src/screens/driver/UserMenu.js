@@ -17,8 +17,6 @@ const DriverMenu = ({ navigation }) => {
   const handleLogout = async () => {
     try {
       await logout();
-      // No necesitas hacer navigate ya que el AuthContext se encargará de mostrar 
-      // la pantalla de login cuando user sea null
     } catch (error) {
       Alert.alert(
         'Error',
@@ -64,36 +62,38 @@ const DriverMenu = ({ navigation }) => {
     }
   };
 
-  const showReviewAlert = (review) => {
-    setCurrentReview(review);
-    setModalVisible(true);
-  };
-
   // const showReviewAlert = (review) => {
-  //   setShowingReviewAlert(true);
-  //   Alert.alert(
-  //     `¿Estacionaste en ${review.parking.nombre}?`,
-  //     "Deja una reseña para ayudar a otros usuarios a encontrar el mejor lugar para estacionar.",
-  //     [
-  //       {
-  //         text: "No",
-  //         onPress: () => {
-  //           setShowingReviewAlert(false);
-  //           handleNoReview(review.id);
-  //         },
-  //         style: "cancel"
-  //       },
-  //       {
-  //         text: "Realizar Review",
-  //         onPress: () => {
-  //           setShowingReviewAlert(false);
-  //           navigation.navigate('Review', { reviewId: review.id });
-  //         }
-  //       }
-  //     ],
-  //     { cancelable: false }
-  //   );
+  //   setCurrentReview(review);
+  //   setModalVisible(true);
   // };
+
+  
+
+  const showReviewAlert = (review) => {
+    setShowingReviewAlert(true);
+    Alert.alert(
+      `¿Estacionaste en ${review.parking.nombre}?`,
+      "Deja una reseña para ayudar a otros usuarios a encontrar el mejor lugar para estacionar.",
+      [
+        {
+          text: "No",
+          onPress: () => {
+            setShowingReviewAlert(false);
+            handleNoReview(review.id);
+          },
+          style: "cancel"
+        },
+        {
+          text: "Realizar Review",
+          onPress: () => {
+            setShowingReviewAlert(false);
+            navigation.navigate('Review', { reviewId: review.id });
+          }
+        }
+      ],
+      { cancelable: false }
+    );
+  };
   const MenuButton = ({ title, onPress }) => (
     <TouchableOpacity
       style={[styles.navigationButton, {
@@ -123,7 +123,7 @@ const DriverMenu = ({ navigation }) => {
   return (
     <View style={[styles.container, { justifyContent: 'flex-start' }]}>
       <Text style={styles.title}>Menú Principal</Text>
-
+{/* Para probar desde la pc
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
@@ -141,7 +141,7 @@ const DriverMenu = ({ navigation }) => {
             }} />
           </View>
         </View>
-      </Modal>
+      </Modal> */}
 
       <ScrollView
         contentContainerStyle={{
