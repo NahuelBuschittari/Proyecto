@@ -4,6 +4,8 @@ import { styles } from "../../styles/SharedStyles";
 import CustomButton from "../../components/CustomButton";
 import { theme } from "../../styles/theme";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { useAuth } from '../../context/AuthContext';
+import { API_URL } from '../../context/constants';
 
 
 const RatingStars = ({ rating, setRating }) => {
@@ -29,7 +31,7 @@ const CharacteristicRating = ({ title, rating, setRating }) => (
     </View>
 );
 
-const Review = ({ navigation }) => {
+const Review = ({ navigation, route }) => {
     const [ratings, setRatings] = useState({
         security: 0,
         cleanliness: 0,
@@ -39,11 +41,45 @@ const Review = ({ navigation }) => {
     });
     const [comment, setComment] = useState("");
 
-    const handleSubmit = () => {
-        console.log("Ratings:", ratings);
-        console.log("Comment:", comment);
-        navigation.goBack();
+    const { user, authTokens } = useAuth();
+    const { reviewId } = route.params;
+
+    const handleSubmit = async () => {
+        try {
+            const token = authTokens.access;
+            const reviewData = {
+                id_review: reviewId,
+                security: ratings.security,
+                cleanliness: ratings.cleanliness,
+                lighting: ratings.lighting,
+                accessibility: ratings.accessibility,
+                service: ratings.service,
+                comment: comment,
+            };
+
+            const response = await fetch(`${API_URL}/reviews/update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(reviewData),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Error al actualizar la reseña');
+            }
+
+            console.log('Review actualizada correctamente:', data.message);
+            navigation.goBack();
+        } catch (error) {
+            console.error('Error en la actualización:', error.message);
+        }
     };
+
+
 
     return (
         <View style={[styles.container, { justifyContent: "flex-start" }]}>

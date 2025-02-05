@@ -11,6 +11,7 @@ from djoser.conf import settings
 from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404, render
 from django.http import JsonResponse
+from rest_framework.exceptions import PermissionDenied
 
 class CustomUserViewSet(UserViewSet):
 
@@ -430,3 +431,23 @@ class PasswordResetConfirmView(View):
 
         except requests.RequestException:
             return render(request, 'password_reset_form.html', {'uid': uid, 'token': token, 'error': 'Error en la conexión con el servidor.'})
+
+@api_view(['POST'])
+def UpdateReviewView(request):
+    try:
+        review_id = request.data.get('id_review')
+        review = Review.objects.get(id=review_id)
+        review.security = request.data.get('security', review.security)
+        review.cleanliness = request.data.get('cleanliness', review.cleanliness)
+        review.lighting = request.data.get('lighting', review.lighting)
+        review.accessibility = request.data.get('accessibility', review.accessibility)
+        review.service = request.data.get('service', review.service)
+        review.comment = request.data.get('comment', review.comment)
+        review.isClosed = True  
+        review.save()
+        
+        return Response({"message": "Review actualizada correctamente"})
+    except Review.DoesNotExist:
+        return Response({"error": "Review no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
