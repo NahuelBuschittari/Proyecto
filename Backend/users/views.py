@@ -1,9 +1,11 @@
 import os
+from math import sin, cos, sqrt, atan2, radians
 from djoser.views import UserViewSet
 from rest_framework import status
 import requests
 from rest_framework.response import Response
 from django.db import transaction
+from django.db.models import Q
 from django.views import View
 from .models import User, Driver, Parking, Prices, Schedule, Features, Review
 from datetime import datetime
@@ -11,6 +13,10 @@ from djoser.conf import settings
 from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404, render
 from django.http import JsonResponse
+from rest_framework.views import APIView
+from django.core.exceptions import ValidationError
+from rest_framework.exceptions import ParseError
+from .serializers import ParkingSerializer
 
 class CustomUserViewSet(UserViewSet):
 
@@ -169,121 +175,244 @@ def NavigationGetParkings(request):
     filtered by vehicle type and current day
     """
     try:
-        # Get query parameters
-        vehicle_type = request.query_params.get('vehicle_type')  # Tipo de vehículo
-        current_day = request.query_params.get('day')  # Día que viene del frontend
-        print("vehicle_type", vehicle_type)
-        print("current_day", current_day)
-        hora_actual = datetime.now().time()
-        print("Hora actual:", hora_actual)
-        # Mapeo de abreviaciones a nombres completos de días
-        day_mapping = {
-            'L': 'lunes',
-            'Ma': 'martes',
-            'Mi': 'miercoles',
-            'J': 'jueves',
-            'V': 'viernes',
-            'S': 'sabado',
-            'D': 'domingo',
-            'F': 'feriados'  # Agregamos el caso de feriados
+        queryset = Parking.objects.select_related('features', 'schedule', 'prices').all()
+        # Validación del día
+        current_day = request.query_params.get('day')
+        valid_days = {'L', 'Ma', 'Mi', 'J', 'V', 'S', 'D', 'F'}
+        if current_day and current_day not in valid_days:
+            raise ParseError(f"Invalid day code: {current_day}")
+        
+        # Validación y filtrado por capacidad
+        vehicle_type = request.query_params.get('vehicle_type', 'car-side')
+        if vehicle_type not in ['car-side', 'truck-pickup', 'motorcycle', 'bicycle']:
+            raise ParseError(f"Invalid vehicle_type: {vehicle_type}")
+
+        capacity_map = {
+            'car-side': 'carCapacity',
+            'truck-pickup': 'carCapacity',
+            'motorcycle': 'motoCapacity',
+            'bicycle': 'bikeCapacity'
         }
-        
-        # Convertir la abreviación a nombre completo
-        schedule_day = day_mapping[current_day]
-        print("schedule_day",schedule_day)
-        # Get all parkings with their related data using select_related
-        parkings = Parking.objects.select_related('features', 'schedule', 'prices').all()
-        
-        available_parkings = []
-        
-        for parking in parkings:
-            # Check capacity based on vehicle type
-            capacity = 0
-            if vehicle_type in ['car-side', 'truck-pickup']:
-                capacity = parking.carCapacity
-            elif vehicle_type == 'motorcycle':
-                capacity = parking.motoCapacity
-            elif vehicle_type == 'bicycle':
-                capacity = parking.bikeCapacity
+        capacity_field = capacity_map[vehicle_type]
 
-            print("capacity",capacity)
-            # Only include parking if there's available capacity
-            if capacity > 0:
-                # Get opening and closing times for current day
-                open_time = getattr(parking.schedule, f'{schedule_day}_open')
-                close_time = getattr(parking.schedule, f'{schedule_day}_close')
-                if open_time<hora_actual and close_time>hora_actual:
-                    parking_data = {
-                        'userData': {
-                            'id': parking.user.id,
-                            'name': parking.nombre,
-                            'address': {
-                                'latitude': float(parking.latitude),
-                                'longitude': float(parking.longitude),
-                                'street': parking.calle,
-                                'number': parking.numero,
-                                'city': parking.ciudad
-                            }
-                        },
-                        'capacities': {
-                            'carCapacity': parking.carCapacity,
-                            'motoCapacity': parking.motoCapacity,
-                            'bikeCapacity': parking.bikeCapacity
-                        },
-                        'schedule': {
-                                'openTime': open_time.strftime('%H:%M'),
-                                'closeTime': close_time.strftime('%H:%M')
-                        },
-                        'prices': {
-                            'Auto': {
-                                'fraccion': float(parking.prices.auto_fraccion),
-                                'hora': float(parking.prices.auto_hora),
-                                'medio dia': float(parking.prices.auto_medio_dia),
-                                'dia completo': float(parking.prices.auto_dia_completo)
-                            },
-                            'Camioneta': {
-                                'fraccion': float(parking.prices.camioneta_fraccion),
-                                'hora': float(parking.prices.camioneta_hora),
-                                'medio dia': float(parking.prices.camioneta_medio_dia),
-                                'dia completo': float(parking.prices.camioneta_dia_completo)
-                            },
-                            'Moto': {
-                                'fraccion': float(parking.prices.moto_fraccion),
-                                'hora': float(parking.prices.moto_hora),
-                                'medio dia': float(parking.prices.moto_medio_dia),
-                                'dia completo': float(parking.prices.moto_dia_completo)
-                            },
-                            'Bicicleta': {
-                                'fraccion': float(parking.prices.bici_fraccion),
-                                'hora': float(parking.prices.bici_hora),
-                                'medio dia': float(parking.prices.bici_medio_dia),
-                                'dia completo': float(parking.prices.bici_dia_completo)
-                            }
-                        },
-                        'features': {
-                            'isCovered': parking.features.isCovered,
-                            'has24hSecurity': parking.features.has24hSecurity,
-                            'hasCCTV': parking.features.hasCCTV,
-                            'hasValetService': parking.features.hasValetService,
-                            'hasDisabledParking': parking.features.hasDisabledParking,
-                            'hasEVChargers': parking.features.hasEVChargers,
-                            'hasAutoPayment': parking.features.hasAutoPayment,
-                            'hasCardAccess': parking.features.hasCardAccess,
-                            'hasCarWash': parking.features.hasCarWash,
-                            'hasRestrooms': parking.features.hasRestrooms,
-                            'hasBreakdownAssistance': parking.features.hasBreakdownAssistance,
-                            'hasFreeWiFi': parking.features.hasFreeWiFi
-                        }
-                    }
-                    available_parkings.append(parking_data)
+        # Filtrar por capacidad
+        queryset = queryset.filter(**{f'{capacity_field}__gt': 0})
 
-        return Response(available_parkings)
+        if current_day:
+            day_map = {
+                'L': 'lunes',
+                'Ma': 'martes',
+                'Mi': 'miercoles',
+                'J': 'jueves',
+                'V': 'viernes',
+                'S': 'sabado',
+                'D': 'domingo',
+                'F': 'feriados'
+            }
+            schedule_day = day_map[current_day]
+            current_time = datetime.now().time()
+            queryset = queryset.filter(
+                Q(**{f'schedule__{schedule_day}_open__lte': current_time}) &
+                Q(**{f'schedule__{schedule_day}_close__gte': current_time})
+            )
+
+       # Serialización
+        try:
+            serialized_parkings = ParkingSerializer(queryset, many=True).data
+            print("serialized_parkings",serialized_parkings)
+            return Response(serialized_parkings)
+        except Exception as e:
+            raise ParseError(f"Error serializing parking data: {str(e)}")
+
+    except ParseError as e:
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    except ValidationError as e:
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    except Exception as e:
+        return Response(
+            {"error": "An unexpected error occurred", "detail": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
     except Exception as e:
         return Response(
             {"error": f"Error al obtener los estacionamientos: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+class ParkingFinderGetParkings(APIView):
+    def calculate_distance(self, lat1, lon1, lat2, lon2):
+        R = 6371000  # Earth's radius in meters
+        lat1, lon1, lat2, lon2 = map(radians, [float(lat1), float(lon1), float(lat2), float(lon2)])
+        
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        
+        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1-a))
+        
+        return round((R * c) / 100)
+    
+    def post(self, request):
+        try:
+            # Feature filters
+            feature_filters = {}
+            valid_features = [
+                'isCovered', 'has24hSecurity', 'hasEVChargers', 'hasCCTV',
+                'hasValetService', 'hasDisabledParking', 'hasAutoPayment',
+                'hasCardAccess', 'hasCarWash', 'hasRestrooms',
+                'hasBreakdownAssistance', 'hasFreeWiFi'
+            ]
+
+            for feature in valid_features:
+                value = request.data.get(feature)
+                if isinstance(value, bool):
+                    feature_filters[feature] = value
+                elif value is not None:
+                    raise ParseError(f"Invalid boolean value for {feature}")
+
+            # Validación y filtrado por capacidad
+            vehicle_type = request.data.get('vehicle_type', 'Auto')
+            if vehicle_type not in ['Auto', 'Camioneta', 'Moto', 'Bicicleta']:
+                raise ParseError(f"Invalid vehicle_type: {vehicle_type}")
+
+            capacity_map = {
+                'Auto': 'carCapacity',
+                'Camioneta': 'carCapacity',
+                'Moto': 'motoCapacity',
+                'Bicicleta': 'bikeCapacity'
+            }
+            capacity_field = capacity_map[vehicle_type]
+
+            # Validación del día
+            current_day = request.data.get('current_day')
+            valid_days = {'L', 'Ma', 'Mi', 'J', 'V', 'S', 'D', 'F'}
+            if current_day and current_day not in valid_days:
+                raise ParseError(f"Invalid day code: {current_day}")
+
+            # Time-related filters
+            open_now = request.data.get('open_now', '') == 'true'
+            selected_start_time = request.data.get('selected_start_time')
+            selected_end_time = request.data.get('selected_end_time')
+
+            # Validación de horarios
+            if selected_start_time and selected_end_time:
+                try:
+                    datetime.strptime(selected_start_time, '%H:%M')
+                    datetime.strptime(selected_end_time, '%H:%M')
+                except ValueError:
+                    raise ParseError("Invalid time format. Use HH:MM format")
+                
+            max_price = request.data.get('max_price')
+            max_price = float(max_price) if max_price else None
+            price_type = request.data.get('price_type', 'hora')
+
+            # Base query
+            queryset = Parking.objects.select_related('features', 'schedule', 'prices').all()
+
+            # Aplicar filtros de características
+            for feature, value in feature_filters.items():
+                if value is True:
+                    queryset = queryset.filter(**{f'features__{feature}': True})
+
+            # Filtrar por capacidad
+            queryset = queryset.filter(**{f'{capacity_field}__gt': 0})
+
+            # Filtrado por horario
+            if current_day:
+                day_map = {
+                    'L': 'lunes',
+                    'Ma': 'martes',
+                    'Mi': 'miercoles',
+                    'J': 'jueves',
+                    'V': 'viernes',
+                    'S': 'sabado',
+                    'D': 'domingo',
+                    'F': 'feriados'
+                }
+                schedule_day = day_map[current_day]
+
+                if open_now:
+                    current_time = datetime.now().time()
+                    queryset = queryset.filter(
+                        Q(**{f'schedule__{schedule_day}_open__lte': current_time}) &
+                        Q(**{f'schedule__{schedule_day}_close__gte': current_time})
+                    )
+                elif selected_start_time and selected_end_time:
+                    queryset = queryset.filter(
+                        Q(**{f'schedule__{schedule_day}_open__lte': selected_start_time}) &
+                        Q(**{f'schedule__{schedule_day}_close__gte': selected_end_time})
+                    )
+
+            # Filtrado por precio
+            if max_price is not None:
+                price_field_map = {
+                    'Auto': f'auto_{price_type}',
+                    'Camioneta': f'camioneta_{price_type}',
+                    'Moto': f'moto_{price_type}',
+                    'Bicicleta': f'bici_{price_type}'
+                }
+                price_field = price_field_map[vehicle_type]
+                queryset = queryset.filter(**{f'prices__{price_field}__lte': max_price})
+            # Filtrar por distancia
+            origin_lat = request.data.get('latitude')
+            origin_lon = request.data.get('longitude')
+            max_distance = request.data.get('max_distance')
+            
+            if origin_lat and origin_lon:
+                try:
+                    # origin_lat = float(origin_lat)
+                    # origin_lon = float(origin_lon)
+                    
+                    max_distance = float(max_distance) if max_distance else None
+                except ValueError:
+                    raise ParseError("Invalid numeric values for latitude, longitude, or max_distance")
+                
+                parkings_list = list(queryset)
+                for parking in parkings_list:
+                    print(f"origin_lat: {type(origin_lat)} = {origin_lat}")
+                    print(f"origin_lon: {type(origin_lon)} = {origin_lon}")
+                    print(f"parking.latitude: {type(parking.latitude)} = {parking.latitude}")
+                    print(f"parking.longitude: {type(parking.longitude)} = {parking.longitude}")
+                    parking.distance = self.calculate_distance(origin_lat, origin_lon, parking.latitude, parking.longitude)
+                
+                if max_distance is not None:
+                    parkings_list = [p for p in parkings_list if p.distance <= max_distance]
+                
+                parkings_list.sort(key=lambda x: x.distance)
+                queryset = parkings_list
+
+            # Serialización
+            try:
+                serialized_parkings = ParkingSerializer(queryset, many=True).data
+                print("serialized_parkings",serialized_parkings)
+                return Response(serialized_parkings)
+            except Exception as e:
+                raise ParseError(f"Error serializing parking data: {str(e)}")
+
+        except ParseError as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except ValidationError as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"error": "An unexpected error occurred", "detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
 
 
 @api_view(['GET'])

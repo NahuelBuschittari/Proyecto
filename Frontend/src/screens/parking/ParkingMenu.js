@@ -1,15 +1,58 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { styles } from '../../styles/SharedStyles';
+import React, { useEffect } from 'react';
+import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { theme } from '../../styles/theme';
-import {useAuth} from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
+
+const bloqueado = true; // Esta constante determina si el usuario está bloqueado
+
+const MenuButton = ({ title, onPress, iconName, disabled }) => (
+  <TouchableOpacity 
+    style={[styles.navigationButton, {
+      backgroundColor: disabled ? '#ccc' : theme.colors.secondary,
+      height: 150,
+      width: '45%',
+    }]} 
+    onPress={disabled ? () => {} : onPress}
+    disabled={disabled}
+  >
+    <Icon 
+      name={iconName} 
+      size={35} 
+      color={theme.colors.background}
+      style={styles.icon}
+    />
+    <Text 
+      style={[
+        styles.navigationButtonText, 
+        { 
+          color: theme.colors.background, 
+          fontSize: theme.typography.fontSize.normal,
+          textAlign: 'center',
+        }
+      ]}
+    >
+      {title}
+    </Text>
+  </TouchableOpacity>
+);
+
 const ParkingMenu = ({ navigation }) => {
   const { logout } = useAuth();
+
+  useEffect(() => {
+    if (bloqueado) {
+      Alert.alert(
+        'Acceso restringido',
+        'Para seguir usando la app, debe realizar el pago correspondiente.',
+        [{ text: 'Aceptar' }]
+      );
+    }
+  }, []);
+  
   const handleLogout = async () => {
     try {
       await logout();
-      // No necesitas hacer navigate ya que el AuthContext se encargará de mostrar 
-      // la pantalla de login cuando user sea null
     } catch (error) {
       Alert.alert(
         'Error',
@@ -17,75 +60,146 @@ const ParkingMenu = ({ navigation }) => {
       );
     }
   };
-  const MenuButton = ({ title, onPress }) => (
-    <TouchableOpacity 
-      style={[styles.navigationButton, {
-        backgroundColor: theme.colors.secondary,
-        marginVertical: theme.spacing.sm,
-        paddingVertical: theme.spacing.md,
-        width: '90%', 
-        alignSelf: 'center', 
-      }]}
-      onPress={onPress}
-    >
-      <Text 
-        style={[
-          styles.navigationButtonText, 
-          { 
-            color: theme.colors.text, 
-            fontSize: theme.typography.fontSize.normal, 
-            textAlign: 'center' 
-          }
-        ]}
-      >
-        {title}
-      </Text>
-    </TouchableOpacity>
-  );
 
   return (
-    <View style={[styles.container, { justifyContent: 'flex-start' }]}>
+    <View style={styles.container}>
       <Text style={styles.title}>Menú Principal</Text>
       
-      <ScrollView 
-        contentContainerStyle={{
-          width: '100%',
-          alignItems: 'center',
-          paddingBottom: theme.spacing.lg
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        <MenuButton 
-          title="Análisis de Datos" 
-          onPress={() => navigation.navigate('DataAnalysis')}
-        />
-        <MenuButton 
-          title="Actualizar Espacio" 
-          onPress={() => navigation.navigate('UpdateSpace')}
-        />
-        <MenuButton 
-          title="Actualizar Precios" 
-          onPress={() => navigation.navigate('UpdatePrices')}
-        />
-        <MenuButton 
-          title="Actualizar Características" 
-          onPress={() => navigation.navigate('UpdateCharacteristics')}
-        />
-        <MenuButton 
-          title="Información de Pago" 
-          onPress={() => navigation.navigate('Payment')}
-        />
-        <MenuButton 
-          title="Perfil de Estacionamiento" 
-          onPress={() => navigation.navigate('ParkingProfile')}
-        />
-        <MenuButton 
-          title="Cerrar Sesión" 
+      <View style={styles.gridContainer}>
+        <View style={styles.row}> 
+          <MenuButton 
+            title="Análisis de Datos" 
+            iconName="chart-bar"
+            onPress={() => navigation.navigate('DataAnalysis')}
+            disabled={bloqueado}
+          />
+          <MenuButton 
+            title="Actualizar Espacio" 
+            iconName="parking"
+            onPress={() => navigation.navigate('UpdateSpace')}
+            disabled={bloqueado}
+          />
+        </View>
+        <View style={styles.row}>
+          <MenuButton 
+            title="Actualizar Precios" 
+            iconName="currency-usd"
+            onPress={() => navigation.navigate('UpdatePrices')}
+            disabled={bloqueado}
+          />
+          <MenuButton 
+            title="Actualizar Características" 
+            iconName="cog"
+            onPress={() => navigation.navigate('UpdateCharacteristics')}
+            disabled={bloqueado}
+          />
+        </View>
+        <View style={styles.row}>
+          <MenuButton 
+            title="Información de Pago" 
+            iconName="credit-card"
+            onPress={() => navigation.navigate('Payment')}
+          />
+          <MenuButton 
+            title="Perfil de Estacionamiento" 
+            iconName="account"
+            onPress={() => navigation.navigate('ParkingProfile')}
+            disabled={bloqueado}
+          />
+        </View>
+        <TouchableOpacity 
+          style={styles.logoutButton}
           onPress={handleLogout}
-        />
-      </ScrollView>
+        >
+          <Icon 
+            name="logout" 
+            size={35} 
+            color={theme.colors.background}
+            style={styles.icon}
+          />
+          <Text 
+            style={[
+              styles.navigationButtonText, 
+              { 
+                color: theme.colors.background, 
+                fontSize: theme.typography.fontSize.normal,
+                textAlign: 'center',
+              }
+            ]}
+          >
+            Cerrar Sesión
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.background,
+  },
+  title: {
+    fontSize: theme.typography.fontSize.title,
+    fontWeight: theme.typography.fontWeight.bold,
+    marginBottom: theme.spacing.xl,
+    color: theme.colors.primary,
+  },
+  gridContainer: {
+    width: '100%',
+    flex: 1,
+    justifyContent: 'flex-start',
+    gap: theme.spacing.md,
+    paddingTop: theme.spacing.lg,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing.lg,
+    width: '100%',
+  },
+  navigationButton: {
+    borderRadius: theme.borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    padding: theme.spacing.sm,
+  },
+  logoutButton: {
+    backgroundColor: theme.colors.secondary,
+    height: 130,
+    width: '100%',
+    borderRadius: theme.borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    padding: theme.spacing.sm,
+    marginTop: theme.spacing.md,
+  },
+  navigationButtonText: {
+    fontWeight: theme.typography.fontWeight.bold,
+    marginTop: theme.spacing.sm,
+  },
+  icon: {
+    marginBottom: theme.spacing.xs,
+  }
+});
 
 export default ParkingMenu;

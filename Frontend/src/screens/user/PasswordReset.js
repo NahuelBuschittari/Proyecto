@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text,Alert} from 'react-native';
-import CustomInput from '../../../components/CustomInput';
-import CustomButton from '../../../components/CustomButton';
+import CustomInput from '../../components/CustomInput';
+import CustomButton from '../../components/CustomButton';
 import axios from 'axios';
-import {styles} from '../../../styles/SharedStyles';
-import { API_URL } from '../../../context/constants';
+import {styles} from '../../styles/SharedStyles';
+import { API_URL } from '../../context/constants';
 const PasswordReset = () => {
   const [email, setEmail] = useState('');
 

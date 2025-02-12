@@ -34,9 +34,10 @@ class ParkingSerializer(serializers.ModelSerializer):
     prices = PricesSerializer(read_only=True)
     schedule = ScheduleSerializer(read_only=True)
     features = FeaturesSerializer(read_only=True)
-
+    distance = serializers.FloatField(read_only=True, required=False)
+    id = serializers.IntegerField(source='user.id', read_only=True)
     class Meta:
         model = Parking
-        fields = ('nombre', 'calle', 'numero', 'ciudad', 'latitude', 'longitude',
+        fields = ('id','nombre', 'calle', 'numero', 'ciudad', 'latitude', 'longitude',
                  'carCapacity', 'bikeCapacity', 'motoCapacity', 'prices',
-                 'schedule', 'features')
+                 'schedule', 'features', 'distance')
