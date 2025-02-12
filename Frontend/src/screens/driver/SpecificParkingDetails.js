@@ -245,6 +245,7 @@ const styles2 = StyleSheet.create({
         top: 0,
         left: 0,
         right: 0,
+        height: 140,
         backgroundColor: theme.colors.background,
         zIndex: 1000,
         borderBottomWidth: 1,
@@ -271,7 +272,7 @@ const styles2 = StyleSheet.create({
         marginLeft: theme.spacing.sm,
     },
     scrollContainer: {
-        paddingTop: 80, 
+        paddingTop: 150, 
         paddingBottom: theme.spacing.xl,
     },
     title: {
