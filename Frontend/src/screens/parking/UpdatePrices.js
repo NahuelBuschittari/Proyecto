@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, Alert,} from 'react-native';
-import { styles } from '../../styles/SharedStyles'; 
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { styles } from '../../styles/SharedStyles';
 import { theme } from '../../styles/theme';
-import {Picker} from '@react-native-picker/picker'
+import { Picker } from '@react-native-picker/picker';
+import { useAuth } from '../../context/AuthContext';
+import { API_URL } from '../../context/constants';
+import axios from 'axios';
 
 const UpdatePrices = () => {
   const vehicles = {
@@ -12,134 +15,171 @@ const UpdatePrices = () => {
     Bicicleta: ['Fracción Bicicleta', 'Hora Bicicleta', 'Medio día Bicicleta', 'Día Bicicleta'],
   };
 
+  const { user, authTokens } = useAuth();
   const [selectedVehicle, setSelectedVehicle] = useState('Auto');
-  const [prices, setPrices] = useState({
-    'Fracción Auto': 0,
-    'Hora Auto': 0,
-    'Medio día Auto': 0,
-    'Día Auto': 0,
-  });
+  const [allPrices, setAllPrices] = useState(null);
+  const [prices, setPrices] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false); // Estado para controlar el estado del botón
 
-  const handlePriceChange = (key, value) => {
-    // Asegurarse de que solo se ingresen números
-    const numericValue = value.replace(/[^0-9]/g, '');
-    setPrices({ ...prices, [key]: numericValue });
-  };
-
-  const handleSave = () => {
-    // Validar que todos los precios sean mayores que 0
-    const invalidPrices = Object.entries(prices)
-      .filter(([_, value]) => parseFloat(value) <= 0);
-
-    if (invalidPrices.length > 0) {
-      Alert.alert(
-        'Error de Validación', 
-        'Todos los precios deben ser mayores a 0.',
-        [{ text: 'OK' }]
-      );
-      return;
+  const loadPrices = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/parking/${user.id}/prices/get`);
+      if (response.data) {
+        setAllPrices(response.data);
+        setPrices(response.data[selectedVehicle] || {});
+      }
+    } catch (error) {
+      console.error('Error al cargar precios:', error);
+      Alert.alert('Error', 'No se pudieron cargar los precios');
+    } finally {
+      setLoading(false);
     }
-
-    // Simular guardado (reemplazar con llamada a API real)
-    Alert.alert(
-      'Precios Actualizados', 
-      `Precios para ${selectedVehicle} actualizados exitosamente.`, 
-      [{ text: 'OK' }]
-    );
-
-    // Aquí iría la lógica real de guardado, por ejemplo:
-    // await updatePricesInBackend(selectedVehicle, prices);
   };
+
+  const handleVehicleChange = (value) => {
+    setSelectedVehicle(value);
+    if (allPrices) {
+      setPrices(allPrices[value] || {});
+    }
+  };
+
+  const handlePriceChange = (item, value) => {
+    setPrices((prevPrices) => ({
+      ...prevPrices,
+      [item]: value,
+    }));
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true); // Desactivar el botón
+    try {
+      console.log('Enviando solicitud para actualizar precios...');
+      const response = await axios.post(
+        `${API_URL}/parking/${user.id}/prices/update`,
+        {
+          vehicleType: selectedVehicle,
+          prices,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${authTokens.access}`,
+          },
+        }
+      );
+
+      console.log('Respuesta del servidor:', response.data);
+
+      if (response.status >= 200 && response.status < 300) {
+        console.log('Actualización exitosa. Mostrando alerta...');
+        Alert.alert(
+          'Precios Actualizados',
+          response.data.message || 'Precios actualizados correctamente.',
+          [{ text: 'OK', onPress: () => console.log('Alerta cerrada') }]
+        );
+
+        loadPrices(); // Recargar los precios después de la actualización
+      } else {
+        console.log('Respuesta no válida del servidor:', response);
+        Alert.alert('Error', 'No se recibió un mensaje válido del servidor.');
+      }
+    } catch (error) {
+      console.error('Error al actualizar precios:', error.response?.data || error.message);
+      Alert.alert(
+        'Error',
+        error.response?.data?.error || 'Ocurrió un error inesperado. Intenta nuevamente.'
+      );
+    } finally {
+      setIsSaving(false); // Reactivar el botón
+    }
+  };
+
+  useEffect(() => {
+    loadPrices();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
 
   return (
-    <>
-      <View style={[styles.card, { width: '90%', alignSelf: 'center' }]}>
-        <Text style={[styles.title, { textAlign: 'center', marginBottom: theme.spacing.md }]}>
-          Actualizar Precios
-        </Text>
+    <View style={[styles.card, { width: '90%', alignSelf: 'center' }]}>
+      <Text style={[styles.title, { textAlign: 'center', marginBottom: theme.spacing.md }]}>Actualizar Precios</Text>
 
-        <Text style={[styles.label, { textAlign: 'center' }]}>
-          Selecciona el tipo de vehículo:
-        </Text>
-        <View style={{
+      <Text style={[styles.label, { textAlign: 'center' }]}>Selecciona el tipo de vehículo:</Text>
+
+      <View
+        style={{
           borderWidth: 1,
           borderColor: theme.colors.border,
           borderRadius: theme.borderRadius.sm,
           marginBottom: theme.spacing.md,
           alignSelf: 'center',
-          width: '100%'
-        }}>
-          <Picker
-            selectedValue={selectedVehicle}
-            onValueChange={(itemValue) => {
-              setSelectedVehicle(itemValue);
-              setPrices(
-                vehicles[itemValue].reduce((acc, item) => {
-                  acc[item] = prices[item] || 0; 
-                  return acc;
-                }, {})
-              );
-            }}
-            style={{ 
-              height: 50, 
-              color: theme.colors.text 
-            }}
-          >
-            {Object.keys(vehicles).map((vehicle) => (
-              <Picker.Item 
-                key={vehicle} 
-                label={vehicle} 
-                value={vehicle} 
-                color={theme.colors.text}
-              />
-            ))}
-          </Picker>
-        </View>
-
-        <FlatList
-          data={vehicles[selectedVehicle]}
-          keyExtractor={(item) => item}
-          renderItem={({ item }) => (
-            <View style={[styles.horizontalContainer, { 
-              marginBottom: theme.spacing.sm, 
-              justifyContent: 'space-between' 
-            }]}>
-              <Text style={[styles.label, { flex: 1 }]}>{item}</Text>
-              <TextInput
-                style={{
-                  borderColor: theme.colors.border,
-                  borderWidth: 1,
-                  borderRadius: theme.borderRadius.sm,
-                  padding: theme.spacing.sm,
-                  width: 100,
-                  textAlign: 'center',
-                  color: theme.colors.text,
-                }}
-                keyboardType="numeric"
-                value={prices[item]?.toString()}
-                onChangeText={(value) => handlePriceChange(item, value)}
-                placeholder="Precio"
-              />
-            </View>
-          )}
-        />
-
-        <TouchableOpacity 
-          style={[
-            styles.navigationButton, 
-            { 
-              backgroundColor: theme.colors.primary, 
-              marginTop: theme.spacing.lg,
-              alignSelf: 'center',
-              width: '100%'
-            }
-          ]}
-          onPress={handleSave}
+          width: '100%',
+        }}
+      >
+        <Picker
+          selectedValue={selectedVehicle}
+          onValueChange={handleVehicleChange}
+          style={{ height: 50, color: theme.colors.text }}
         >
-          <Text style={styles.navigationButtonText}>Guardar</Text>
-        </TouchableOpacity>
+          {Object.keys(vehicles).map((vehicle) => (
+            <Picker.Item key={vehicle} label={vehicle} value={vehicle} color={theme.colors.text} />
+          ))}
+        </Picker>
       </View>
-    </>
+
+      <FlatList
+        data={vehicles[selectedVehicle]}
+        keyExtractor={(item) => item}
+        renderItem={({ item }) => (
+          <View
+            style={[styles.horizontalContainer, {
+              marginBottom: theme.spacing.sm,
+              justifyContent: 'space-between',
+            }]}>
+            <Text style={[styles.label, { flex: 1 }]}>{item}</Text>
+            <TextInput
+              style={{
+                borderColor: theme.colors.border,
+                borderWidth: 1,
+                borderRadius: theme.borderRadius.sm,
+                padding: theme.spacing.sm,
+                width: 100,
+                textAlign: 'center',
+                color: theme.colors.text,
+              }}
+              keyboardType="numeric"
+              value={prices[item]?.toString() || ''}
+              onChangeText={(value) => handlePriceChange(item, value)}
+              placeholder="Precio"
+            />
+          </View>
+        )}
+      />
+
+      <TouchableOpacity
+        style={[
+          styles.navigationButton,
+          {
+            backgroundColor: isSaving ? theme.colors.disabled : theme.colors.primary, // Cambiar color si está guardando
+            marginTop: theme.spacing.lg,
+            alignSelf: 'center',
+            width: '100%',
+          },
+        ]}
+        onPress={handleSave}
+        disabled={isSaving} // Desactivar el botón mientras se guarda
+      >
+        <Text style={styles.navigationButtonText}>
+          {isSaving ? 'Guardando...' : 'Guardar'}
+        </Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 

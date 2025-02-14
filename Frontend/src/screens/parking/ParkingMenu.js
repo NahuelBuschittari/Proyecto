@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { theme } from '../../styles/theme';
 import { useAuth } from '../../context/AuthContext';
 
-const bloqueado = true; // Esta constante determina si el usuario está bloqueado
+const bloqueado = false; // Esta constante determina si el usuario está bloqueado
 
 const MenuButton = ({ title, onPress, iconName, disabled }) => (
   <TouchableOpacity 

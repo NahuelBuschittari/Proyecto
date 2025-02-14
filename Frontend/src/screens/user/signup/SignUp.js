@@ -109,7 +109,7 @@ const SignUp = ({ navigation }) => {
         password: userData.password,
         re_password: userData.repeatPassword,
         isParking: isParking,
-        fecha_nacimiento: userData.birthDate.toISOString().split('T')[0],
+        fecha_nacimiento: userData.birthDate?.toISOString().split('T')[0] ||'',
         nombre: userData.name,
         apellido: userData.surname,
         // Extraer dirección formateada

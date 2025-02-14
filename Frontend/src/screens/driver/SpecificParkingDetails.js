@@ -268,7 +268,7 @@ const styles2 = StyleSheet.create({
         marginLeft: theme.spacing.sm,
     },
     scrollContainer: {
-        paddingTop: 80, 
+        paddingTop: 160, 
         paddingBottom: theme.spacing.xl,
     },
     title: {

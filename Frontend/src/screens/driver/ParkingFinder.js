@@ -656,9 +656,8 @@ useEffect(() => {
              style={styles.navigationButton}
              textStyle={styles.navigationButtonText}
              onPress={() => {
-               if (origin) {
                  openGoogleMaps(origin, item, selectedVehicle);
-               }
+               
              }}
            />
          </View>
