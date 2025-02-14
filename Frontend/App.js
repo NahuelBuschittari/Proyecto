@@ -6,8 +6,7 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 
 import Login from './src/screens/user/Login';
 import SignUp from './src/screens/user/signup/SignUp';
-import PasswordReset from './src/screens/user/passwordreset/PasswordReset';
-import PasswordSet from './src/screens/user/passwordreset/PasswordSet';
+import PasswordReset from './src/screens/user/PasswordReset';
 
 import ParkingMenu from './src/screens/parking/ParkingMenu';
 import DataAnalysis from './src/screens/parking/DataAnalysis';
@@ -49,7 +48,6 @@ const NavigationWrapper = () => {
             <Stack.Screen name="Login" component={Login} />
             <Stack.Screen name="SignUp" component={SignUp} />
             <Stack.Screen name="PasswordReset" component={PasswordReset} />
-            <Stack.Screen name="PasswordSet" component={PasswordSet} />
           </>
         ) : (
           <>

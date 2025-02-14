@@ -1,21 +1,47 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, TextInput, StyleSheet } from "react-native";
 import { styles } from "../../styles/SharedStyles";
 import CustomInput from "../../components/CustomInput";
 import CustomButton from "../../components/CustomButton";
 import { theme } from "../../styles/theme";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useAuth } from '../../context/AuthContext';
+import { API_URL } from '../../context/constants';
 
 const DriverProfile = ({ navigation }) => {
+    const { user, authTokens, logout} = useAuth();
     const [userData, setUserData] = useState({
-        name: "Juan",
-        surname: "Pérez",
-        email: "juan@example.com",
-        birthDate: "01/01/1990",
+        name: "",
+        surname: "",
+        email: "",
+        birthDate: "",
     });
 
     const [showPicker, setShowPicker] = useState(false);
     const [date, setDate] = useState(new Date());
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const response = await fetch(`${API_URL}/driver/${user.id}/profile`, {
+                    headers: {
+                        Authorization: `Bearer ${authTokens.access}`,
+                    }
+                });
+                const data = await response.json();
+                setUserData({
+                    name: data.nombre,
+                    surname: data.apellido,
+                    email: data.email,
+                    birthDate: new Date(data.fecha_nacimiento).toLocaleDateString(),
+                });
+                setDate(new Date(data.fecha_nacimiento));
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        fetchProfile();
+    }, []);
 
     const handleInputChange = (key, value) => {
         setUserData((prev) => ({ ...prev, [key]: value }));
@@ -34,14 +60,37 @@ const DriverProfile = ({ navigation }) => {
         toggleDatepicker();
     };
 
-    const handleSave = () => {
-        console.log("Guardando cambios:", userData);
-        navigation.goBack();
+    const handleSave = async () => {
+        try {
+            const response = await fetch(`${API_URL}/driver/${user.id}/profile/update`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${authTokens.access}`,
+                },
+                body: JSON.stringify({
+                    nombre: userData.name,
+                    apellido: userData.surname,
+                    fecha_nacimiento: date.toISOString().split('T')[0],
+                }),
+            });
+
+            if (response.ok) {
+                navigation.goBack();
+            } else {
+                console.error('Error al actualizar perfil');
+            }
+        } catch (error) {
+            console.error(error);
+        }
     };
 
-    const handleLogout = () => {
-        console.log("Cerrando sesión");
-        navigation.navigate("Login");
+    const handleLogout = async () => {
+        try {
+            await logout();
+        } catch (error) {
+            console.error('Error al cerrar sesión:', error);
+        }
     };
 
     return (
@@ -89,6 +138,8 @@ const DriverProfile = ({ navigation }) => {
                 setValue={(value) => handleInputChange("email", value)}
                 placeholder="nombre@ejemplo.com"
                 keyboardType="email-address"
+                editable={false}
+                style={{backgroundColor: '#e0e0e0'}} 
             />
 
             <View style={styles2.buttonContainer}>

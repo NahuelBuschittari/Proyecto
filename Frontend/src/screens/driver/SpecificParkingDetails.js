@@ -6,10 +6,13 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import CustomButton from '../../components/CustomButton';
 import { setupNotifications,checkParkingAvailability } from '../../components/Notifications';
+import createReview from '../../components/createReview';
+import { useAuth } from '../../context/AuthContext';
 const SpecificParkingDetails = ({ route, navigation }) => {
     const { parkingData, selectedVehicle } = route.params;
     const [activeSection, setActiveSection] = useState(null);
     const [userLocation, setUserLocation] = useState(null);
+    const { user, authTokens } = useAuth();
     console.log("selectedVehicle",selectedVehicle);
     React.useLayoutEffect(() => {
         navigation.setOptions({
@@ -47,10 +50,21 @@ const SpecificParkingDetails = ({ route, navigation }) => {
         setupNotifications();
     }, []);
 
-    const openGoogleMaps = () => {
+    async function openGoogleMaps (){
         if (!userLocation) return;
-        const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.latitude},${userLocation.longitude}&destination=${parkingData.userData.address.latitude},${parkingData.userData.address.longitude}&travelmode=driving`;
-        checkParkingAvailability(parkingData.userData.id,parkingData.capacities, selectedVehicle);
+        let travelmode= 'driving'
+        if(selectedVehicle==='Moto' ||selectedVehicle==='motorcycle'){
+            travelmode='two-wheeler';}
+        else if(selectedVehicle==='Bicicleta' || selectedVehicle==='bicycle') {
+            travelmode='bicycling';}
+
+        const latDest = parseFloat(parkingData.latitude);
+        const lngDest = parseFloat(parkingData.longitude);
+        const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.latitude},${userLocation.longitude}&destination=${latDest},${lngDest}&travelmode=${travelmode}`;
+        const space= await checkParkingAvailability(parkingData, selectedVehicle);
+        if(space){
+            createReview(parkingData.id, user.id, authTokens.access);
+        }
         Linking.openURL(url);
     };
 
@@ -92,78 +106,64 @@ const SpecificParkingDetails = ({ route, navigation }) => {
 
     const PricesContent = () => (
         <View>
-            <View style={styles2.priceCard}>
-                <Text style={styles2.priceTitle}>Autos</Text>
-                <View style={styles2.priceGrid}>
-                    <Text style={styles2.priceItem}>Fracción: ${parkingData.prices.Auto.fraccion}</Text>
-                    <Text style={styles2.priceItem}>Hora: ${parkingData.prices.Auto.hora}</Text>
-                    <Text style={styles2.priceItem}>Medio día: ${parkingData.prices.Auto["medio dia"]}</Text>
-                    <Text style={styles2.priceItem}>Día: ${parkingData.prices.Auto["dia completo"]}</Text>
+            {[
+                { type: 'auto', label: 'Autos' },
+                { type: 'camioneta', label: 'Camionetas' },
+                { type: 'moto', label: 'Motos' },
+                { type: 'bici', label: 'Bicicletas' }
+            ].map(({ type, label }) => (
+                <View key={type} style={styles2.priceCard}>
+                    <Text style={styles2.priceTitle}>{label}</Text>
+                    <View style={styles2.priceGrid}>
+                        <Text style={styles2.priceItem}>Fracción: ${parkingData.prices[`${type}_fraccion`]}</Text>
+                        <Text style={styles2.priceItem}>Hora: ${parkingData.prices[`${type}_hora`]}</Text>
+                        <Text style={styles2.priceItem}>Medio día: ${parkingData.prices[`${type}_medio_dia`]}</Text>
+                        <Text style={styles2.priceItem}>Día: ${parkingData.prices[`${type}_dia_completo`]}</Text>
+                    </View>
                 </View>
-            </View>
-            <View style={styles2.priceCard}>
-                <Text style={styles2.priceTitle}>Camionetas</Text>
-                <View style={styles2.priceGrid}>
-                    <Text style={styles2.priceItem}>Fracción: ${parkingData.prices.Camioneta.fraccion}</Text>
-                    <Text style={styles2.priceItem}>Hora: ${parkingData.prices.Camioneta.hora}</Text>
-                    <Text style={styles2.priceItem}>Medio día: ${parkingData.prices.Camioneta["medio dia"]}</Text>
-                    <Text style={styles2.priceItem}>Día: ${parkingData.prices.Camioneta["dia completo"]}</Text>
-                </View>
-            </View>
-            <View style={styles2.priceCard}>
-                <Text style={styles2.priceTitle}>Motos</Text>
-                <View style={styles2.priceGrid}>
-                    <Text style={styles2.priceItem}>Fracción: ${parkingData.prices.Moto.fraccion}</Text>
-                    <Text style={styles2.priceItem}>Hora: ${parkingData.prices.Moto.hora}</Text>
-                    <Text style={styles2.priceItem}>Medio día: ${parkingData.prices.Moto["medio dia"]}</Text>
-                    <Text style={styles2.priceItem}>Día: ${parkingData.prices.Moto["dia completo"]}</Text>
-                </View>
-            </View>
-            <View style={styles2.priceCard}>
-                <Text style={styles2.priceTitle}>Bicicletas</Text>
-                <View style={styles2.priceGrid}>
-                    <Text style={styles2.priceItem}>Fracción: ${parkingData.prices.Bicicleta.fraccion}</Text>
-                    <Text style={styles2.priceItem}>Hora: ${parkingData.prices.Bicicleta.hora}</Text>
-                    <Text style={styles2.priceItem}>Medio día: ${parkingData.prices.Bicicleta["medio dia"]}</Text>
-                    <Text style={styles2.priceItem}>Día: ${parkingData.prices.Bicicleta["dia completo"]}</Text>
-                </View>
-            </View>
+            ))}
         </View>
     );
-
+    
     const ScheduleContent = () => (
         <View style={styles2.scheduleContainer}>
-            <Text style={styles2.scheduleItem}>Lunes: {parkingData.schedule.L.openTime} - {parkingData.schedule.L.closeTime}</Text>
-            <Text style={styles2.scheduleItem}>Martes: {parkingData.schedule.Ma.openTime} - {parkingData.schedule.Ma.closeTime}</Text>
-            <Text style={styles2.scheduleItem}>Miércoles: {parkingData.schedule.Mi.openTime} - {parkingData.schedule.Mi.closeTime}</Text>
-            <Text style={styles2.scheduleItem}>Jueves: {parkingData.schedule.J.openTime} - {parkingData.schedule.J.closeTime}</Text>
-            <Text style={styles2.scheduleItem}>Viernes: {parkingData.schedule.V.openTime} - {parkingData.schedule.V.closeTime}</Text>
-            <Text style={styles2.scheduleItem}>Sábados: {parkingData.schedule.S.openTime} - {parkingData.schedule.S.closeTime}</Text>
-            <Text style={styles2.scheduleItem}>Domingos: {parkingData.schedule.D.openTime} - {parkingData.schedule.D.closeTime}</Text>
-            <Text style={styles2.scheduleItem}>Feriados: {parkingData.schedule.F.openTime} - {parkingData.schedule.F.closeTime}</Text>
+            {[
+                { key: 'lunes', label: 'Lunes' },
+                { key: 'martes', label: 'Martes' },
+                { key: 'miercoles', label: 'Miércoles' },
+                { key: 'jueves', label: 'Jueves' },
+                { key: 'viernes', label: 'Viernes' },
+                { key: 'sabado', label: 'Sábados' },
+                { key: 'domingo', label: 'Domingos' },
+                { key: 'feriados', label: 'Feriados' }
+            ].map(({ key, label }) => (
+                <Text key={key} style={styles2.scheduleItem}>
+                    {label}: {parkingData.schedule[`${key}_open`]} - {parkingData.schedule[`${key}_close`]}
+                </Text>
+            ))}
         </View>
     );
-
+    
     const CapacityContent = () => (
         <View style={styles2.capacityContainer}>
-            <Text style={styles2.capacityItem}>Autos: {parkingData.capacities.carCapacity}</Text>
-            <Text style={styles2.capacityItem}>Motos: {parkingData.capacities.motoCapacity}</Text>
-            <Text style={styles2.capacityItem}>Bicicletas: {parkingData.capacities.bikeCapacity}</Text>
+            <Text style={styles2.capacityItem}>Autos: {parkingData.carCapacity}</Text>
+            <Text style={styles2.capacityItem}>Motos: {parkingData.motoCapacity}</Text>
+            <Text style={styles2.capacityItem}>Bicicletas: {parkingData.bikeCapacity}</Text>
         </View>
     );
-
+    
     const FeaturesContent = () => (
         <View style={styles2.featuresContainer}>
             {Object.entries(parkingData.features).map(([key, value]) => (
                 <View key={key} style={styles2.featureItem}>
                     <FontAwesome5 
-                        name={featureTranslations[key].icon} 
+                        name={featureTranslations[key]?.icon || 'question-circle'} 
                         size={20} 
                         color={theme.colors.primary}
                         style={styles2.featureIcon}
                     />
                     <Text style={styles2.featureText}>
-                        {featureTranslations[key].text}
+                        {featureTranslations[key]?.text || key}
                     </Text>
                     <FontAwesome5 
                         name={value ? 'check' : 'times'} 
@@ -181,16 +181,16 @@ const SpecificParkingDetails = ({ route, navigation }) => {
             <View style={styles2.stickyHeader}>
                 <View style={styles2.headerContent}>
                     <View style={styles2.headerTextContainer}>
-                        <Text style={styles2.title}>{parkingData.userData.name}</Text>
+                        <Text style={styles2.title}>{parkingData.nombre}</Text>
                         <Text style={styles2.address}>
-                            {parkingData.userData.address.street} {parkingData.userData.address.number}
+                            {parkingData.calle} {parkingData.numero}, {parkingData.ciudad}
                         </Text>
                     </View>
                     <CustomButton
                         style={styles2.mapsButton}
                         textStyle={{color: 'white'}}
                         text="Ir con Maps"
-                        onPress={openGoogleMaps}
+                        onPress={()=>openGoogleMaps()}
                     />
                 </View>
             </View>
@@ -268,7 +268,7 @@ const styles2 = StyleSheet.create({
         marginLeft: theme.spacing.sm,
     },
     scrollContainer: {
-        paddingTop: 80, 
+        paddingTop: 160, 
         paddingBottom: theme.spacing.xl,
     },
     title: {

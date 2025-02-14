@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-
+from django.utils.timezone import now
 class UserAccountManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -46,6 +46,8 @@ class Parking(models.Model):
     carCapacity = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0)])
     bikeCapacity = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0)])
     motoCapacity = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0)])
+    periodo_prueba = models.BooleanField(default=True)  # Estado inicial en False
+    fecha_activacion = models.DateTimeField(null=True, blank=True)  # Fecha de activación de la cuenta
     REQUIRED_FIELDS = ['nombre', 'calle', 'numero', 'ciudad', 'latitude', 'longitude', 'carCapacity', 'bikeCapacity', 'motoCapacity']
     def __str__(self):
         return self.nombre
@@ -78,6 +80,49 @@ class Prices(models.Model):
     bici_dia_completo = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     REQUIRED_FIELDS = ['auto_fraccion', 'auto_hora', 'auto_medio_dia', 'auto_dia_completo', 'camioneta_fraccion', 'camioneta_hora', 'camioneta_medio_dia', 'camioneta_dia_completo', 'moto_fraccion', 'moto_hora', 'moto_medio_dia', 'moto_dia_completo', 'bici_fraccion', 'bici_hora', 'bici_medio_dia', 'bici_dia_completo']
+
+class PriceHistory(models.Model):
+    parking = models.ForeignKey(Parking, on_delete=models.CASCADE, related_name='price_history')
+    fecha = models.DateField(auto_now_add=True)  # Fecha en la que se registró el precio
+    auto_fraccion = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    auto_hora = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    auto_medio_dia = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    auto_dia_completo = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    camioneta_fraccion = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    camioneta_hora = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    camioneta_medio_dia = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    camioneta_dia_completo = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    moto_fraccion = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    moto_hora = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    moto_medio_dia = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    moto_dia_completo = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    bici_fraccion = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    bici_hora = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    bici_medio_dia = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    bici_dia_completo = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    def __str__(self):
+        return f"Historial de precios de {self.parking.nombre} - {self.fecha}"
+
+    class Meta:
+        ordering = ['fecha']
+
+
+class SpaceHistory(models.Model):
+    parking = models.ForeignKey(Parking, on_delete=models.CASCADE, related_name='space_history')
+    fecha = models.DateField(auto_now_add=True)  
+    car_occupied = models.PositiveIntegerField(default=0)
+    bike_occupied = models.PositiveIntegerField(default=0)
+    moto_occupied = models.PositiveIntegerField(default=0)
+    
+    def __str__(self):
+        return f"Historial de ocupación de {self.parking.nombre} - {self.fecha}"
+
+    class Meta:
+        ordering = ['fecha']
 
 class Schedule(models.Model):
     parking = models.OneToOneField(Parking, on_delete=models.CASCADE,primary_key=True, related_name='schedule')

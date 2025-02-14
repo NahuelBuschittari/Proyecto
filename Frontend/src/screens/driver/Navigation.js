@@ -1,27 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Image, Modal, ActivityIndicator } from 'react-native';
 import MapView, { Callout, Marker } from 'react-native-maps';
-import MapViewDirections from 'react-native-maps-directions';
-import { GOOGLE_MAPS_KEY } from '@env';
 import { Linking } from 'react-native';
 import CustomButton from '../../components/CustomButton';
-import getLocation from '../../components/getLocation';
-import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome5} from '@expo/vector-icons';
 import { styles } from '../../styles/SharedStyles';
 import { theme } from '../../styles/theme';
-import { dummyParkingData } from './DUMMY_PARKINGS';
-import getAvailableParkings from '../../components/getAvailableParkings';
 import * as Location from 'expo-location';
 import getDay from '../../components/getDay';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { API_URL } from '../../context/constants';
 import { setupNotifications,checkParkingAvailability } from '../../components/Notifications';
+import { user,useAuth } from '../../context/AuthContext';
+import axios from 'axios';
+import createReview from '../../components/createReview'; 
 const Navigation = ({ navigation, route }) => {
+    const [currentDay, setCurrentDay] = useState(null);
     const [origin, setOrigin] = useState(null);
     const [selectedVehicle, handleVehicleSelect] = useState('car-side');
     const [vehicle, setVehicle] = useState('driving');
     const [parkingsDisponibles, setParkingsDisponibles] = useState([]);
     const [loading, setLoading] = useState(true); 
-    const [currentDay, setCurrentDay] = useState(null);
+    const { user, authTokens } = useAuth();
     const [selectedParking, setSelectedParking] = useState(null);
     const [mapRegion, setMapRegion] = useState({
         latitude: -32.9479,
@@ -29,6 +29,8 @@ const Navigation = ({ navigation, route }) => {
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
     });
+
+    console.log("token:",authTokens.access);
     React.useLayoutEffect(() => {
         navigation.setOptions({
             headerLeft: () => (
@@ -82,20 +84,33 @@ const Navigation = ({ navigation, route }) => {
     useEffect(() => {
         const fetchAvailableParkings = async () => {
             try {
-                const day = await getDay();
+                console.log("token:", authTokens.access);
+                
+                const day = await getDay(); // Usa tu función existente
+                console.log(day);
+                console.log(selectedVehicle);
                 setCurrentDay(day);
-                const availableParkings = await getAvailableParkings(dummyParkingData, selectedVehicle, day);
-                setParkingsDisponibles(availableParkings);
+                const response = await axios.get(`${API_URL}/driver/navigation`, {
+                    params: {
+                        vehicle_type: selectedVehicle,
+                        day: day, // Envía el día (L, Ma, Mi, etc.)
+                    },
+                    headers: {
+                        'Authorization': `Bearer ${authTokens.access}`
+                    },
+                });
+    
+                setParkingsDisponibles(response.data);
+                console.log("parkings:",response.data);
                 setLoading(false);
             } catch (error) {
-                console.error('Error al obtener estacionamientos:', error);
+                console.error('Error al obtener estacionamientos:', error.response || error.message);
                 setLoading(false);
             }
         };
-
+    
         fetchAvailableParkings();
     }, [selectedVehicle]);
-
     useEffect(() => {
         if (route.params?.selectedParking) {
             setSelectedParking(route.params.selectedParking);
@@ -103,12 +118,31 @@ const Navigation = ({ navigation, route }) => {
     }, [route.params?.selectedParking]);
 
 
-    function openGoogleMaps(origin, latitude, longitude, vehicle) {
+
+    async function openGoogleMaps(origin, latitude, longitude, vehicle) {
         const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${latitude},${longitude}&travelmode=${vehicle}`;
-        checkParkingAvailability(selectedParking.userData.id, selectedParking.capacities, selectedVehicle);
+        const space=await checkParkingAvailability(selectedParking, selectedVehicle);
+        console.log("space",space)
+        if(space){
+            createReview(selectedParking.id, user.id, authTokens.access);
+        }
         Linking.openURL(url);
     };
 
+    //Mapeo de dia de la semana
+    day_map = {
+        'L': 'lunes',
+        'Ma': 'martes',
+        'Mi': 'miercoles',
+        'J': 'jueves',
+        'V': 'viernes',
+        'S': 'sabado',
+        'D': 'domingo',
+        'F': 'feriados'
+    }
+    const scheduleDay = day_map[currentDay];
+    console.log("currentDay",currentDay);
+    console.log("scheduleDay",scheduleDay);
     if (loading || !origin) {
         return (
             <View style={styles2.loadingContainer}>
@@ -132,10 +166,10 @@ const Navigation = ({ navigation, route }) => {
                 {parkingsDisponibles.map((parking) => (
                     <Marker
                         style={{ backgroundColor: theme.colors.primary }}
-                        key={parking.userData.id}
+                        key={parking.id}
                         coordinate={{
-                            latitude: parking.userData.address.latitude,
-                            longitude: parking.userData.address.longitude,
+                            latitude: parseFloat(parking.latitude),
+                            longitude: parseFloat(parking.longitude),
                         }}
                         onPress={() => setSelectedParking(parking)}
                     >
@@ -161,54 +195,50 @@ const Navigation = ({ navigation, route }) => {
                             <Ionicons name="close" size={24} color={theme.colors.text} />
                         </TouchableOpacity>
 
-                        <Text style={styles2.modalTitle}>{selectedParking?.userData.name}</Text>
+                        <Text style={styles2.modalTitle}>{selectedParking?.nombre}</Text>
                         <Text style={styles.label}>
                             Quedan{' '}
-                            {selectedParking?.capacities
-                                ? selectedVehicle === 'car-side' || selectedVehicle === 'truck-pickup'
-                                    ? selectedParking.capacities.carCapacity
-                                    : selectedVehicle === 'motorcycle'
-                                        ? selectedParking.capacities.motoCapacity
-                                        : selectedParking.capacities.bikeCapacity
-                                : '0'}{' '}
+                            {selectedVehicle === 'car-side' || selectedVehicle === 'truck-pickup'
+                                ? selectedParking?.carCapacity
+                                : selectedVehicle === 'motorcycle'
+                                ? selectedParking?.motoCapacity
+                                : selectedParking?.bikeCapacity}{' '}
                             lugares disponibles
                         </Text>
                         <Text style={styles.label}>
                             Cierra a las {' '}
-                            {currentDay && selectedParking?.schedule[currentDay]
-                                ? selectedParking.schedule[currentDay].closeTime
-                                : 'Horario no disponible'}
+                            {selectedParking?.schedule[`${scheduleDay}_close`] || 'Horario no disponible'}
                         </Text>
                         {selectedParking?.prices && (
                             <View style={styles.card}>
                                 <Text style={styles.label}>Tarifa de precios</Text>
                                 {selectedVehicle === 'car-side' ? (
                                     <>
-                                        <Text>Fracción: ${selectedParking.prices.Auto.fraccion}</Text>
-                                        <Text>Hora: ${selectedParking.prices.Auto.hora}</Text>
-                                        <Text>Medio día: ${selectedParking.prices.Auto["medio dia"]}</Text>
-                                        <Text>Día completo: ${selectedParking.prices.Auto["dia completo"]}</Text>
+                                        <Text>Fracción: ${selectedParking.prices.auto_fraccion}</Text>
+                                        <Text>Hora: ${selectedParking.prices.auto_hora}</Text>
+                                        <Text>Medio día: ${selectedParking.prices.auto_medio_dia}</Text>
+                                        <Text>Día completo: ${selectedParking.prices.auto_dia_completo}</Text>
                                     </>
                                 ) : selectedVehicle === 'truck-pickup' ? (
                                     <>
-                                        <Text>Fracción: ${selectedParking.prices.Camioneta.fraccion}</Text>
-                                        <Text>Hora: ${selectedParking.prices.Camioneta.hora}</Text>
-                                        <Text>Medio día: ${selectedParking.prices.Camioneta["medio dia"]}</Text>
-                                        <Text>Día completo: ${selectedParking.prices.Camioneta["dia completo"]}</Text>
+                                        <Text>Fracción: ${selectedParking.prices.camioneta_fraccion}</Text>
+                                        <Text>Hora: ${selectedParking.prices.camioneta_hora}</Text>
+                                        <Text>Medio día: ${selectedParking.prices.camioneta_medio_dia}</Text>
+                                        <Text>Día completo: ${selectedParking.prices.camioneta_dia_completo}</Text>
                                     </>
                                 ) : selectedVehicle === 'motorcycle' ? (
                                     <>
-                                        <Text>Fracción: ${selectedParking.prices.Moto.fraccion}</Text>
-                                        <Text>Hora: ${selectedParking.prices.Moto.hora}</Text>
-                                        <Text>Medio día: ${selectedParking.prices.Moto["medio dia"]}</Text>
-                                        <Text>Día completo: ${selectedParking.prices.Moto["dia completo"]}</Text>
+                                        <Text>Fracción: ${selectedParking.prices.moto_fraccion}</Text>
+                                        <Text>Hora: ${selectedParking.prices.moto_hora}</Text>
+                                        <Text>Medio día: ${selectedParking.prices.moto_medio_dia}</Text>
+                                        <Text>Día completo: ${selectedParking.prices.moto_dia_completo}</Text>
                                     </>
                                 ) : (
                                     <>
-                                        <Text>Fracción: ${selectedParking.prices.Bicicleta.fraccion}</Text>
-                                        <Text>Hora: ${selectedParking.prices.Bicicleta.hora}</Text>
-                                        <Text>Medio día: ${selectedParking.prices.Bicicleta["medio dia"]}</Text>
-                                        <Text>Día completo: ${selectedParking.prices.Bicicleta["dia completo"]}</Text>
+                                        <Text>Fracción: ${selectedParking.prices.bicicleta_fraccion}</Text>
+                                        <Text>Hora: ${selectedParking.prices.bicicleta_hora}</Text>
+                                        <Text>Medio día: ${selectedParking.prices.bicicleta_medio_dia}</Text>
+                                        <Text>Día completo: ${selectedParking.prices.bicicleta_dia_completo}</Text>
                                     </>
                                 )}
                             </View>
@@ -222,8 +252,8 @@ const Navigation = ({ navigation, route }) => {
                                 onPress={() => {
                                     openGoogleMaps(
                                         origin,
-                                        selectedParking.userData.address.latitude,
-                                        selectedParking.userData.address.longitude,
+                                        selectedParking.latitude,
+                                        selectedParking.longitude,
                                         vehicle
                                     );
                                     setSelectedParking(null);
