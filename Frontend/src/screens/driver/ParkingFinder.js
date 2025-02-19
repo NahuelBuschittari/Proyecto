@@ -126,42 +126,90 @@ const ParkingFinder = ({ route, navigation }) => {
   const [sortBy, setSortBy] = useState('price');
   const [sortDirection, setSortDirection] = useState('asc');
 
-  const toggleDrawer = () => setDrawerOpen(!drawerOpen);
-
-  const clearFilters = useCallback(() => {
-    setFilters({
-      vehicleType: selectedVehicle,
-      maxDistance: null,
-      maxPrice: null,
-      priceType: 'Hora',
-      isCovered: null,
-      has24hSecurity: null,
-      hasEVChargers: null,      
-      hasCCTV: null,
-      hasValetService: null,
-      hasDisabledParking: null,
-      hasAutoPayment: null,
-      hasCardAccess: null,
-      hasCarWash: null,
-      hasRestrooms: null,
-      hasBreakdownAssistance: null,
-      hasFreeWiFi: null,
-      selectedDay: null,
-      selectedStartTime: null,
-      selectedEndTime: null,
-      openNow:false,
-    });
-  }, [selectedVehicle]);
+  function toggleDrawer() {
+    setDrawerOpen(!drawerOpen);
+  }
 
   const [filteredParkings, setFilteredParkings] = useState([]);
 
-useEffect(() => {
-  const fetchFilteredParkings = async () => {
-    try {
-      const response = await axios.post(`${API_URL}/driver/parkingFinder`, {
+  
+    useEffect(() => {
+      if (filteredParkings.length > 0) {
+        const sortedParkings = sortParkings(filteredParkings, sortBy, sortDirection);
+        setFilteredParkings(sortedParkings);
+      }
+    }, [sortBy, sortDirection]);
+  
+    // Función para manejar el ordenamiento
+    const sortParkings = (parkings, sortBy, sortDirection) => {
+      return [...parkings].sort((a, b) => {
+        if (sortBy === 'price') {
+          const priceKey = `${selectedVehicle.toLowerCase()}_${priceType.toLowerCase().replace(' ', '_')}`;
+    
+          const priceA = parseFloat(a.prices[priceKey] || 0);
+          const priceB = parseFloat(b.prices[priceKey] || 0);
+    
+          return sortDirection === 'asc' ? priceA - priceB : priceB - priceA;
+        } else if (sortBy === 'distance') {
+          return sortDirection === 'asc' ? a.distance - b.distance : b.distance - a.distance;
+        }
+        return 0;
+      });
+    };
+    
+    const clearFilters = () => {
+      setFilters({
+        vehicleType: selectedVehicle,
+        maxDistance: null,
+        maxPrice: null,
+        priceType: 'Hora',
+        isCovered: null,
+        has24hSecurity: null,
+        hasEVChargers: null,
+        hasCCTV: null,
+        hasValetService: null,
+        hasDisabledParking: null,
+        hasAutoPayment: null,
+        hasCardAccess: null,
+        hasCarWash: null,
+        hasRestrooms: null,
+        hasBreakdownAssistance: null,
+        hasFreeWiFi: null,    
+        selectedDay: null,
+        selectedStartTime: null,
+        selectedEndTime: null,
+        openNow: false,
+      });
+    
+      // Volver a cargar los estacionamientos iniciales
+      fetchInitialParkings();
+    };
+    const fetchInitialParkings = async () => {
+      try {
+        const response = await axios.post(`${API_URL}/driver/parkingFinder`, {
+          vehicle_type: selectedVehicle,
+          latitude: location.lat,
+          longitude: location.lon
+        });
+    
+        let parkings = response.data;
+        setFilteredParkings(parkings);
+      } catch (error) {
+        console.error('Error fetching initial parkings:', error);
+      }
+    };
+    
+    // Llamar a la función cuando el componente se monta
+    useEffect(() => {
+      fetchInitialParkings();
+    }, [selectedVehicle, location]);
+
+    const applyFilters = async () => {
+      try {
+        const parkingFilters = {
           vehicle_type: selectedVehicle,
           max_price: filters.maxPrice || null,
-          price_type: priceType?.toLowerCase().replace(' ', '_'),
+          price_type: filters.priceType?.toLowerCase().replace(' ', '_').replace('í', 'i'),
           max_distance: filters.maxDistance || null,
           latitude: location.lat,
           longitude: location.lon,
@@ -181,46 +229,21 @@ useEffect(() => {
           hasRestrooms: filters.hasRestrooms || false,
           hasBreakdownAssistance: filters.hasBreakdownAssistance || false,
           hasFreeWiFi: filters.hasFreeWiFi || false
-      });
-      console.log(response.data)
-      // Sort the results based on sortBy and sortDirection
-      let sortedParkings = response.data;
-      if (sortBy === 'price') {
-        sortedParkings.sort((a, b) => {
-          const priceA = a.prices[selectedVehicle.toLowerCase()][priceType.toLowerCase().replace(' ', '_')];
-          const priceB = b.prices[selectedVehicle.toLowerCase()][priceType.toLowerCase().replace(' ', '_')];
-          return sortDirection === 'asc' ? priceA - priceB : priceB - priceA;
-        });
-      } else if (sortBy === 'distance') {
-        sortedParkings.sort((a, b) => 
-          sortDirection === 'asc' ? a.distance - b.distance : b.distance - a.distance
-        );
+        };
+        console.log(parkingFilters)
+        const response = await axios.post(`${API_URL}/driver/parkingFinder`, parkingFilters);
+    
+        let parkings = response.data;
+    
+        // Aplicar ordenamiento
+        parkings = sortParkings(parkings, sortBy, sortDirection);
+        toggleDrawer();
+        setFilteredParkings(parkings);
+        
+      } catch (error) {
+        console.error('Error applying filters:', error);
       }
-
-      setFilteredParkings(sortedParkings);
-      console.log(sortedParkings);
-    } catch (error) {
-      console.error('Error fetching parkings:', error);
-    }
-  };
-
-  // Debounce logic
-  const debounceTimer = setTimeout(() => {
-    const shouldFetch = origin && (
-      filters.maxPrice !== null || 
-      filters.maxDistance !== null || 
-      filters.selectedDay !== null ||
-      Object.values(filters).some(val => val === true)
-    );
-
-    if (shouldFetch) {
-      fetchFilteredParkings();
-    }
-  }, 500);
-
-  // Cleanup
-  return () => clearTimeout(debounceTimer);
-}, [filters, origin, selectedVehicle, priceType, sortBy, sortDirection]);
+    };
     
     if (loading) {
             return (
@@ -270,7 +293,7 @@ useEffect(() => {
 
       {drawerOpen && (
         <Drawer.Section style={styles2.drawer}>
-          <ScrollView>
+          
             <View style={{ alignSelf:'center',width:'90%',borderWidth: 1, borderColor: theme.colors.primary, borderRadius: theme.spacing.sm }}>
             <Picker
               selectedValue={activeFilterCategory}
@@ -299,6 +322,15 @@ useEffect(() => {
               
             </Picker>
             </View>
+            <View style={[{padding: 8,marginBottom: 8,alignItems: 'center',width:'100%'}]}>
+            <CustomButton 
+                text='Limpiar filtros' 
+                onPress={clearFilters}
+                style={styles.signupButton}
+                textStyle={[styles.signupButtonText,{color:theme.colors.background}]} 
+              />
+            </View>
+            <ScrollView>
             {activeFilterCategory === 'ubiPrecio' && (
               <>
                 <View style={styles2.row}>
@@ -324,7 +356,7 @@ useEffect(() => {
                 </View>
 
                 <View style={styles2.row}>
-                  <Text>Distancia máxima(en cuadras):</Text>
+                  <Text>Distancia máxima(cuadras):</Text>
                   <CustomInput
                     style={styles2.input}
                     keyboardType="numeric"
@@ -336,7 +368,7 @@ useEffect(() => {
                   />
                 </View>
                 <View style={styles2.row}>
-                  <Text>Precio máximo:</Text>
+                  <Text>Precio máximo(pesos):</Text>
                   <CustomInput
                     style={styles2.input}
                     keyboardType="numeric"
@@ -532,7 +564,7 @@ useEffect(() => {
                   </View>
                   <View style={styles2.row}>
                     <Text>Hora desde:</Text>                   
-                    <Pressable onPress={() => setShowStartTimePicker(true)} style={{width:'40%',height:'35%'}}>
+                    <Pressable onPress={() => setShowStartTimePicker(true)} style={{width:'40%',height:'40%'}}>
                     <CustomInput
                       style={[styles2.input,{width:'100%',height:'100%'}]}
                       placeholder="(HH:MM)"
@@ -546,7 +578,7 @@ useEffect(() => {
                   <View style={styles2.row}>
                     <Text>Hora hasta:</Text>
                     
-                    <Pressable onPress={() => setShowEndTimePicker(true)} style={{width:'40%',height:'35%'}}>
+                    <Pressable onPress={() => setShowEndTimePicker(true)} style={{width:'40%',height:'40%'}}>
                     <CustomInput
                       style={[styles2.input,{width:'100%',height:'100%'}]}
                       placeholder="(HH:MM)"
@@ -576,22 +608,21 @@ useEffect(() => {
                   )}
                 </>
               )}
-
+            </ScrollView>
             <View style={styles2.row}>
               <CustomButton 
                 text='Cerrar' 
-                onPress={toggleDrawer} 
+                onPress={toggleDrawer()} 
                 style={styles.navigationButton} 
                 textStyle={styles.navigationButtonText}
               />
               <CustomButton 
-                text='Limpiar filtros' 
-                onPress={clearFilters} 
+                text='Aplicar filtros' 
+                onPress={applyFilters} 
                 style={styles.navigationButton} 
                 textStyle={styles.navigationButtonText}
               />
             </View>
-          </ScrollView>
         </Drawer.Section>
       )}
 

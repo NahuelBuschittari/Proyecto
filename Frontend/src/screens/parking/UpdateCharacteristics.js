@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Switch, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, Switch, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
 import { styles } from '../../styles/SharedStyles';
 import { theme } from '../../styles/theme';
 import { useAuth } from '../../context/AuthContext';
@@ -20,7 +20,7 @@ const UpdateCharacteristics = ({ parkingId }) => {
   const [hasFreeWiFi, setHasFreeWiFi] = useState(false);
   const { user, authTokens } = useAuth();
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
@@ -47,9 +47,10 @@ const UpdateCharacteristics = ({ parkingId }) => {
         setHasFreeWiFi(data.hasFreeWiFi);
       } catch (error) {
         setSuccessMessage('Error al cargar las características.');
+      } finally {
+        setIsLoading(false);
       }
     };
-
     loadCharacteristics();
   }, [parkingId]);
 
@@ -112,6 +113,13 @@ const UpdateCharacteristics = ({ parkingId }) => {
 
   const screenHeight = Dimensions.get('window').height;
 
+  if (isLoading) {
+    return (
+      <View style={[styles.container,{alignItems: 'center', justifyContent: 'center'}]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
   return (
     <View
       style={[

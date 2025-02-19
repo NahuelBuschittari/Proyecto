@@ -1,28 +1,38 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/CustomButton';
 import {styles} from '../../styles/SharedStyles';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../context/constants';
+
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+
   const handleLogin = async () => {
+    setIsLoading(true);
     try {
       console.log("Intentando login en URL:", `${API_URL}/auth/jwt/create/`);
       console.log("Con credenciales:", { email, password });
       await login(email, password);
     } catch (error) {
-      console.error("Error completo:", error);
-      console.error("Response data:", error.response?.data);
-      console.error("Error message:", error.message);
-      Alert.alert(
-        'Error de inicio de sesión',
-        `Error: ${error.message}\n${JSON.stringify(error.response?.data || {})}`
-      );
+      if (error.response?.data?.detail === "No active account found with the given credentials") {
+        Alert.alert(
+          'Error de inicio de sesión',
+          'Usuario y/o contraseña incorrectos'
+        );
+      } else {
+        Alert.alert(
+          'Error de inicio de sesión',
+          `Error: ${error.message}\n${JSON.stringify(error.response?.data || {})}`
+        );
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -37,6 +47,7 @@ const Login = ({ navigation }) => {
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Iniciar Sesión</Text>
@@ -77,6 +88,12 @@ const Login = ({ navigation }) => {
         style={styles.signupButton} 
         textStyle={styles.signupButtonText}
       />
+
+      {isLoading && (
+        <View style={styles2.loadingOverlay}>
+          <ActivityIndicator size="large" color="#FFFFFF" />
+        </View>
+      )}
     </View>
   );
 };
@@ -95,6 +112,16 @@ const styles2 = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     paddingHorizontal: 10,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   }
 });
 

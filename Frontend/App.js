@@ -53,7 +53,12 @@ const NavigationWrapper = () => {
           <>
             {user.isParking === true ? (
               <>
-                <Stack.Screen name="ParkingMenu" component={ParkingMenu}/>
+                <Stack.Screen name="ParkingMenu" component={ParkingMenu}
+                options={{
+                  title: '',
+                  headerTitleAlign: 'center',
+                }}
+                />
 
                 <Stack.Screen name="DataAnalysis" component={DataAnalysis}
                   options={({ navigation }) => ({
@@ -94,7 +99,12 @@ const NavigationWrapper = () => {
               </>
             ) : (
               <>
-                <Stack.Screen name="UserMenu" component={UserMenu}/>
+                <Stack.Screen name="UserMenu" component={UserMenu}
+                  options={{
+                    title: '',
+                    headerTitleAlign: 'center',
+                  }}
+                />
                 <Stack.Screen name="Review" component={Review}
                     options={({ navigation }) => ({
                       headerTitle: () => renderHeaderLogo(navigation, 'UserMenu'),
