@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { API_URL } from '../../context/constants';
 import { useAuth } from '../../context/AuthContext';
-
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { theme } from '../../styles/theme';
 const ParkingManager = () => {
   const { user, authTokens } = useAuth();
   const [spaces, setSpaces] = useState({ cars: 0, motorcycles: 0, bikes: 0 });
   const [isSaved, setIsSaved] = useState(false);
   const [pendingChanges, setPendingChanges] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadSpaces();
@@ -28,8 +30,18 @@ const ParkingManager = () => {
       });
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container,{alignItems: 'center', justifyContent: 'center'}]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
 
 
   const handleIncrement = (type, increment) => {
@@ -74,10 +86,10 @@ const ParkingManager = () => {
   };
   
 
-  const SpaceCard = ({ title, emoji, available, type }) => (
+  const SpaceCard = ({ title, iconName, available, type }) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
-        <Text style={styles.emoji}>{emoji}</Text>
+        <Icon name={iconName} size={24} color={theme.colors.background} />
         <Text style={styles.title}>{title}</Text>
       </View>
       <View style={styles.cardContent}>
@@ -98,9 +110,9 @@ const ParkingManager = () => {
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Control de Espacios</Text>
       <ScrollView contentContainerStyle={styles.cardsContainer}>
-        <SpaceCard title="Vehículos" emoji="🚗" available={spaces.cars} type="cars" />
-        <SpaceCard title="Motos" emoji="🏍️" available={spaces.motorcycles} type="motorcycles" />
-        <SpaceCard title="Bicicletas" emoji="🚲" available={spaces.bikes} type="bikes" />
+        <SpaceCard title="Autos y camionetas" iconName="car-side" available={spaces.cars} type="cars" />
+        <SpaceCard title="Motos" iconName="motorbike" available={spaces.motorcycles} type="motorcycles" />
+        <SpaceCard title="Bicicletas" iconName="bicycle" available={spaces.bikes} type="bikes" />
       </ScrollView>
       <TouchableOpacity
         style={[styles.saveButton, pendingChanges ? styles.activeSaveButton : styles.disabledSaveButton]}
@@ -123,8 +135,13 @@ const styles = StyleSheet.create({
   header: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 },
   cardsContainer: { flex: 1, justifyContent: 'center', gap: 8 },
   card: { borderRadius: 8, padding: 8, backgroundColor: '#b1c8e7', height: '28%' },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  emoji: { fontSize: 24 },
+  cardHeader: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: 8,
+    marginTop: 8
+  },
   title: { fontSize: 16, fontWeight: 'bold' },
   cardContent: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   availableNumber: { fontSize: 32, fontWeight: 'bold' },
