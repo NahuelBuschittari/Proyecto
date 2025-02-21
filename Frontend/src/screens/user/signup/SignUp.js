@@ -1,5 +1,5 @@
 import React, { useState } from 'react'; 
-import { View, Text, Button, Switch, Alert, ScrollView,} from 'react-native';
+import { View, Text, Button, Alert, ScrollView,TouchableOpacity,ActivityIndicator} from 'react-native';
 import { styles } from '../../../styles/SharedStyles.js';
 import CustomButton from '../../../components/CustomButton.js';
 import CustomInput from '../../../components/CustomInput.js';
@@ -17,6 +17,7 @@ const SignUp = ({ navigation }) => {
   const [isParking, setIsParking] = useState(false);
   const [step, setStep] = useState(1);
   const [vehiculoIndex, setVehiculoIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [userData, setUserData] = useState({
     name: '',
@@ -103,6 +104,7 @@ const SignUp = ({ navigation }) => {
 
   const handleSubmit = async () => {
     try {
+      setIsLoading(true);
       // Formatear los datos según la estructura requerida
       const formattedData = {
         email: userData.email,
@@ -182,7 +184,8 @@ const SignUp = ({ navigation }) => {
       console.log(data);
       Alert.alert(
         'Registro exitoso',
-        'Su cuenta ha sido creada exitosamente',
+        'Su cuenta ha sido creada exitosamente\n'+
+        'Por favor, revise su correo electrónico para activar su cuenta.',
         [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
       );
 
@@ -193,6 +196,8 @@ const SignUp = ({ navigation }) => {
         [{ text: 'OK' }]
       );
       console.error('Error en el registro:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -494,29 +499,59 @@ const validations = {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Crear Cuenta</Text>
-        <View style={styles.switchContainer}>
-          <Text style={styles.cardTitle}>
-            {isParking ? 'Registro de Estacionamiento' : 'Registro de Usuario'}
-          </Text>
-          <Switch
-            value={isParking}
-            onValueChange={(value) => {
-              setIsParking(value);
-              setStep(1);
-            }}
-          />
-        </View>
+        <View style={styles.typeSelector}>
+            <TouchableOpacity
+              style={[
+                styles.typeButton,
+                !isParking && styles.typeButtonActive
+              ]}
+              onPress={() => {
+                setIsParking(false);
+                setStep(1);
+              }}
+            >
+              <Text style={[
+                styles.typeButtonText,
+                !isParking && styles.typeButtonTextActive
+              ]}>
+                Conductor
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.typeButton,
+                isParking && styles.typeButtonActive
+              ]}
+              onPress={() => {
+                setIsParking(true);
+                setStep(1);
+              }}
+            >
+              <Text style={[
+                styles.typeButtonText,
+                isParking && styles.typeButtonTextActive
+              ]}>
+                Estacionamiento
+              </Text>
+            </TouchableOpacity>
+          </View>
       </View>
 
       {step === 1 && (
         <ScrollView contentContainerStyle={[{
           alignItems:'center',
           flexGrow: 1,}]}>
-            <UserForm
-              userData={userData}
-              setUserData={setUserData}
-              isParking={isParking}
-            />
+            <>
+              <UserForm
+                userData={userData}
+                setUserData={setUserData}
+                isParking={isParking}
+              />
+              {isLoading && (
+              <View>
+                  <ActivityIndicator size="large" color="#FFFFFF" />
+              </View>)}
+            </>
         </ScrollView>
       )}
 
@@ -650,6 +685,11 @@ const validations = {
                 return null;
               })}
           </View>
+          {isLoading && (
+            <View>
+                <ActivityIndicator size="large" color="#FFFFFF" />
+            </View>
+                )}
         </ScrollView> 
       )}
       {/* Footer */}

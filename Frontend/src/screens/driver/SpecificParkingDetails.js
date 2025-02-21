@@ -25,7 +25,8 @@ const SpecificParkingDetails = ({ route, navigation }) => {
                             navigation.goBack();
                         } else {
                             navigation.navigate('Navigation', {
-                                selectedParking: parkingData
+                                selectedParking: parkingData,
+                                selectedVehicle: selectedVehicle
                             });
                         }
                     }}

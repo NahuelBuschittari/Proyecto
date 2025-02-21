@@ -14,7 +14,7 @@ const CharacteristicsForm = ({ features, updateFeature }) => {
     { label: 'Acceso con Tarjeta', key: 'hasCardAccess' },
     { label: 'Lavado de Autos', key: 'hasCarWash' },
     { label: 'Baños', key: 'hasRestrooms' },
-    { label: 'Asistencia en Carretera', key: 'hasBreakdownAssistance' },
+    { label: 'Asistencia para averías', key: 'hasBreakdownAssistance' },
     { label: 'WiFi Gratuito', key: 'hasFreeWiFi' },
   ];
 

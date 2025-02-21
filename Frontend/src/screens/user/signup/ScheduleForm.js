@@ -72,7 +72,16 @@ const ScheduleForm = ({ handleScheduleChange, schedule }) => {
     setIs24Hours(false);
     setIsClosed(false);
   };
-
+  const dayNames = {
+    'L': 'Lunes',
+    'Ma': 'Martes',
+    'Mi': 'Miércoles',
+    'J': 'Jueves',
+    'V': 'Viernes',
+    'S': 'Sábado',
+    'D': 'Domingo',
+    'F': 'Feriado'
+  };
   return (
     <View style={styles2.container}>
       <Text style={styles.label}>Selecciona los días:</Text>
@@ -195,7 +204,7 @@ const ScheduleForm = ({ handleScheduleChange, schedule }) => {
       {Object.keys(schedule).map((day) => (
         schedule[day]?.openTime && schedule[day]?.closeTime ? (
           <View key={day} style={styles2.scheduledItem}>
-            <Text style={styles2.scheduledDays}>{day}</Text>
+            <Text style={styles2.scheduledDays}>{dayNames[day]}</Text>
             <Text style={styles2.scheduledTime}>
               {schedule[day].openTime} - {schedule[day].closeTime}
             </Text>

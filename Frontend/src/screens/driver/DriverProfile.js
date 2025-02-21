@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Pressable, TextInput, StyleSheet } from "react-native";
+import { View, Text, Pressable, TextInput, StyleSheet, ActivityIndicator } from "react-native";
 import { styles } from "../../styles/SharedStyles";
 import CustomInput from "../../components/CustomInput";
 import CustomButton from "../../components/CustomButton";
@@ -9,7 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../context/constants';
 
 const DriverProfile = ({ navigation }) => {
-    const { user, authTokens, logout} = useAuth();
+    const { user, authTokens, logout } = useAuth();
     const [userData, setUserData] = useState({
         name: "",
         surname: "",
@@ -19,9 +19,11 @@ const DriverProfile = ({ navigation }) => {
 
     const [showPicker, setShowPicker] = useState(false);
     const [date, setDate] = useState(new Date());
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchProfile = async () => {
+            setIsLoading(true);
             try {
                 const response = await fetch(`${API_URL}/driver/${user.id}/profile`, {
                     headers: {
@@ -38,6 +40,8 @@ const DriverProfile = ({ navigation }) => {
                 setDate(new Date(data.fecha_nacimiento));
             } catch (error) {
                 console.error(error);
+            } finally {
+                setIsLoading(false);
             }
         };
         fetchProfile();
@@ -61,6 +65,7 @@ const DriverProfile = ({ navigation }) => {
     };
 
     const handleSave = async () => {
+        setIsLoading(true);
         try {
             const response = await fetch(`${API_URL}/driver/${user.id}/profile/update`, {
                 method: 'PUT',
@@ -82,6 +87,8 @@ const DriverProfile = ({ navigation }) => {
             }
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -93,8 +100,16 @@ const DriverProfile = ({ navigation }) => {
         }
     };
 
+    if (isLoading) {
+        return (
+            <View style={styles.container}>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+            </View>
+        );
+    }
+
     return (
-        <View style={[styles.container, { justifyContent: "flex-start" }]}>
+        <View style={[styles.container, { justifyContent: "flex-start" }]}> 
             <Text style={styles.title}>Perfil</Text>
 
             <Text style={styles.upperInputText}>Nombre</Text>
@@ -146,12 +161,12 @@ const DriverProfile = ({ navigation }) => {
                 <CustomButton
                     text="Guardar cambios"
                     onPress={handleSave}
-                    type="PRIMARY"
                 />
                 <CustomButton
                     text="Cerrar sesión"
                     onPress={handleLogout}
-                    type="TERTIARY"
+                    style={styles.signupButton} 
+                    textStyle={styles.signupButtonText}
                 />
             </View>
         </View>

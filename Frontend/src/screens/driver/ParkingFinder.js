@@ -126,9 +126,9 @@ const ParkingFinder = ({ route, navigation }) => {
   const [sortBy, setSortBy] = useState('price');
   const [sortDirection, setSortDirection] = useState('asc');
 
-  function toggleDrawer() {
+  const toggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
-  }
+  };
 
   const [filteredParkings, setFilteredParkings] = useState([]);
 
@@ -213,8 +213,8 @@ const ParkingFinder = ({ route, navigation }) => {
           max_distance: filters.maxDistance || null,
           latitude: location.lat,
           longitude: location.lon,
-          current_day: filters.selectedDay || null,
           open_now: filters.openNow || false,
+          current_day: filters.openNow ? currentDay : filters.selectedDay || null,
           selected_start_time: filters.selectedStartTime || null,
           selected_end_time: filters.selectedEndTime || null,
           isCovered: filters.isCovered || false,
@@ -237,7 +237,6 @@ const ParkingFinder = ({ route, navigation }) => {
     
         // Aplicar ordenamiento
         parkings = sortParkings(parkings, sortBy, sortDirection);
-        toggleDrawer();
         setFilteredParkings(parkings);
         
       } catch (error) {
@@ -256,7 +255,7 @@ const ParkingFinder = ({ route, navigation }) => {
   return (
     <View style={styles2.container}>
       <Text style={styles.title}>Encontrar Estacionamiento</Text>
-        <Text style={styles.labelNegrita}>Ubicacion seleccionada:</Text>
+        <Text style={styles.labelNegrita}>Ubicación seleccionada:</Text>
         <Text style={styles.label}>
           {location.address.name!=location.address.road ? 
           `${location.address.name}, `: ''}{location.address.road} {location.address.house_number}, {location.address.city}, {location.address.state}, {location.address.country}
@@ -612,7 +611,7 @@ const ParkingFinder = ({ route, navigation }) => {
             <View style={styles2.row}>
               <CustomButton 
                 text='Cerrar' 
-                onPress={toggleDrawer()} 
+                onPress={toggleDrawer} 
                 style={styles.navigationButton} 
                 textStyle={styles.navigationButtonText}
               />

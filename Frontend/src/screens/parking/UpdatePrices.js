@@ -125,7 +125,7 @@ const UpdatePrices = () => {
         <Picker
           selectedValue={selectedVehicle}
           onValueChange={handleVehicleChange}
-          style={{ height: 50, color: theme.colors.text }}
+          style={{ height: 52, color: theme.colors.text }}
         >
           {Object.keys(vehicles).map((vehicle) => (
             <Picker.Item key={vehicle} label={vehicle} value={vehicle} color={theme.colors.text} />

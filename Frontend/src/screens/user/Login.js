@@ -22,8 +22,11 @@ const Login = ({ navigation }) => {
     } catch (error) {
       if (error.response?.data?.detail === "No active account found with the given credentials") {
         Alert.alert(
-          'Error de inicio de sesión',
-          'Usuario y/o contraseña incorrectos'
+          'No se pudo iniciar sesión',
+          'Esto puede deberse a:\n\n' +
+          '• Usuario y/o contraseña incorrectos\n' +
+          '• La cuenta no ha sido activada por correo electrónico\n\n' +
+          'Por favor, verifica tus credenciales o revisa tu correo para activar tu cuenta.'
         );
       } else {
         Alert.alert(
