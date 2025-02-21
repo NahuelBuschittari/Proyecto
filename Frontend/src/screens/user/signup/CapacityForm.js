@@ -12,21 +12,21 @@ const CapacityForm = ({ capacities, setCapacities }) => {
       <Text style={styles.cardTitle}>Cantidad de espacios disponibles</Text>
       <Text style={styles.upperInputText}>Capacidad para autos y camionetas</Text>
       <CustomInput
-        placeholder="Capacidad mínima: 0, ingrese 0 si no aplica"
+        placeholder="Valor mínimo: 0. Ingrese 0 si no aplica"
         value={capacities.carCapacity}
         setValue={(value) => handleInputChange('carCapacity', value)}
         keyboardType="numeric"
       />
       <Text style={styles.upperInputText}>Capacidad para motos</Text>
       <CustomInput
-        placeholder="Capacidad mínima: 0, ingrese 0 si no aplica"
+        placeholder="Valor mínimo: 0. Ingrese 0 si no aplica"
         value={capacities.motoCapacity}
         setValue={(value) => handleInputChange('motoCapacity', value)}
         keyboardType="numeric"
       />
       <Text style={styles.upperInputText}>Capacidad para bicicletas</Text>
       <CustomInput
-        placeholder="Capacidad mínima: 0, ingrese 0 si no aplica"
+        placeholder="Valor mínimo: 0. Ingrese 0 si no aplica"
         value={capacities.bikeCapacity}
         setValue={(value) => handleInputChange('bikeCapacity', value)}
         keyboardType="numeric"

@@ -636,7 +636,7 @@ class ParkingFinderGetParkings(APIView):
                 raise ParseError(f"Invalid day code: {current_day}")
 
             # Time-related filters
-            open_now = request.data.get('open_now', '') == 'true'
+            open_now = request.data.get('open_now')
             selected_start_time = request.data.get('selected_start_time')
             selected_end_time = request.data.get('selected_end_time')
 
@@ -684,6 +684,7 @@ class ParkingFinderGetParkings(APIView):
                         Q(**{f'schedule__{schedule_day}_close__gte': current_time})
                     )
                 elif selected_start_time and selected_end_time:
+                    print("entonces pasa por el else")
                     queryset = queryset.filter(
                         Q(**{f'schedule__{schedule_day}_open__lte': selected_start_time}) &
                         Q(**{f'schedule__{schedule_day}_close__gte': selected_end_time})

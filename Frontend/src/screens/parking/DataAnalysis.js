@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, ScrollView, Dimensions, StyleSheet, SafeAreaView } from 'react-native';
 import { BarChart, LineChart } from 'react-native-chart-kit';
 import { Picker } from '@react-native-picker/picker';
-import { Card } from 'react-native-paper';
+import { Card} from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../context/constants';
 
@@ -29,7 +29,12 @@ const DataAnalysis = () => {
     medio_dia: 'Medio Día',
     dia_completo: 'Día Completo'
   };
-
+  // Explicaciones de cada gráfico
+  const chartInfo = {
+    price: 'Este gráfico muestra la evolución del precio por tipo de vehículo en el tiempo.',
+    occupancy: 'Este gráfico muestra la ocupación de los espacios de estacionamiento a lo largo del tiempo.',
+    ratings: 'Este gráfico muestra el promedio de calificaciones en diferentes categorías.',
+  }
   const getPriceDataByType = (data, type) => {
     return {
       labels: data.map(item => item.fecha),
@@ -199,7 +204,6 @@ const DataAnalysis = () => {
       >
         <Card containerStyle={styles.card}>
           <Text style={styles.cardTitle}>Análisis de Datos</Text>
-          
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={selectedChart}
@@ -351,6 +355,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginHorizontal: 16,
     marginVertical: 8,
+    alignItems: 'center',
     padding: 16,
     elevation: 4,
     shadowColor: '#000',
@@ -371,7 +376,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   picker: {
-    height: 50,
+    height: 55,
     width: '100%',
   },
   chartWrapper: {

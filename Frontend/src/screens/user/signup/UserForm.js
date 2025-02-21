@@ -36,7 +36,7 @@ const UserForm = ({ userData, setUserData, isParking }) => {
     <>
       <Text style={styles.upperInputText}>{isParking ? "Nombre del Estacionamiento" : "Nombre"}</Text>
       <CustomInput
-        placeholder={isParking ? "Introduce el nombre del estacionamiento" : "Introduce tu nombre"}
+        placeholder={isParking ? "Introduce el nombre " : "Introduzca su nombre"}
         value={userData.name}
         setValue={(value) => handleInputChange('name', value)}
         keyboardType="default"
@@ -46,7 +46,7 @@ const UserForm = ({ userData, setUserData, isParking }) => {
         <>
           <Text style={styles.upperInputText}>Apellido</Text>
           <CustomInput
-            placeholder="Introduce tu apellido"
+            placeholder="Introduzca su apellido"
             value={userData.surname}
             setValue={(value) => handleInputChange('surname', value)}
             keyboardType="default"
@@ -54,7 +54,8 @@ const UserForm = ({ userData, setUserData, isParking }) => {
           <Text style={styles.upperInputText}>Fecha de nacimiento</Text>
           <Pressable onPress={toggleDatepicker} style={[{width:'100%', alignItems:'center'}]}>
             <TextInput
-            placeholder="Introduzca fecha de Nacimiento"
+            placeholder="Introduzca su fecha de nacimiento"
+            placeholderTextColor={theme.colors.primary}
             value={userData.birthDate? userData.birthDate.toLocaleDateString(): ""}
             setValue={(value) => handleInputChange('birthDate', value)}
             editable={false}
@@ -95,7 +96,7 @@ const UserForm = ({ userData, setUserData, isParking }) => {
       />
       <Text style={styles.upperInputText}>Repetir contraseña</Text>
       <CustomInput
-        placeholder="Repite tu Contraseña"
+        placeholder="Repita su contraseña"
         value={userData.repeatPassword}
         setValue={(value) => handleInputChange('repeatPassword', value)}
         secureTextEntry={!showPassword}

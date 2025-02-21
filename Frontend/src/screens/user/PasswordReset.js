@@ -16,7 +16,7 @@ const PasswordReset = () => {
       const response = await axios.post(`${API_URL}/auth/users/reset_password/`, { email });
   
       if (response.status === 204) {
-        Alert.alert("Revise su casilla de correo para restablecer la contraseña.");
+        Alert.alert("Correo enviado","Revise su casilla de correo para restablecer la contraseña.");
       }
     } catch (error) {
       console.log("Error en la solicitud:", error);
