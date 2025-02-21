@@ -61,8 +61,8 @@ const ParkingFinder = ({ route, navigation }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [currentDay,setCurrentDay]=useState('');
   const [loading, setLoading] = useState(true);
+  const [isLoading,setIsLoading]=useState(false);
   const [origin, setOrigin] = useState(null);
- 
 
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
@@ -186,6 +186,7 @@ const ParkingFinder = ({ route, navigation }) => {
     };
     const fetchInitialParkings = async () => {
       try {
+        setIsLoading(true);
         const response = await axios.post(`${API_URL}/driver/parkingFinder`, {
           vehicle_type: selectedVehicle,
           latitude: location.lat,
@@ -196,6 +197,8 @@ const ParkingFinder = ({ route, navigation }) => {
         setFilteredParkings(parkings);
       } catch (error) {
         console.error('Error fetching initial parkings:', error);
+      }finally{
+        setIsLoading(false);
       }
     };
     
@@ -206,6 +209,7 @@ const ParkingFinder = ({ route, navigation }) => {
 
     const applyFilters = async () => {
       try {
+        setIsLoading(true);
         const parkingFilters = {
           vehicle_type: selectedVehicle,
           max_price: filters.maxPrice || null,
@@ -241,6 +245,8 @@ const ParkingFinder = ({ route, navigation }) => {
         
       } catch (error) {
         console.error('Error applying filters:', error);
+      }finally{
+        setIsLoading(false);
       }
     };
     
@@ -626,80 +632,84 @@ const ParkingFinder = ({ route, navigation }) => {
       )}
 
       {/* Resultados */}
-      {filteredParkings.length > 0 ? (
- <FlatList
-   data={filteredParkings}
-   keyExtractor={(item) => item.id.toString()}
-   renderItem={({ item }) => {
-     let dayToShow = null;
-     let openTime = null;
-     let closeTime = null;
+      {isLoading ? (
+                <View style={[styles.container,{alignItems: 'center', justifyContent: 'center'}]}>
+                  <ActivityIndicator size="large" color={theme.colors.primary} />
+                </View>
+      ) : filteredParkings.length > 0 ? (
+        <FlatList
+          data={filteredParkings}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => {
+            let dayToShow = null;
+            let openTime = null;
+            let closeTime = null;
 
-     const dayMap = {
-       'L': 'lunes',
-       'Ma': 'martes', 
-       'Mi': 'miercoles',
-       'J': 'jueves',
-       'V': 'viernes',
-       'S': 'sabado',
-       'D': 'domingo',
-       'F': 'feriados'
-     };
+            const dayMap = {
+              'L': 'lunes',
+              'Ma': 'martes', 
+              'Mi': 'miercoles',
+              'J': 'jueves',
+              'V': 'viernes',
+              'S': 'sabado',
+              'D': 'domingo',
+              'F': 'feriados'
+            };
 
-     if (filters.openNow || filters.selectedDay) {
-       const day = filters.openNow ? currentDay : filters.selectedDay;
-       const scheduleDay = dayMap[day];
-       openTime = item.schedule[`${scheduleDay}_open`];
-       closeTime = item.schedule[`${scheduleDay}_close`];
-       dayToShow = day;
-     }
+      if (filters.openNow || filters.selectedDay) {
+        const day = filters.openNow ? currentDay : filters.selectedDay;
+        const scheduleDay = dayMap[day];
+        openTime = item.schedule[`${scheduleDay}_open`];
+        closeTime = item.schedule[`${scheduleDay}_close`];
+        dayToShow = day;
+      }
 
-     const vehiclePrefix = selectedVehicle.toLowerCase().replace('í', 'i');
+      const vehiclePrefix = selectedVehicle.toLowerCase().replace('í', 'i');
 
-     return (
-       <View style={styles.card}>
-         <Text style={styles2.parkingTitle}>{item.nombre}</Text>
-         <Text>{item.calle} {item.numero}</Text>
-         <Text>Distancia: {item.distance} cuadras</Text>
-         <View style={styles.card}>
-           <Text>Tarifas para {selectedVehicle}:</Text>
-           <Text>Fracción: ${item.prices[`${vehiclePrefix}_fraccion`]}</Text>
-           <Text>Hora: ${item.prices[`${vehiclePrefix}_hora`]}</Text>
-           <Text>Medio día: ${item.prices[`${vehiclePrefix}_medio_dia`]}</Text>
-           <Text>Día completo: ${item.prices[`${vehiclePrefix}_dia_completo`]}</Text>
-         </View>
-         {dayToShow && (
-           <Text>Horarios ({dayToShow}): {openTime} - {closeTime}</Text>
-         )}
-         <View style={styles.buttonContainer}>
-           <CustomButton 
-             text='Mas info'
-             style={styles.navigationButton}
-             textStyle={styles.navigationButtonText}
-             onPress={() => navigation.navigate('SpecificParkingDetails', {
-               parkingData: item,
-               selectedVehicle: selectedVehicle,
-             })}
-           />
-           <CustomButton 
-             text='Ir con Google Maps'
-             style={styles.navigationButton}
-             textStyle={styles.navigationButtonText}
-             onPress={() => {
-                 openGoogleMaps(origin, item, selectedVehicle);
-               
-             }}
-           />
-         </View>
-       </View>
-     );
-   }}
- />
-) : (
- <Text style={styles2.noResults}>
-   No se encontraron estacionamientos que coincidan con tus filtros.
- </Text>
-)}
+      return (
+        <View style={styles.card}>
+          <Text style={styles2.parkingTitle}>{item.nombre}</Text>
+          <Text>{item.calle} {item.numero}</Text>
+          <Text>Distancia: {item.distance} cuadras</Text>
+          <View style={styles.card}>
+            <Text>Tarifas para {selectedVehicle}:</Text>
+            <Text>Fracción: ${item.prices[`${vehiclePrefix}_fraccion`]}</Text>
+            <Text>Hora: ${item.prices[`${vehiclePrefix}_hora`]}</Text>
+            <Text>Medio día: ${item.prices[`${vehiclePrefix}_medio_dia`]}</Text>
+            <Text>Día completo: ${item.prices[`${vehiclePrefix}_dia_completo`]}</Text>
+          </View>
+          {dayToShow && (
+            <Text>Horarios ({dayToShow}): {openTime} - {closeTime}</Text>
+          )}
+          <View style={styles.buttonContainer}>
+            <CustomButton 
+              text='Mas info'
+              style={styles.navigationButton}
+              textStyle={styles.navigationButtonText}
+              onPress={() => navigation.navigate('SpecificParkingDetails', {
+                parkingData: item,
+                selectedVehicle: selectedVehicle,
+              })}
+            />
+            <CustomButton 
+              text='Ir con Google Maps'
+              style={styles.navigationButton}
+              textStyle={styles.navigationButtonText}
+              onPress={() => {
+                  openGoogleMaps(origin, item, selectedVehicle);
+                
+              }}
+            />
+          </View>
+        </View>
+      );
+    }}
+  />
+  ) : (
+  <Text style={styles2.noResults}>
+    No se encontraron estacionamientos que coincidan con tus filtros.
+  </Text>
+  )}
     </View>
   );
 };
