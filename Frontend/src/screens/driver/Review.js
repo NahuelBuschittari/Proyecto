@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, ScrollView, Platform } from "react-native";
+import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, ScrollView, Platform, Alert } from "react-native";
 import { styles } from "../../styles/SharedStyles";
 import CustomButton from "../../components/CustomButton";
 import { theme } from "../../styles/theme";
@@ -85,9 +85,8 @@ const Review = ({ navigation, route }) => {
             if (!response.ok) {
                 throw new Error(data.error || 'Error al actualizar la reseña');
             }
-
+            Alert.alert('Reseña registrada', 'Tu reseña ha sido registrada correctamente. Gracias por tu opinión.', [{ text: 'Aceptar', onPress: () => navigation.goBack() }]);
             console.log('Review actualizada correctamente:', data.message);
-            navigation.goBack();
         } catch (error) {
             console.error('Error en la actualización:', error.message);
         }

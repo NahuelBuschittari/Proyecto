@@ -45,9 +45,21 @@ const NavigationWrapper = () => {
     <Stack.Navigator>
       {!user ? (
           <>
-            <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="SignUp" component={SignUp} />
-            <Stack.Screen name="PasswordReset" component={PasswordReset} />
+            <Stack.Screen name="Login" component={Login} 
+            options={{
+              title: '',
+              headerTitleAlign: 'center',
+            }}/>
+            <Stack.Screen name="SignUp" component={SignUp} 
+            options={{
+              title: '',
+              headerTitleAlign: 'center',
+            }}/>
+            <Stack.Screen name="PasswordReset" component={PasswordReset} 
+            options={{
+              title: '',
+              headerTitleAlign: 'center',
+            }}/>
           </>
         ) : (
           <>

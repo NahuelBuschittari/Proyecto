@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
       console.log('User profile response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error in getUserProfile:', error.response?.data || error.message);
+      console.log('Error in getUserProfile:', error.response?.data || error.message);
       throw error;
     }
   };
@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
       await AsyncStorage.setItem('authTokens', JSON.stringify(tokens));
       await AsyncStorage.setItem('userData', JSON.stringify(userData));
     } catch (error) {
-      console.error('Error storing auth data:', error);
+      console.log('Error storing auth data:', error);
       throw error;
     }
   };
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
       }
     } catch (error) {
-      console.error('Error loading auth data:', error);
+      console.log('Error loading auth data:', error);
     } finally {
       setLoading(false);
     }
@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }) => {
       return userData;
 
     } catch (error) {
-      console.error('Login error:', error.response?.data || error.message);
+      console.log('Login error:', error.response?.data || error.message);
       throw error;
     }
   };
@@ -103,7 +103,7 @@ export const AuthProvider = ({ children }) => {
       await AsyncStorage.removeItem('userData');
       console.log('Logout successful');
     } catch (error) {
-      console.error('Logout error:', error);
+      console.log('Logout error:', error);
     }
   };
 
@@ -131,7 +131,7 @@ export const AuthProvider = ({ children }) => {
   
       return newToken;
     } catch (error) {
-      console.error('Token refresh error:', error.response?.data || error.message);
+      console.log('Token refresh error:', error.response?.data || error.message);
       await logout();
       return null;
     }
@@ -174,7 +174,7 @@ export const AuthProvider = ({ children }) => {
               return axios(originalRequest);
             }
           } catch (refreshError) {
-            console.error('Error during token refresh:', refreshError);
+            console.log('Error during token refresh:', refreshError);
             await logout();
           }
         }
@@ -188,7 +188,7 @@ export const AuthProvider = ({ children }) => {
         try {
           await refreshToken();
         } catch (error) {
-          console.error('Error in periodic refresh:', error);
+          console.log('Error in periodic refresh:', error);
         }
       }
     }, 240000);
