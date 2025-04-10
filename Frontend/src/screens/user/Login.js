@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image } from 'react-native';
 import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/CustomButton';
 import {styles} from '../../styles/SharedStyles';
@@ -53,6 +53,7 @@ const Login = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      <Image source={require("./../../../assets/logoEstacionApp.png")} style={{ width: 100, height: 100 }}/> 
       <Text style={styles.title}>Iniciar Sesión</Text>
       
       <CustomInput 
