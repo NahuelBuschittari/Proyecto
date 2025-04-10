@@ -34,7 +34,7 @@ const NavigationWrapper = () => {
   
   const renderHeaderLogo = (navigation, homeRoute) => (
     <TouchableOpacity onPress={() => navigation.navigate(homeRoute)}>
-      <Text>Home</Text>
+      <Image source={require("./assets/logoEstacionApp.png")} style={{ width: 60, height: 60 }}/> 
     </TouchableOpacity>
   );
 
