@@ -1,9 +1,11 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, StyleSheet } from "react-native";
+import React, { useState, useRef } from "react";
+import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, ScrollView, Platform, Alert } from "react-native";
 import { styles } from "../../styles/SharedStyles";
 import CustomButton from "../../components/CustomButton";
 import { theme } from "../../styles/theme";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { useAuth } from '../../context/AuthContext';
+import { API_URL } from '../../context/constants';
 
 
 const RatingStars = ({ rating, setRating }) => {
@@ -29,7 +31,7 @@ const CharacteristicRating = ({ title, rating, setRating }) => (
     </View>
 );
 
-const Review = ({ navigation }) => {
+const Review = ({ navigation, route }) => {
     const [ratings, setRatings] = useState({
         security: 0,
         cleanliness: 0,
@@ -39,70 +41,131 @@ const Review = ({ navigation }) => {
     });
     const [comment, setComment] = useState("");
 
-    const handleSubmit = () => {
-        console.log("Ratings:", ratings);
-        console.log("Comment:", comment);
-        navigation.goBack();
+    const inputRef = useRef(null);
+    const scrollViewRef = useRef(null);
+
+    const { user, authTokens } = useAuth();
+    const { reviewId } = route.params;
+
+    const handleFocus = () => {
+        setTimeout(() => {
+            inputRef.current?.measureLayout(
+                scrollViewRef.current,
+                (x, y) => {
+                    scrollViewRef.current?.scrollTo({ y, animated: true });
+                }
+            );
+        }, 300);
     };
 
+    const handleSubmit = async () => {
+        try {
+            const token = authTokens.access;
+            const reviewData = {
+                id_review: reviewId,
+                security: ratings.security,
+                cleanliness: ratings.cleanliness,
+                lighting: ratings.lighting,
+                accessibility: ratings.accessibility,
+                service: ratings.service,
+                comment: comment,
+            };
+
+            const response = await fetch(`${API_URL}/reviews/update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(reviewData),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Error al actualizar la reseña');
+            }
+            Alert.alert('Reseña registrada', 'Tu reseña ha sido registrada correctamente. Gracias por tu opinión.', [{ text: 'Aceptar', onPress: () => navigation.goBack() }]);
+            console.log('Review actualizada correctamente:', data.message);
+        } catch (error) {
+            console.error('Error en la actualización:', error.message);
+        }
+    };
+
+
+
     return (
-        <View style={[styles.container, { justifyContent: "flex-start" }]}>
-            <Text style={styles.title}>Evaluar Estacionamiento</Text>
+        <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0} 
+            style={{ flex: 1 }}
+        >
+            <ScrollView
+                ref={scrollViewRef}
+                contentContainerStyle={{ flexGrow: 1 }}
+                keyboardShouldPersistTaps="handled"
+            >
+                <View style={[styles.container, { justifyContent: "flex-start" }]}>
+                    <Text style={styles.title}>Evaluar Estacionamiento</Text>
 
-            <CharacteristicRating
-                title="Seguridad"
-                rating={ratings.security}
-                setRating={(value) =>
-                    setRatings((prev) => ({ ...prev, security: value }))
-                }
-            />
-            <CharacteristicRating
-                title="Limpieza"
-                rating={ratings.cleanliness}
-                setRating={(value) =>
-                    setRatings((prev) => ({ ...prev, cleanliness: value }))
-                }
-            />
-            <CharacteristicRating
-                title="Iluminación"
-                rating={ratings.lighting}
-                setRating={(value) =>
-                    setRatings((prev) => ({ ...prev, lighting: value }))
-                }
-            />
-            <CharacteristicRating
-                title="Facilidad de acceso"
-                rating={ratings.accessibility}
-                setRating={(value) =>
-                    setRatings((prev) => ({ ...prev, accessibility: value }))
-                }
-            />
-            <CharacteristicRating
-                title="Atención del personal"
-                rating={ratings.service}
-                setRating={(value) =>
-                    setRatings((prev) => ({ ...prev, service: value }))
-                }
-            />
+                    <CharacteristicRating
+                        title="Seguridad"
+                        rating={ratings.security}
+                        setRating={(value) =>
+                            setRatings((prev) => ({ ...prev, security: value }))
+                        }
+                    />
+                    <CharacteristicRating
+                        title="Limpieza"
+                        rating={ratings.cleanliness}
+                        setRating={(value) =>
+                            setRatings((prev) => ({ ...prev, cleanliness: value }))
+                        }
+                    />
+                    <CharacteristicRating
+                        title="Iluminación"
+                        rating={ratings.lighting}
+                        setRating={(value) =>
+                            setRatings((prev) => ({ ...prev, lighting: value }))
+                        }
+                    />
+                    <CharacteristicRating
+                        title="Facilidad de acceso"
+                        rating={ratings.accessibility}
+                        setRating={(value) =>
+                            setRatings((prev) => ({ ...prev, accessibility: value }))
+                        }
+                    />
+                    <CharacteristicRating
+                        title="Atención del personal"
+                        rating={ratings.service}
+                        setRating={(value) =>
+                            setRatings((prev) => ({ ...prev, service: value }))
+                        }
+                    />
 
-            <Text style={styles2.commentTitle}>
-                Comentarios adicionales (opcional)
-            </Text>
-            <TextInput
-                style={styles2.commentInput}
-                multiline
-                numberOfLines={4}
-                value={comment}
-                onChangeText={setComment}
-                placeholder="Escribe tu comentario aquí..."
-            />
+                    <Text style={styles2.commentTitle}>
+                        Comentarios adicionales (opcional)
+                    </Text>
+                    <TextInput
+                        ref={inputRef}
+                        onFocus={handleFocus}
+                        style={styles2.commentInput}
+                        multiline
+                        numberOfLines={4}
+                        value={comment}
+                        onChangeText={setComment}
+                        placeholder="Escribe tu comentario aquí..."
+                    />
 
-            <CustomButton
-                text="Enviar reseña"
-                onPress={handleSubmit}
-                type="PRIMARY"
-            />
-        </View>
+                    <CustomButton
+                        text="Enviar reseña"
+                        onPress={handleSubmit}
+                        type="PRIMARY"
+                    />
+                </View>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
 

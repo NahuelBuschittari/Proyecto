@@ -181,6 +181,7 @@ export const styles = StyleSheet.create({
   header: {
     padding: theme.spacing.md,
     backgroundColor: theme.colors.background,
+    alignItems: 'center',
 
   },
 
@@ -204,5 +205,34 @@ export const styles = StyleSheet.create({
     height: 50,
     width: '100%',
     marginBottom: 12,
+  },
+  typeSelector: {
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+    borderRadius: 8,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 10,
+    marginBottom: 20,
+    width: '80%',
+  },
+  typeButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 0,
+    borderRadius: 6,
+    backgroundColor: '#f5f5f5',
+    flex: 1,
+    maxWidth: 150,
+    alignItems: 'center',
+  },
+  typeButtonActive: {
+    backgroundColor: '#394c74',
+  },
+  typeButtonText: {
+    color: '#394c74',
+    fontWeight: '500',
+  },
+  typeButtonTextActive: {
+    color: '#f5f5f5',
   },
 });

@@ -20,20 +20,9 @@ import { Picker } from '@react-native-picker/picker';
 import getDay from '../../components/getDay';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
-const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const toRadians = (degree) => degree * (Math.PI / 180);
-  const R = 6371000; // Radio de la Tierra en metros
-  const dLat = toRadians(lat2 - lat1);
-  const dLon = toRadians(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c; // Distancia en metros
-  return distance;
-};
-
+import { setupNotifications,checkParkingAvailability } from '../../components/Notifications';
+import { API_URL } from '../../context/constants';
+import axios from 'axios';
 const ParkingFinder = ({ route, navigation }) => {
 
   useEffect(() => {
@@ -60,7 +49,7 @@ const ParkingFinder = ({ route, navigation }) => {
         longitude: location.coords.longitude
       });
     };
-
+    setupNotifications();
     fetchDay();
     fetchLocation();
   }, []);
@@ -68,11 +57,12 @@ const ParkingFinder = ({ route, navigation }) => {
   const [parkings, setParkings] = useState(dummyParkingData);
   const [activeFilterCategory, setActiveFilterCategory] = useState('caracteristicas');
   const [selectedVehicle, setSelectedVehicle] = useState(vehicle || 'Auto');
+  const [priceType, setPriceType] = useState('Hora');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [currentDay,setCurrentDay]=useState('');
   const [loading, setLoading] = useState(true);
+  const [isLoading,setIsLoading]=useState(false);
   const [origin, setOrigin] = useState(null);
- 
 
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
@@ -99,10 +89,11 @@ const ParkingFinder = ({ route, navigation }) => {
   const [filters, setFilters] = useState({
     vehicleType: selectedVehicle,
     maxDistance: null,
+    maxPrice: null,
+    priceType: 'Hora',
     isCovered: null,
     has24hSecurity: null,
     hasEVChargers: null,
-    maxPrice: null,
     hasCCTV: null,
     hasValetService: null,
     hasDisabledParking: null,
@@ -119,142 +110,145 @@ const ParkingFinder = ({ route, navigation }) => {
   });
 
 
-  const openGoogleMaps = (origin, latitude, longitude, vehicle) => {
-    const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${latitude},${longitude}&travelmode=driving`;
+  async function openGoogleMaps(origin, item, vehicle) {
+    let travelmode= 'driving'
+    if(vehicle==='Moto'){
+      travelmode='two-wheeler';}
+    else if(vehicle==='Bicicleta') {
+      travelmode='bicycling';}
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${item.latitude},${item.longitude}&travelmode=${travelmode}`;
+    const space=await checkParkingAvailability(item,vehicle);
+    if(space){
+      createReview(item.id, user.id, authTokens.access);
+     }
     Linking.openURL(url);
   };
   const [sortBy, setSortBy] = useState('price');
   const [sortDirection, setSortDirection] = useState('asc');
 
-  const toggleDrawer = () => setDrawerOpen(!drawerOpen);
+  const toggleDrawer = () => {
+    setDrawerOpen(!drawerOpen);
+  };
 
-  const clearFilters = useCallback(() => {
-    setFilters({
-      vehicleType: selectedVehicle,
-      maxDistance: null,
-      isCovered: null,
-      has24hSecurity: null,
-      hasEVChargers: null,
-      maxPrice: null,
-      hasCCTV: null,
-      hasValetService: null,
-      hasDisabledParking: null,
-      hasAutoPayment: null,
-      hasCardAccess: null,
-      hasCarWash: null,
-      hasRestrooms: null,
-      hasBreakdownAssistance: null,
-      hasFreeWiFi: null,
-      selectedDay: null,
-      selectedStartTime: null,
-      selectedEndTime: null,
-      openNow:false,
-    });
-  }, [selectedVehicle]);
+  const [filteredParkings, setFilteredParkings] = useState([]);
 
-  const filteredParkings = parkings
-    .filter((parking) => {
-      // Mapeo de capacidades según el tipo de vehículo
-      const vehicleCapacityMap = {
-        'Auto': 'carCapacity',
-        'Camioneta': 'carCapacity',
-        'Moto': 'motoCapacity',
-        'Bicicleta': 'bikeCapacity'
-      };
-
-      const vehicleCapacityKey = vehicleCapacityMap[selectedVehicle];
-
-      // Filtro de capacidad
-      if (parseInt(parking.capacities[vehicleCapacityKey]) === 0) return false;
-
-      // Filtro de distancia
-      if (location && parking.userData.address) {
-        const distanceMeters = calculateDistance(
-          location.lat,
-          location.lon,
-          parking.userData.address.latitude,
-          parking.userData.address.longitude
-        );
-        const distanceBlocks = Math.round(parseFloat(distanceMeters / 100));
-        if(filters.maxDistance !== null){
-          if (distanceBlocks > filters.maxDistance){ 
-            return false;}
-        }else{
-          parking.distanceFormatted = distanceBlocks;
-        };
-        
+  
+    useEffect(() => {
+      if (filteredParkings.length > 0) {
+        const sortedParkings = sortParkings(filteredParkings, sortBy, sortDirection);
+        setFilteredParkings(sortedParkings);
       }
-
-      // Filtros de características
-      const featureFilters = [
-        'isCovered', 'has24hSecurity', 'hasEVChargers', 
-        'hasCCTV', 'hasValetService', 'hasDisabledParking', 
-        'hasAutoPayment', 'hasCardAccess', 'hasCarWash', 
-        'hasRestrooms', 'hasBreakdownAssistance', 'hasFreeWiFi'
-      ];
-
-      for (let feature of featureFilters) {
-        if (filters[feature] === true  && parking.features[feature] !== filters[feature]) {
-          return false;
+    }, [sortBy, sortDirection]);
+  
+    // Función para manejar el ordenamiento
+    const sortParkings = (parkings, sortBy, sortDirection) => {
+      return [...parkings].sort((a, b) => {
+        if (sortBy === 'price') {
+          const priceKey = `${selectedVehicle.toLowerCase()}_${priceType.toLowerCase().replace(' ', '_')}`;
+    
+          const priceA = parseFloat(a.prices[priceKey] || 0);
+          const priceB = parseFloat(b.prices[priceKey] || 0);
+    
+          return sortDirection === 'asc' ? priceA - priceB : priceB - priceA;
+        } else if (sortBy === 'distance') {
+          return sortDirection === 'asc' ? a.distance - b.distance : b.distance - a.distance;
         }
-      }
-
-    // Validación de horario
-    if (filters.openNow) {
-      const scheduleForDay = parking.schedule[currentDay];
-      const currentTime = new Date().toLocaleTimeString('es-AR', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
+        return 0;
       });
-      
-      if (currentTime < scheduleForDay.openTime || 
-          currentTime > scheduleForDay.closeTime) {
-        return false;
+    };
+    
+    const clearFilters = () => {
+      setFilters({
+        vehicleType: selectedVehicle,
+        maxDistance: null,
+        maxPrice: null,
+        priceType: 'Hora',
+        isCovered: null,
+        has24hSecurity: null,
+        hasEVChargers: null,
+        hasCCTV: null,
+        hasValetService: null,
+        hasDisabledParking: null,
+        hasAutoPayment: null,
+        hasCardAccess: null,
+        hasCarWash: null,
+        hasRestrooms: null,
+        hasBreakdownAssistance: null,
+        hasFreeWiFi: null,    
+        selectedDay: null,
+        selectedStartTime: null,
+        selectedEndTime: null,
+        openNow: false,
+      });
+    
+      // Volver a cargar los estacionamientos iniciales
+      fetchInitialParkings();
+    };
+    const fetchInitialParkings = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.post(`${API_URL}/driver/parkingFinder`, {
+          vehicle_type: selectedVehicle,
+          latitude: location.lat,
+          longitude: location.lon
+        });
+    
+        let parkings = response.data;
+        setFilteredParkings(parkings);
+      } catch (error) {
+        console.error('Error fetching initial parkings:', error);
+      }finally{
+        setIsLoading(false);
       }
-    }
+    };
+    
+    // Llamar a la función cuando el componente se monta
+    useEffect(() => {
+      fetchInitialParkings();
+    }, [selectedVehicle, location]);
 
-    // Filtro de horario específico
-    if (!filters.openNow && filters.selectedDay && 
-        filters.selectedStartTime && filters.selectedEndTime) {
-          const scheduleForDay = parking.schedule[filters.selectedDay];
-      if (filters.selectedStartTime < scheduleForDay.openTime || 
-          filters.selectedEndTime > scheduleForDay.closeTime) {
-        return false;
+    const applyFilters = async () => {
+      try {
+        setIsLoading(true);
+        const parkingFilters = {
+          vehicle_type: selectedVehicle,
+          max_price: filters.maxPrice || null,
+          price_type: filters.priceType?.toLowerCase().replace(' ', '_').replace('í', 'i'),
+          max_distance: filters.maxDistance || null,
+          latitude: location.lat,
+          longitude: location.lon,
+          open_now: filters.openNow || false,
+          current_day: filters.openNow ? currentDay : filters.selectedDay || null,
+          selected_start_time: filters.selectedStartTime || null,
+          selected_end_time: filters.selectedEndTime || null,
+          isCovered: filters.isCovered || false,
+          has24hSecurity: filters.has24hSecurity || false,
+          hasCCTV: filters.hasCCTV || false,
+          hasValetService: filters.hasValetService || false,
+          hasDisabledParking: filters.hasDisabledParking || false,
+          hasEVChargers: filters.hasEVChargers || false,
+          hasAutoPayment: filters.hasAutoPayment || false,
+          hasCardAccess: filters.hasCardAccess || false,
+          hasCarWash: filters.hasCarWash || false,
+          hasRestrooms: filters.hasRestrooms || false,
+          hasBreakdownAssistance: filters.hasBreakdownAssistance || false,
+          hasFreeWiFi: filters.hasFreeWiFi || false
+        };
+        console.log(parkingFilters)
+        const response = await axios.post(`${API_URL}/driver/parkingFinder`, parkingFilters);
+    
+        let parkings = response.data;
+    
+        // Aplicar ordenamiento
+        parkings = sortParkings(parkings, sortBy, sortDirection);
+        setFilteredParkings(parkings);
+        
+      } catch (error) {
+        console.error('Error applying filters:', error);
+      }finally{
+        setIsLoading(false);
       }
-    }
-
-      // Filtro de precio máximo
-      if (filters.maxPrice !== null) {
-        const currentPrice = parseInt(parking.prices[selectedVehicle]['dia completo']);
-        if (currentPrice > filters.maxPrice) return false;
-      }
-
-      return true;
-    })
-    .sort((a, b) => {
-      let comparison = 0;
-    
-      switch (sortBy) {
-        case 'price':
-          const priceA = parseInt(a.prices[selectedVehicle]['dia completo']);
-          const priceB = parseInt(b.prices[selectedVehicle]['dia completo']);
-          comparison = priceA - priceB;
-          break;
-    
-        case 'distance':
-          const distA = a.distanceFormatted;
-          const distB = b.distanceFormatted;
-          comparison = distA - distB;
-          break;
-    
-        default:
-          break;
-      }
-    
-      // Aplicar dirección (ascendente o descendente)
-      return sortDirection === 'asc' ? comparison : -comparison;
-    });
+    };
     
     if (loading) {
             return (
@@ -267,7 +261,7 @@ const ParkingFinder = ({ route, navigation }) => {
   return (
     <View style={styles2.container}>
       <Text style={styles.title}>Encontrar Estacionamiento</Text>
-        <Text style={styles.labelNegrita}>Ubicacion seleccionada:</Text>
+        <Text style={styles.labelNegrita}>Ubicación seleccionada:</Text>
         <Text style={styles.label}>
           {location.address.name!=location.address.road ? 
           `${location.address.name}, `: ''}{location.address.road} {location.address.house_number}, {location.address.city}, {location.address.state}, {location.address.country}
@@ -304,7 +298,7 @@ const ParkingFinder = ({ route, navigation }) => {
 
       {drawerOpen && (
         <Drawer.Section style={styles2.drawer}>
-          <ScrollView>
+          
             <View style={{ alignSelf:'center',width:'90%',borderWidth: 1, borderColor: theme.colors.primary, borderRadius: theme.spacing.sm }}>
             <Picker
               selectedValue={activeFilterCategory}
@@ -333,6 +327,15 @@ const ParkingFinder = ({ route, navigation }) => {
               
             </Picker>
             </View>
+            <View style={[{padding: 8,marginBottom: 8,alignItems: 'center',width:'100%'}]}>
+            <CustomButton 
+                text='Limpiar filtros' 
+                onPress={clearFilters}
+                style={styles.signupButton}
+                textStyle={[styles.signupButtonText,{color:theme.colors.background}]} 
+              />
+            </View>
+            <ScrollView>
             {activeFilterCategory === 'ubiPrecio' && (
               <>
                 <View style={styles2.row}>
@@ -358,7 +361,7 @@ const ParkingFinder = ({ route, navigation }) => {
                 </View>
 
                 <View style={styles2.row}>
-                  <Text>Distancia máxima(en cuadras):</Text>
+                  <Text>Distancia máxima(cuadras):</Text>
                   <CustomInput
                     style={styles2.input}
                     keyboardType="numeric"
@@ -370,7 +373,7 @@ const ParkingFinder = ({ route, navigation }) => {
                   />
                 </View>
                 <View style={styles2.row}>
-                  <Text>Precio máximo:</Text>
+                  <Text>Precio máximo(pesos):</Text>
                   <CustomInput
                     style={styles2.input}
                     keyboardType="numeric"
@@ -380,6 +383,27 @@ const ParkingFinder = ({ route, navigation }) => {
                       setFilters({ ...filters, maxPrice: price });
                     }}
                   />
+                </View>
+                <View style={styles2.row}>
+                <Text>Tipo de tarifa:</Text>
+                <View style={[{width:'70%'}]}>
+                  <Picker pickerStyleType={[{fontSize:theme.typography.fontSize.small}]}
+                    selectedValue={priceType}
+                    onValueChange={(itemValue) => {
+                      setPriceType(itemValue);
+                      setFilters(prev => ({ ...prev, priceType: itemValue }));
+                    }}
+                  >
+                    {['Fraccion', 'Hora', 'Medio día', 'Día completo'].map((priceType, index) => (
+                      <Picker.Item 
+                        key={index} 
+                        label={priceType} 
+                        value={priceType} 
+                        color={theme.colors.text}
+                      />
+                    ))}
+                  </Picker> 
+                </View>
                 </View>
               </>
             )}
@@ -545,7 +569,7 @@ const ParkingFinder = ({ route, navigation }) => {
                   </View>
                   <View style={styles2.row}>
                     <Text>Hora desde:</Text>                   
-                    <Pressable onPress={() => setShowStartTimePicker(true)} style={{width:'40%',height:'35%'}}>
+                    <Pressable onPress={() => setShowStartTimePicker(true)} style={{width:'40%',height:'40%'}}>
                     <CustomInput
                       style={[styles2.input,{width:'100%',height:'100%'}]}
                       placeholder="(HH:MM)"
@@ -559,7 +583,7 @@ const ParkingFinder = ({ route, navigation }) => {
                   <View style={styles2.row}>
                     <Text>Hora hasta:</Text>
                     
-                    <Pressable onPress={() => setShowEndTimePicker(true)} style={{width:'40%',height:'35%'}}>
+                    <Pressable onPress={() => setShowEndTimePicker(true)} style={{width:'40%',height:'40%'}}>
                     <CustomInput
                       style={[styles2.input,{width:'100%',height:'100%'}]}
                       placeholder="(HH:MM)"
@@ -589,7 +613,7 @@ const ParkingFinder = ({ route, navigation }) => {
                   )}
                 </>
               )}
-
+            </ScrollView>
             <View style={styles2.row}>
               <CustomButton 
                 text='Cerrar' 
@@ -598,74 +622,94 @@ const ParkingFinder = ({ route, navigation }) => {
                 textStyle={styles.navigationButtonText}
               />
               <CustomButton 
-                text='Limpiar filtros' 
-                onPress={clearFilters} 
+                text='Aplicar filtros' 
+                onPress={applyFilters} 
                 style={styles.navigationButton} 
                 textStyle={styles.navigationButtonText}
               />
             </View>
-          </ScrollView>
         </Drawer.Section>
       )}
 
       {/* Resultados */}
-      {filteredParkings.length > 0 ? (
-        <FlatList
-        data={filteredParkings}
-        keyExtractor={(item) => item.userData.id.toString()}
-        renderItem={({ item }) => {
-          let dayToShow = null;
-          let schedule = null;
-
-          if (filters.openNow) {
-            dayToShow = currentDay;
-            schedule = item.schedule[dayToShow];
-          } else if (filters.selectedDay !== null) {
-            dayToShow = filters.selectedDay;
-            schedule = item.schedule[dayToShow];
-          }
-            return (
-              <View style={styles.card}>
-                <Text style={styles2.parkingTitle}>{item.userData.name}</Text>
-                <Text>
-                  {item.userData.address.street} {item.userData.address.number}
-                </Text>
-                <Text>Distancia: {item.distanceFormatted} cuadras</Text>
-                <View style={styles.card}>
-                <Text>Tarifas para {selectedVehicle}:</Text>
-                <Text>Fracción: ${item.prices[selectedVehicle].fraccion}</Text>
-                <Text>Hora: ${item.prices[selectedVehicle].hora}</Text>
-                <Text>Medio día: ${item.prices[selectedVehicle]['medio dia']}</Text>
-                <Text>Día completo: ${item.prices[selectedVehicle]['dia completo']}</Text>
+      {isLoading ? (
+                <View style={[styles.container,{alignItems: 'center', justifyContent: 'center'}]}>
+                  <ActivityIndicator size="large" color={theme.colors.primary} />
                 </View>
-                {schedule && (
-                <Text>Horarios ({dayToShow}): {schedule.openTime} - {schedule.closeTime}</Text>
-                )} 
-                <View style={styles.buttonContainer}>
-                  <CustomButton style={styles.navigationButton} textStyle={styles.navigationButtonText} text='Mas info'
-                  onPress={() => {
-                    navigation.navigate('SpecificParkingDetails', {
-                        parkingData: item
-                    });
-                }}/>  
-                  <CustomButton style={styles.navigationButton} textStyle={styles.navigationButtonText} text='Ir con Google Maps'
-                   onPress={() => {
-                    if (origin) {
-                      openGoogleMaps(origin, item.userData.address.latitude, item.userData.address.longitude);
-                    } else {
-                      console.error('Current location not available');
-                    }
-                  }}/>      
-                </View>      
-              </View>
-            );
-          }}
-        />
-      ) : (
-        <Text style={styles2.noResults}>
-          No se encontraron estacionamientos que coincidan con tus filtros.
-        </Text>
-      )}
+      ) : filteredParkings.length > 0 ? (
+        <FlatList
+          data={filteredParkings}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => {
+            let dayToShow = null;
+            let openTime = null;
+            let closeTime = null;
+
+            const dayMap = {
+              'L': 'lunes',
+              'Ma': 'martes', 
+              'Mi': 'miercoles',
+              'J': 'jueves',
+              'V': 'viernes',
+              'S': 'sabado',
+              'D': 'domingo',
+              'F': 'feriados'
+            };
+
+      if (filters.openNow || filters.selectedDay) {
+        const day = filters.openNow ? currentDay : filters.selectedDay;
+        const scheduleDay = dayMap[day];
+        openTime = item.schedule[`${scheduleDay}_open`];
+        closeTime = item.schedule[`${scheduleDay}_close`];
+        dayToShow = day;
+      }
+
+      const vehiclePrefix = selectedVehicle.toLowerCase().replace('í', 'i');
+
+      return (
+        <View style={styles.card}>
+          <Text style={styles2.parkingTitle}>{item.nombre}</Text>
+          <Text>{item.calle} {item.numero}</Text>
+          <Text>Distancia: {item.distance} cuadras</Text>
+          <View style={styles.card}>
+            <Text>Tarifas para {selectedVehicle}:</Text>
+            <Text>Fracción: ${item.prices[`${vehiclePrefix}_fraccion`]}</Text>
+            <Text>Hora: ${item.prices[`${vehiclePrefix}_hora`]}</Text>
+            <Text>Medio día: ${item.prices[`${vehiclePrefix}_medio_dia`]}</Text>
+            <Text>Día completo: ${item.prices[`${vehiclePrefix}_dia_completo`]}</Text>
+          </View>
+          {dayToShow && (
+            <Text>Horarios ({dayToShow}): {openTime} - {closeTime}</Text>
+          )}
+          <View style={styles.buttonContainer}>
+            <CustomButton 
+              text='Mas info'
+              style={styles.navigationButton}
+              textStyle={styles.navigationButtonText}
+              onPress={() => navigation.navigate('SpecificParkingDetails', {
+                parkingData: item,
+                selectedVehicle: selectedVehicle,
+              })}
+            />
+            <CustomButton 
+              text='Ir con Google Maps'
+              style={styles.navigationButton}
+              textStyle={styles.navigationButtonText}
+              onPress={() => {
+                  openGoogleMaps(origin, item, selectedVehicle);
+                
+              }}
+            />
+          </View>
+        </View>
+      );
+    }}
+  />
+  ) : (
+  <Text style={styles2.noResults}>
+    No se encontraron estacionamientos que coincidan con tus filtros.
+  </Text>
+  )}
     </View>
   );
 };

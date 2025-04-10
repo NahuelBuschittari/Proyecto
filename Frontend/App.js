@@ -2,12 +2,11 @@ import React from 'react';
 import { TouchableOpacity, Image, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { useAuth } from './src/context/AuthContext';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 
 import Login from './src/screens/user/Login';
 import SignUp from './src/screens/user/signup/SignUp';
-import PasswordReset from './src/screens/user/passwordreset/PasswordReset';
-import PasswordSet from './src/screens/user/passwordreset/PasswordSet';
+import PasswordReset from './src/screens/user/PasswordReset';
 
 import ParkingMenu from './src/screens/parking/ParkingMenu';
 import DataAnalysis from './src/screens/parking/DataAnalysis';
@@ -29,31 +28,49 @@ import Review from './src/screens/driver/Review';
 
 const Stack = createStackNavigator();
 
-const App = () => {
-  const isAuthenticated = true // Valor provisional
-  const userRole = 'driver'; // Valor provisional
-
+// Separate the navigation logic into a new component
+const NavigationWrapper = () => {
+  const { user, loading } = useAuth();
+  
   const renderHeaderLogo = (navigation, homeRoute) => (
     <TouchableOpacity onPress={() => navigation.navigate(homeRoute)}>
       <Text>Home</Text>
     </TouchableOpacity>
   );
 
+  if (loading) {
+    return null; // Or a loading component
+  }
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        {!isAuthenticated ? (
+    <Stack.Navigator>
+      {!user ? (
           <>
-            <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="SignUp" component={SignUp} />
-            <Stack.Screen name="PasswordReset" component={PasswordReset} />
-            <Stack.Screen name="PasswordSet" component={PasswordSet} />
+            <Stack.Screen name="Login" component={Login} 
+            options={{
+              title: '',
+              headerTitleAlign: 'center',
+            }}/>
+            <Stack.Screen name="SignUp" component={SignUp} 
+            options={{
+              title: '',
+              headerTitleAlign: 'center',
+            }}/>
+            <Stack.Screen name="PasswordReset" component={PasswordReset} 
+            options={{
+              title: '',
+              headerTitleAlign: 'center',
+            }}/>
           </>
         ) : (
           <>
-            {userRole === 'parking' ? (
+            {user.isParking === true ? (
               <>
-                <Stack.Screen name="ParkingMenu" component={ParkingMenu}/>
+                <Stack.Screen name="ParkingMenu" component={ParkingMenu}
+                options={{
+                  title: '',
+                  headerTitleAlign: 'center',
+                }}
+                />
 
                 <Stack.Screen name="DataAnalysis" component={DataAnalysis}
                   options={({ navigation }) => ({
@@ -94,7 +111,12 @@ const App = () => {
               </>
             ) : (
               <>
-                <Stack.Screen name="UserMenu" component={UserMenu}/>
+                <Stack.Screen name="UserMenu" component={UserMenu}
+                  options={{
+                    title: '',
+                    headerTitleAlign: 'center',
+                  }}
+                />
                 <Stack.Screen name="Review" component={Review}
                     options={({ navigation }) => ({
                       headerTitle: () => renderHeaderLogo(navigation, 'UserMenu'),
@@ -147,8 +169,16 @@ const App = () => {
             )}
           </>
         )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    </Stack.Navigator>
+  );
+};
+const App = () => {
+  return (
+    <AuthProvider>
+      <NavigationContainer>
+        <NavigationWrapper />
+      </NavigationContainer>
+    </AuthProvider>
   );
 };
 

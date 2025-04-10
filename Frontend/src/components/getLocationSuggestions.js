@@ -17,7 +17,7 @@ export const getLocationSuggestions = async (query) => {
     });
     return response.data;
   } catch (error) {
-    console.error(error);
+    console.log(error);
     return [];
   }
 };
