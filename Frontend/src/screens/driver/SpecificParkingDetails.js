@@ -1,19 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, ActivityIndicator } from 'react-native';
 import { styles } from '../../styles/SharedStyles';
 import { theme } from '../../styles/theme';
 import { FontAwesome5 } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import CustomButton from '../../components/CustomButton';
-import { setupNotifications,checkParkingAvailability } from '../../components/Notifications';
+import { setupNotifications, checkParkingAvailability } from '../../components/Notifications';
 import createReview from '../../components/createReview';
 import { useAuth } from '../../context/AuthContext';
+import axios from 'axios';
+import { API_URL } from '../../context/constants';
+import Stars from 'react-native-stars';
+import Icon from 'react-native-vector-icons/FontAwesome';
+
+
+
+
 const SpecificParkingDetails = ({ route, navigation }) => {
     const { parkingData, selectedVehicle } = route.params;
     const [activeSection, setActiveSection] = useState(null);
     const [userLocation, setUserLocation] = useState(null);
     const { user, authTokens } = useAuth();
-    console.log("selectedVehicle",selectedVehicle);
+    const [reviews, setReviews] = useState([]);
+    const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+    console.log("selectedVehicle", selectedVehicle);
     React.useLayoutEffect(() => {
         navigation.setOptions({
             headerBackTitle: 'Atrás',
@@ -50,20 +60,25 @@ const SpecificParkingDetails = ({ route, navigation }) => {
         })();
         setupNotifications();
     }, []);
+    useEffect(() => {
+        fetchReviews();
+    }, [parkingData.id]);
 
-    async function openGoogleMaps (){
+    async function openGoogleMaps() {
         if (!userLocation) return;
-        let travelmode= 'driving'
-        if(selectedVehicle==='Moto' ||selectedVehicle==='motorcycle'){
-            travelmode='two-wheeler';}
-        else if(selectedVehicle==='Bicicleta' || selectedVehicle==='bicycle') {
-            travelmode='bicycling';}
+        let travelmode = 'driving'
+        if (selectedVehicle === 'Moto' || selectedVehicle === 'motorcycle') {
+            travelmode = 'two-wheeler';
+        }
+        else if (selectedVehicle === 'Bicicleta' || selectedVehicle === 'bicycle') {
+            travelmode = 'bicycling';
+        }
 
         const latDest = parseFloat(parkingData.latitude);
         const lngDest = parseFloat(parkingData.longitude);
         const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.latitude},${userLocation.longitude}&destination=${latDest},${lngDest}&travelmode=${travelmode}`;
-        const space= await checkParkingAvailability(parkingData, selectedVehicle);
-        if(space){
+        const space = await checkParkingAvailability(parkingData, selectedVehicle);
+        if (space) {
             createReview(parkingData.id, user.id, authTokens.access);
         }
         Linking.openURL(url);
@@ -82,6 +97,26 @@ const SpecificParkingDetails = ({ route, navigation }) => {
         hasRestrooms: { text: 'Baños', icon: 'restroom' },
         hasBreakdownAssistance: { text: 'Asistencia Mecánica', icon: 'tools' },
         hasFreeWiFi: { text: 'WiFi Gratuito', icon: 'wifi' }
+    };
+
+    const fetchReviews = async () => {
+        setIsLoadingReviews(true);
+        try {
+            const response = await axios.get(`${API_URL}/parking/${parkingData.id}/reviews`, {
+                headers: {
+                    'Authorization': `Bearer ${authTokens.access}`
+                }
+            });
+            setReviews(response.data);
+        } catch (error) {
+            if (error.response && error.response.status === 404) {
+                setReviews([]);
+            } else {
+                console.error('Error al cargar reseñas:', error);
+            }
+        } finally {
+            setIsLoadingReviews(false);
+        }
     };
 
     const AccordionSection = ({ title, isActive, onPress, children }) => (
@@ -125,7 +160,7 @@ const SpecificParkingDetails = ({ route, navigation }) => {
             ))}
         </View>
     );
-    
+
     const ScheduleContent = () => (
         <View style={styles2.scheduleContainer}>
             {[
@@ -144,7 +179,7 @@ const SpecificParkingDetails = ({ route, navigation }) => {
             ))}
         </View>
     );
-    
+
     const CapacityContent = () => (
         <View style={styles2.capacityContainer}>
             <Text style={styles2.capacityItem}>Autos: {parkingData.carCapacity}</Text>
@@ -152,23 +187,23 @@ const SpecificParkingDetails = ({ route, navigation }) => {
             <Text style={styles2.capacityItem}>Bicicletas: {parkingData.bikeCapacity}</Text>
         </View>
     );
-    
+
     const FeaturesContent = () => (
         <View style={styles2.featuresContainer}>
             {Object.entries(parkingData.features).map(([key, value]) => (
                 <View key={key} style={styles2.featureItem}>
-                    <FontAwesome5 
-                        name={featureTranslations[key]?.icon || 'question-circle'} 
-                        size={20} 
+                    <FontAwesome5
+                        name={featureTranslations[key]?.icon || 'question-circle'}
+                        size={20}
                         color={theme.colors.primary}
                         style={styles2.featureIcon}
                     />
                     <Text style={styles2.featureText}>
                         {featureTranslations[key]?.text || key}
                     </Text>
-                    <FontAwesome5 
-                        name={value ? 'check' : 'times'} 
-                        size={20} 
+                    <FontAwesome5
+                        name={value ? 'check' : 'times'}
+                        size={20}
                         color={value ? theme.colors.success : theme.colors.error}
                         style={styles2.featureStatus}
                     />
@@ -176,6 +211,81 @@ const SpecificParkingDetails = ({ route, navigation }) => {
             ))}
         </View>
     );
+
+    const renderStars = (rating) => (
+        <Stars
+            display={rating}
+            spacing={2}
+            count={5}
+            starSize={20}
+            disabled={true}
+            fullStar={<Icon name={'star'} style={[{ color: '#394c74' }]} />}
+            emptyStar={<Icon name={'star-o'} style={[{ color: '#b1c8e7' }]} />}
+        />
+    );
+
+    const ReviewsContent = () => {
+        if (isLoadingReviews) {
+            return (
+                <View style={styles2.loadingContainer}>
+                    <ActivityIndicator size="large" color={theme.colors.primary} />
+                </View>
+            );
+        }
+        if (reviews.length === 0) {
+            return (
+                <Text style={styles2.noReviewsText}>
+                    No hay reseñas para este estacionamiento
+                </Text>
+            );
+        }
+
+        const averageRatings = {
+            Seguridad: reviews.reduce((sum, r) => sum + (r.Seguridad || 0), 0) / reviews.length,
+            Limpieza: reviews.reduce((sum, r) => sum + (r.Limpieza || 0), 0) / reviews.length,
+            Iluminación: reviews.reduce((sum, r) => sum + (r.Iluminación || 0), 0) / reviews.length,
+            Accesibilidad: reviews.reduce((sum, r) => sum + (r.Acces || 0), 0) / reviews.length,
+            Servicio: reviews.reduce((sum, r) => sum + (r.Servicio || 0), 0) / reviews.length
+        };
+
+        return (
+            <View style={styles2.averageRatingsContainer}>
+                <Text style={styles2.averageRatingsTitle}>Promedios de Reseñas</Text>
+                {Object.entries(averageRatings).map(([key, value]) => (
+                    <View key={key} style={styles2.ratingRow}>
+                        <Text style={styles2.ratingLabel}>{key}</Text>
+                        <View style={styles2.starsContainer}>
+                            {renderStars(value, 5)}
+                            <Text style={styles2.ratingValue}>({value.toFixed(1)})</Text>
+                        </View>
+                    </View>
+                ))}
+
+                <Text style={styles2.individualReviewsTitle}>Reseñas individuales</Text>
+                {reviews.map((review, index) => (
+                    <View key={index}>
+                        <View style={styles2.reviewCard}>
+                            <Text style={styles2.reviewerName}>{review.Usuario}</Text>
+                            <View style={styles2.individualRatingsContainer}>
+                                {['Seguridad', 'Limpieza', 'Iluminación', 'Accesibilidad', 'Servicio'].map(key => (
+                                    <View key={key} style={styles2.individualRatingRow}>
+                                        <Text style={styles2.individualRatingLabel}>{key}</Text>
+                                        {renderStars(review[key === 'Accesibilidad' ? 'Acces' : key] || 0)}
+                                    </View>
+                                ))}
+                            </View>
+                            {review.Comentario && (
+                                <Text style={styles2.reviewComment}>{review.Comentario}</Text>
+                            )}
+                        </View>
+                        {index < reviews.length - 1 && (
+                            <View style={styles2.reviewDivider} />
+                        )}
+                    </View>
+                ))}
+            </View>
+        );
+    };
 
     return (
         <View style={styles2.mainContainer}>
@@ -189,14 +299,17 @@ const SpecificParkingDetails = ({ route, navigation }) => {
                     </View>
                     <CustomButton
                         style={styles2.mapsButton}
-                        textStyle={{color: 'white'}}
+                        textStyle={{ color: 'white' }}
                         text="Ir con Maps"
-                        onPress={()=>openGoogleMaps()}
+                        onPress={() => openGoogleMaps()}
                     />
                 </View>
             </View>
 
-            <ScrollView contentContainerStyle={styles2.scrollContainer}>
+            <ScrollView
+                contentContainerStyle={styles2.scrollContainer}
+                showsVerticalScrollIndicator={false}
+            >
                 <AccordionSection
                     title="Capacidad"
                     isActive={activeSection === 'capacity'}
@@ -227,6 +340,13 @@ const SpecificParkingDetails = ({ route, navigation }) => {
                     onPress={() => setActiveSection(activeSection === 'features' ? null : 'features')}
                 >
                     <FeaturesContent />
+                </AccordionSection>
+                <AccordionSection
+                    title="Reseñas"
+                    isActive={activeSection === 'reviews'}
+                    onPress={() => setActiveSection(activeSection === 'reviews' ? null : 'reviews')}
+                >
+                    <ReviewsContent />
                 </AccordionSection>
             </ScrollView>
         </View>
@@ -269,7 +389,7 @@ const styles2 = StyleSheet.create({
         marginLeft: theme.spacing.sm,
     },
     scrollContainer: {
-        paddingTop: 160, 
+        paddingTop: 160,
         paddingBottom: theme.spacing.xl,
     },
     title: {
@@ -286,7 +406,7 @@ const styles2 = StyleSheet.create({
         marginBottom: theme.spacing.sm,
     },
     mapsButton: {
-        color: theme.colors.white,   
+        color: theme.colors.white,
         fontSize: theme.typography.fontSize.small,
         fontWeight: 'bold',
     },
@@ -370,6 +490,91 @@ const styles2 = StyleSheet.create({
     capacityItem: {
         color: theme.colors.text,
         fontSize: theme.typography.fontSize.normal,
+    },
+    noReviewsText: {
+        textAlign: 'center',
+        color: theme.colors.secondary,
+        fontStyle: 'italic',
+        padding: theme.spacing.md,
+    },
+    individualReviewsTitle: {
+        fontSize: theme.typography.fontSize.normal,
+        fontWeight: 'bold',
+        color: theme.colors.text,
+        marginTop: theme.spacing.lg,
+        marginBottom: theme.spacing.md,
+    },
+
+    reviewCard: {
+        backgroundColor: theme.colors.card,
+        padding: theme.spacing.md,
+        borderRadius: theme.borderRadius.md,
+        marginBottom: theme.spacing.sm,
+    },
+    individualRatingsContainer: {
+        marginVertical: theme.spacing.sm,
+    },
+    individualRatingRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: theme.spacing.sm,
+    },
+    individualRatingLabel: {
+        fontSize: theme.typography.fontSize.normal,
+    },
+    starsContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    ratingRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: theme.spacing.sm,
+    },
+    ratingLabel: {
+        fontSize: theme.typography.fontSize.normal,
+    },
+    ratingValue: {
+        marginLeft: theme.spacing.sm,
+        fontSize: theme.typography.fontSize.small,
+        color: theme.colors.secondary,
+    },
+    reviewerName: {
+        fontSize: theme.typography.fontSize.normal,
+        fontWeight: 'bold',
+        marginBottom: theme.spacing.sm,
+    },
+    reviewComment: {
+        fontSize: theme.typography.fontSize.small,
+        color: theme.colors.text,
+        fontStyle: 'italic',
+        marginTop: theme.spacing.sm,
+    },
+    loadingContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: theme.spacing.md,
+    },
+    averageRatingsContainer: {
+        backgroundColor: theme.colors.background,
+        borderRadius: theme.borderRadius.md,
+        padding: theme.spacing.md,
+        marginBottom: theme.spacing.md,
+        elevation: 2,
+    },
+    averageRatingsTitle: {
+        fontSize: theme.typography.fontSize.title,
+        fontWeight: 'bold',
+        color: theme.colors.primary,
+        marginBottom: theme.spacing.lg,
+        textAlign: 'center',
+    },
+    reviewDivider: {
+        height: 1,
+        backgroundColor: theme.colors.border,
+        marginVertical: theme.spacing.sm,
     },
 });
 
