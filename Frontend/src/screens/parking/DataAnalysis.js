@@ -275,11 +275,13 @@ const styles = StyleSheet.create({
   pickerContainer: {
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 5,
+    borderRadius: 8,
     marginVertical: 10,
+    width: '90%',
+    alignSelf: 'center',
   },
   picker: {
-    height: 50,
+    height: 60,
   },
   chartExplanation: {
     marginTop: 15,
