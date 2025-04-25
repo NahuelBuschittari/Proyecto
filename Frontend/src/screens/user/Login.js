@@ -16,9 +16,10 @@ const Login = ({ navigation }) => {
   const handleLogin = async () => {
     setIsLoading(true);
     try {
+      email
       console.log("Intentando login en URL:", `${API_URL}/auth/jwt/create/`);
       console.log("Con credenciales:", { email, password });
-      await login(email, password);
+      await login(email.toLowerCase(), password);
     } catch (error) {
       if (error.response?.data?.detail === "No active account found with the given credentials") {
         Alert.alert(

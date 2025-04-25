@@ -6,6 +6,7 @@ import { Divider, Title, Button } from 'react-native-paper';
 import Svg, { Circle } from 'react-native-svg';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { theme } from '../../styles/theme';
 
 const PriceHistoryChart = ({ priceHistory, onInfoPress }) => {
   const [selectedTimeType, setSelectedTimeType] = useState('fraccion');
@@ -217,7 +218,7 @@ const PriceHistoryChart = ({ priceHistory, onInfoPress }) => {
   // Calcular el ancho total requerido
   const screenWidth = Dimensions.get('window').width;
   const daysToShow = labels?.length || 0;
-  const dataPointWidth = 12; // Ancho por punto de datos
+  const dataPointWidth = 2; // Ancho por punto de datos
   const calculatedWidth = Math.max(screenWidth, (daysToShow * dataPointWidth));
 
   // Encontrar el valor máximo para el eje Y
@@ -226,7 +227,7 @@ const PriceHistoryChart = ({ priceHistory, onInfoPress }) => {
     : 100;
   
   // Calcular los segmentos del eje Y para asegurar divisiones precisas
-  const yAxisSegments = 5;
+  const yAxisSegments = 10;
   const yAxisMax = Math.ceil(maxValue / 100) * 100; // Redondear al siguiente cien
   
   return (
@@ -317,11 +318,12 @@ const PriceHistoryChart = ({ priceHistory, onInfoPress }) => {
         </View>
       </View>
       <View>
+        <Divider style={styles.divider} />
       <MaterialCommunityIcons
                   name="information-outline"
                   size={17}
                   onPress={onInfoPress}
-                  style={{ position: 'absolute', right: 10, top: 20 }}
+                  style={{ position: 'absolute', right: 1, top: 55,color:theme.colors.primary }}
       />
       </View>
       
@@ -348,15 +350,12 @@ const PriceHistoryChart = ({ priceHistory, onInfoPress }) => {
               yAxisLabel="$"
               yAxisInterval={1}
               chartConfig={{
-                backgroundColor: '#f0f0f0',
-                backgroundGradientFrom: '#ffffff',
-                backgroundGradientTo: '#f8f8f8',
+                backgroundColor: 'white',
+                backgroundGradientFrom: 'white',
+                backgroundGradientTo: 'white',
                 decimalPlaces: 0,
                 color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
                 labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                style: {
-                  borderRadius: 16,
-                },
                 propsForDots: {
                   r: '4',
                   strokeWidth: '2',
@@ -366,7 +365,8 @@ const PriceHistoryChart = ({ priceHistory, onInfoPress }) => {
                   fontWeight: 'bold',
                 },
                 propsForHorizontalLabels: {
-                  fontSize: 10,
+                  fontSize: 12,
+                  fontWeight: 'bold',
                 },
                 formatXLabel: (label) => {
                   if (!label) return '';
@@ -414,9 +414,8 @@ const PriceHistoryChart = ({ priceHistory, onInfoPress }) => {
           <Text style={styles.noDataText}>No hay datos disponibles para este período</Text>
         )}
       </ScrollView>
-
-      <Divider style={styles.divider} />
-      
+    <View>
+    <Divider style={styles.divider} />
       <Title style={styles.title}>Cambios de Precio</Title>
       
       {vehicleTypes.map(vehicle => {
@@ -466,6 +465,7 @@ const PriceHistoryChart = ({ priceHistory, onInfoPress }) => {
       {Object.keys(priceChanges).length === 0 && (
         <Text style={styles.noDataText}>No hay cambios de precio registrados</Text>
       )}
+    </View>
     </ScrollView>
   );
 };
@@ -474,6 +474,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
+    
   },
   title: {
     fontSize: 18,
@@ -488,15 +489,14 @@ const styles = StyleSheet.create({
   },
   pickerLabel: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 12,
     
   },
   picker: {
     flex: 2,
     height: 60,
     borderWidth: 1,
-    borderColor: '',
-    borderRadius: 8,
+    borderRadius: theme.borderRadius.sm,
   },
   dateRangeContainer: {
     flexDirection: 'row',
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   datePickerLabel: {
-    fontSize: 14,
+    fontSize: 8,
     marginRight: 5,
   },
   datePicker: {
@@ -520,7 +520,9 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     justifyContent: 'center',
-    borderRadius: 8,
+    borderRadius: theme.borderRadius.md,
+    borderColor: theme.colors.primary,
+    
   },
   legendContainer: {
     flexDirection: 'row',
@@ -541,7 +543,8 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   legendText: {
-    fontSize: 12,
+    fontSize: 16,
+    fontWeight:theme.typography.fontWeight.regular
   },
   chartContainer: {
     marginVertical: 10,
@@ -563,7 +566,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   vehicleName: {
-    fontWeight: 'bold',
+    fontWeight: theme.typography.fontWeight.bold,
     fontSize: 16,
   },
   priceChange: {
@@ -575,14 +578,14 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f0f0f0',
   },
   priceChangeDate: {
-    fontSize: 14,
+    fontSize: 12,
   },
   priceValues: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   priceAmount: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
     marginRight: 5,
   },

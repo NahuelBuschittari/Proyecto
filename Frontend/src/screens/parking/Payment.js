@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Clipboard } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Clipboard,Alert } from 'react-native';
 import { styles } from '../../styles/SharedStyles';
 import { theme } from '../../styles/theme';
 
@@ -11,11 +11,11 @@ const PaymentScreen = () => {
     cbu: '0123456789012345678901',
     alias: 'EstacionApp.Gestion.NFC',
     currency: 'Pesos Argentinos',
+    mail: 'nfcestacionamientopf2024@gmail.com'
   };
 
   const copyToClipboard = (text, label) => {
     Clipboard.setString(text);
-    alert(`${label} copiado al portapapeles`);
   };
 
   const renderInfoRow = (label, value) => (
@@ -52,11 +52,12 @@ const PaymentScreen = () => {
         {renderInfoRow('CBU', paymentInfo.cbu)}
         {renderInfoRow('Alias', paymentInfo.alias)}
         {renderInfoRow('Moneda', paymentInfo.currency)}
+        {renderInfoRow('Mail', paymentInfo.mail)}
       </View>
 
       <View style={customStyles.warningSection}>
         <Text style={customStyles.warningText}>
-          Importante: Verifica los datos antes de realizar la transferencia.
+          Importante: Verifica los datos antes de realizar la transferencia. Una vez realizada, envía el comprobante a nuestro correo electrónico.
         </Text>
       </View>
     </ScrollView>
@@ -95,7 +96,7 @@ const customStyles = StyleSheet.create({
     alignItems: 'center',
   },
   infoValue: {
-    fontSize: theme.typography.fontSize.normal,
+    fontSize: theme.typography.fontSize.small,
     color: theme.colors.text,
     marginRight: theme.spacing.sm,
   },

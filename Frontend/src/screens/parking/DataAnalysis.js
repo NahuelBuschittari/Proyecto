@@ -31,9 +31,9 @@ const DataAnalysis = () => {
   });
 
   const chartDescriptions = {
-    price: "Este gráfico muestra la evolución de los precios a lo largo del tiempo para diferentes tipos de vehículos (auto, camioneta, moto, bicicleta). El eje horizontal representa los períodos de tiempo, mientras que el eje vertical muestra los precios. Puedes seleccionar el tipo de tarifa específica (fracción, hora, medio día o día completo) para visualizar cómo han cambiado estos precios en el tiempo y comparar tendencias entre diferentes categorías de vehículos.",
-    scatter: "Este gráfico de dispersión muestra la relación entre dos variables. Cada punto representa una observación individual donde podemos ver cómo se correlacionan ambas medidas. Este tipo de visualización es útil para identificar patrones, tendencias o anomalías en los datos, así como para detectar posibles relaciones causales entre las variables analizadas.",
-    ratings: "Este gráfico muestra las calificaciones promedio que recibe el estacionamiento en cinco categorías clave. El eje horizontal presenta las diferentes categorías evaluadas (seguridad, limpieza, iluminación, accesibilidad y servicio), mientras que el eje vertical muestra la puntuación promedio para cada una. Te permite identificar rápidamente las áreas donde el servicio destaca y aquellas que podrían requerir mejoras para aumentar la satisfacción del cliente."
+    price: "Este gráfico de líneas múltiples muestra la evolución temporal de los precios para diferentes tipos de vehículos (auto, moto, bicicleta). Puedes filtrar por rango de fechas y modalidad de cobro (fracción, hora, medio día o día completo) para visualizar tendencias específicas. Esta herramienta te permite identificar patrones estacionales en las tarifas y comportamientos históricos, proporcionando información valiosa para la toma de decisiones sobre ajustes tarifarios futuros y estrategias de precios competitivas.",
+    scatter: "Este diagrama de dispersión visualiza la relación entre los servicios ofrecidos por diferentes estacionamientos y sus precios. El eje horizontal representa el puntaje de servicios (basado en las características que ofrece cada estacionamiento), mientras que el eje vertical muestra el precio para autos. Tu estacionamiento aparece destacado con un color diferente, permitiéndote comparar fácilmente con la competencia. Ideal para evaluar si tus precios están justificados por los servicios ofrecidos y para desarrollar estrategias de diferenciación efectivas, ya sea mejorando servicios o ajustando tarifas.",
+    ratings: "Este gráfico de barras muestra las calificaciones promedio que recibe el estacionamiento en cinco categorías clave: seguridad, limpieza, iluminación, accesibilidad y servicio. Con una escala de 0 a 5, te permite identificar rápidamente fortalezas y áreas de mejora en la percepción de los clientes. Utiliza esta información para priorizar estratégicamente las mejoras en las categorías con puntuaciones más bajas, impactando directamente en la satisfacción y fidelización de los usuarios."
   };
 
   const loadAnalysisData = async () => {
@@ -167,8 +167,7 @@ const DataAnalysis = () => {
         <View style={[styles.reviewsContainer, {alignItems:'center', paddingTop:20}]}>
           <Text style={styles.cardTitle}>Análisis de Datos</Text>
         </View>
-        <Card containerStyle={styles.card}>
-          <View style={styles.pickerContainer}>
+        <Card style={styles.card}>         
             <Picker
               selectedValue={selectedChart}
               onValueChange={(itemValue) => setSelectedChart(itemValue)}
@@ -177,9 +176,9 @@ const DataAnalysis = () => {
               <Picker.Item label="Historial de Precios" value="price" />
               <Picker.Item label="Relación entre Servicios y Precios" value="scatter" />
               <Picker.Item label="Calificaciones" value="ratings" />
-            </Picker>
-          </View>
-          
+            </Picker>         
+        </Card>
+        <Card style={styles.card}>  
           {selectedChart === 'price' && (
             <PriceHistoryChart 
               priceHistory={priceHistory} 
@@ -268,16 +267,16 @@ const styles = StyleSheet.create({
     color: '#394c74',
   },
   card: {
-    padding: 15,
     borderRadius: 10,
     marginBottom: 15,
+    backgroundColor: 'white',
   },
   pickerContainer: {
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
     marginVertical: 10,
-    width: '90%',
+    width: '100%',
     alignSelf: 'center',
   },
   picker: {

@@ -107,7 +107,7 @@ const SignUp = ({ navigation }) => {
       setIsLoading(true);
       // Formatear los datos según la estructura requerida
       const formattedData = {
-        email: userData.email,
+        email: userData.email.toLowerCase(),
         password: userData.password,
         re_password: userData.repeatPassword,
         isParking: isParking,

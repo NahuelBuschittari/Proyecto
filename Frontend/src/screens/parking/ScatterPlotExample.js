@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, Dimensions, StyleSheet, TouchableOpacity } from 'react-native';
 import { Svg, Circle, Text as SvgText, Line } from 'react-native-svg';
 import { Picker } from '@react-native-picker/picker';
-
-const ScatterPlotExample = ({ scatterData }) => {
+import { theme } from '../../styles/theme';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+const ScatterPlotExample = ({ scatterData, onInfoPress }) => {
   // Estado para seleccionar el tipo de precio a mostrar
   const [priceType, setPriceType] = useState('hora'); // opciones: fraccion, hora, medio_dia, dia_completo
   const [vehicleType, setVehicleType] = useState('auto'); // opciones: auto, camioneta
@@ -102,7 +103,13 @@ const ScatterPlotExample = ({ scatterData }) => {
                     <Picker.Item key={value} label={label} value={value} />
                   ))}
         </Picker>
-      </View> 
+      </View>
+      <MaterialCommunityIcons
+            name="information-outline"
+            size={17}
+            onPress={onInfoPress}
+             style={{color: theme.colors.primary, alignSelf: 'flex-end'}}
+      /> 
       <Svg width={width} height={height}>
         {/* Líneas de promedio */}
         <Line 
@@ -217,38 +224,37 @@ const ScatterPlotExample = ({ scatterData }) => {
             key={item.id}
             cx={scaleX(item.puntaje_servicios)}
             cy={scaleY(item.precios[vehicleType][priceType])}
-            r={item.es_usuario ? 8 : 6}
-            fill={item.es_usuario ? 'rgba(255, 99, 132, 0.7)' : 'rgba(54, 162, 235, 0.5)'}
-            stroke={item.es_usuario ? '#ff6384' : '#36a2eb'}
-            strokeWidth={item.es_usuario ? 2 : 1}
+            r={item.es_usuario ? 7 : 5}
+            fill={item.es_usuario ? theme.colors.primary : theme.colors.secondary}
+            stroke={item.es_usuario ? theme.colors.primary : theme.colors.secondary}
           />
         ))}
         
         {/* Indicadores de cuadrantes */}
-        <SvgText x={padding + 10} y={padding + 15} fontSize="10" fill="#666">
+        <SvgText x={padding + 10} y={padding + 15} fontSize="10" fill="black">
           Alto Precio / Bajo Servicio
         </SvgText>
         
-        <SvgText x={width - padding - 10} y={padding + 15} fontSize="10" textAnchor="end" fill="#666">
+        <SvgText x={width - padding - 10} y={padding + 15} fontSize="10" textAnchor="end" fill="black">
           Alto Precio / Alto Servicio
         </SvgText>
         
-        <SvgText x={padding + 10} y={height - padding - 10} fontSize="10" fill="#666">
+        <SvgText x={padding + 10} y={height - padding - 10} fontSize="10" fill="black">
           Bajo Precio / Bajo Servicio
         </SvgText>
         
-        <SvgText x={width - padding - 10} y={height - padding - 10} fontSize="10" textAnchor="end" fill="#666">
+        <SvgText x={width - padding - 10} y={height - padding - 10} fontSize="10" textAnchor="end" fill="black">
           Bajo Precio / Alto Servicio
         </SvgText>
       </Svg>
       
       <View style={styles.legend}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendColor, { backgroundColor: 'rgba(54, 162, 235, 0.5)' }]} />
+          <View style={[styles.legendColor, { backgroundColor: theme.colors.secondary }]} />
           <Text>Competidores</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendColor, { backgroundColor: 'rgba(255, 99, 132, 0.7)' }]} />
+          <View style={[styles.legendColor, { backgroundColor: theme.colors.primary }]} />
           <Text>Mi Estacionamiento</Text>
         </View>
       </View>
@@ -269,19 +275,12 @@ const ScatterPlotExample = ({ scatterData }) => {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
     margin: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   pickerContainer: {
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 5,
+    borderRadius: theme.borderRadius.md,
     marginVertical: 10,
   },
   title: {
