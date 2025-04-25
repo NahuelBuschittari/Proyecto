@@ -401,65 +401,125 @@ def GetParkingReviews(request, parking_id):
     except Parking.DoesNotExist:
         return Response({"error": "Estacionamiento no encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
+FEATURE_SCORES = {
+    'isCovered': 15,
+    'has24hSecurity': 15,
+    'hasCCTV': 10,
+    'hasDisabledParking': 10,
+    'hasBreakdownAssistance': 8,
+    'hasAutoPayment': 8,
+    'hasRestrooms': 7,
+    'hasEVChargers': 7,
+    'hasCardAccess': 6,
+    'hasValetService': 5,
+    'hasCarWash': 5,
+    'hasFreeWiFi': 4,
+}
+
+@api_view(['GET'])
+def GetScatterData(request):
+    user_parking_id = None
+    try:
+        if request.user.id:
+            user_parking_id = request.user.id  # ID del modelo Parking
+    except Exception:
+        user_parking_id = None
+
+    data = []
+    parkings = Parking.objects.select_related('features', 'prices')
+
+    for parking in parkings:
+        try:
+            features = parking.features
+            prices = parking.prices
+        except (Features.DoesNotExist, Prices.DoesNotExist):
+            continue  # Saltar parkings incompletos
+
+        puntaje = sum(
+            score for attr, score in FEATURE_SCORES.items() if getattr(features, attr, False)
+        )
+
+        data.append({
+            "id": parking.user_id,
+            "nombre": parking.nombre,
+            "puntaje_servicios": puntaje,
+            "es_usuario": parking.user.id == user_parking_id,
+            "precios": {
+                "auto": {
+                    "fraccion": float(prices.auto_fraccion),
+                    "hora": float(prices.auto_hora),
+                    "medio_dia": float(prices.auto_medio_dia),
+                    "dia_completo": float(prices.auto_dia_completo),
+                },
+                "camioneta": {
+                    "fraccion": float(prices.camioneta_fraccion),
+                    "hora": float(prices.camioneta_hora),
+                    "medio_dia": float(prices.camioneta_medio_dia),
+                    "dia_completo": float(prices.camioneta_dia_completo),
+                }
+            }
+        })
+
+    return Response(data)
 
 @api_view(['GET'])
 def GetDataAnalysis(request, parking_id):
     try:
-        # Obtener los históricos de precios y de espacios ocupados
-        price_history = PriceHistory.objects.filter(parking_id=parking_id).order_by('fecha')
-        space_history = SpaceHistory.objects.filter(parking_id=parking_id).order_by('fecha')
+        price_history_raw = PriceHistory.objects.filter(parking_id=parking_id).order_by('fecha', 'id')
 
-        # Si no se encuentran registros en PriceHistory o SpaceHistory
-        if not price_history:
+        if not price_history_raw:
             return Response({"error": "No hay historial de precios para este estacionamiento."}, status=status.HTTP_404_NOT_FOUND)
-        
-        if not space_history:
-            return Response({"error": "No hay historial de ocupación para este estacionamiento."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Formatear los datos para el análisis
-        price_data = []
-        for entry in price_history:
-            price_data.append({
-                "fecha": entry.fecha,
-                "auto_fraccion": entry.auto_fraccion,
-                "auto_hora": entry.auto_hora,
-                "auto_medio_dia": entry.auto_medio_dia,
-                "auto_dia_completo": entry.auto_dia_completo,
-                "camioneta_fraccion": entry.camioneta_fraccion,
-                "camioneta_hora": entry.camioneta_hora,
-                "camioneta_medio_dia": entry.camioneta_medio_dia,
-                "camioneta_dia_completo": entry.camioneta_dia_completo,
-                "moto_fraccion": entry.moto_fraccion,
-                "moto_hora": entry.moto_hora,
-                "moto_medio_dia": entry.moto_medio_dia,
-                "moto_dia_completo": entry.moto_dia_completo,
-                "bici_fraccion": entry.bici_fraccion,
-                "bici_hora": entry.bici_hora,
-                "bici_medio_dia": entry.bici_medio_dia,
-                "bici_dia_completo": entry.bici_dia_completo,
-            })
-        
-        space_data = []
-        for entry in space_history:
-            space_data.append({
-                "fecha": entry.fecha,
-                "car_occupied": entry.car_occupied,
-                "bike_occupied": entry.bike_occupied,
-                "moto_occupied": entry.moto_occupied,
-            })
+        price_history_by_date = {}
+        for entry in price_history_raw:
+            fecha_str = entry.fecha.isoformat()
+            price_history_by_date[fecha_str] = entry
 
-        # Preparar la respuesta con los datos obtenidos
-        data = {
-            "price_history": price_data,
-            "space_history": space_data,
-        }
-        
-        return Response(data)
+        sorted_dates = sorted(price_history_by_date.keys())
+        price_history = [price_history_by_date[date] for date in sorted_dates]
+
+        import datetime
+        campos_precio = [
+            "auto_fraccion", "auto_hora", "auto_medio_dia", "auto_dia_completo",
+            "camioneta_fraccion", "camioneta_hora", "camioneta_medio_dia", "camioneta_dia_completo",
+            "moto_fraccion", "moto_hora", "moto_medio_dia", "moto_dia_completo",
+            "bici_fraccion", "bici_hora", "bici_medio_dia", "bici_dia_completo"
+        ]
+
+        # Diccionario para acumular cambios por campo
+        cambios_por_campo = {campo: [] for campo in campos_precio}
+        ultimos_valores = {campo: None for campo in campos_precio}
+
+        if price_history:
+            start_date = price_history[0].fecha
+            end_date = price_history[-1].fecha
+            last_entry = price_history[0]
+            current_date = start_date
+            price_idx = 0
+
+            while current_date <= end_date:
+                if price_idx < len(price_history) and price_history[price_idx].fecha == current_date:
+                    last_entry = price_history[price_idx]
+                    price_idx += 1
+
+                for campo in campos_precio:
+                    valor_actual = float(getattr(last_entry, campo))
+                    if ultimos_valores[campo] is None or valor_actual != ultimos_valores[campo]:
+                        cambios_por_campo[campo].append({
+                            "fecha": current_date.isoformat(),
+                            "precio": valor_actual
+                        })
+                        ultimos_valores[campo] = valor_actual
+
+                current_date += datetime.timedelta(days=1)
+
+        return Response(cambios_por_campo)
 
     except Parking.DoesNotExist:
         return Response({"error": "Estacionamiento no encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": f"Error interno: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(['GET'])
 def GetParkingCapacities(request, parking_id):

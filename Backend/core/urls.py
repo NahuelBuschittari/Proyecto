@@ -1,7 +1,7 @@
 from django.urls import path, include, re_path
 from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
-from users.views import CustomUserViewSet, GetParkingCharacteristics,NavigationGetParkings, ParkingFinderGetParkings, CreateReviewView, GetOpenReview, DiscardReview, ActivationRedirectView, PasswordResetConfirmView, UpdateReviewView,GetDriverProfile, UpdateDriverProfile, UpdateParkingCharacteristics, GetParkingPrices, UpdateParkingPrices, GetParkingDetails, GetParkingReviews, GetDataAnalysis, GetParkingCapacities, UpdateParkingCapacities
+from users.views import CustomUserViewSet, GetParkingCharacteristics,NavigationGetParkings, ParkingFinderGetParkings, CreateReviewView, GetOpenReview, DiscardReview, ActivationRedirectView, PasswordResetConfirmView, UpdateReviewView,GetDriverProfile, UpdateDriverProfile, UpdateParkingCharacteristics, GetParkingPrices, UpdateParkingPrices, GetParkingDetails, GetParkingReviews, GetDataAnalysis, GetParkingCapacities, UpdateParkingCapacities,GetScatterData
 
 router = DefaultRouter()
 router.register('users', CustomUserViewSet, basename='user')
@@ -32,7 +32,7 @@ urlpatterns = [
 
     #Análisis de datos
     path('parking/<int:parking_id>/data', GetDataAnalysis, name='get_data_analysis'),
-
+    path('parking/scatter',GetScatterData,name='get_scatter_data'),
     #Actualizar Espacios
     path('parking/<int:parking_id>/spaces/get', GetParkingCapacities, name='get-parking-capacities'),
     path('parking/<int:parking_id>/spaces/update', UpdateParkingCapacities, name='post-parking-capacities'),

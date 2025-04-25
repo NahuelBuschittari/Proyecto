@@ -10,6 +10,7 @@ import PasswordReset from './src/screens/user/PasswordReset';
 
 import ParkingMenu from './src/screens/parking/ParkingMenu';
 import DataAnalysis from './src/screens/parking/DataAnalysis';
+import ScatterPlotExample from './src/screens/parking/ScatterPlotExample'; // Example component, replace with actual component
 import UpdateSpace from './src/screens/parking/UpdateSpace';
 import UpdatePrices from './src/screens/parking/UpdatePrices';
 import UpdateCharacteristics from './src/screens/parking/UpdateCharacteristics';
@@ -73,6 +74,12 @@ const NavigationWrapper = () => {
                 />
 
                 <Stack.Screen name="DataAnalysis" component={DataAnalysis}
+                  options={({ navigation }) => ({
+                    headerTitle: () => renderHeaderLogo(navigation, 'ParkingMenu'),
+                    headerTitleAlign: 'center',
+                  })}
+                />
+                <Stack.Screen name="ScatterPlotExample" component={ScatterPlotExample}
                   options={({ navigation }) => ({
                     headerTitle: () => renderHeaderLogo(navigation, 'ParkingMenu'),
                     headerTitleAlign: 'center',
