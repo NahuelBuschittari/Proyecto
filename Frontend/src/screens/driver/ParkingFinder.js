@@ -118,10 +118,12 @@ const ParkingFinder = ({ route, navigation }) => {
       travelmode='bicycling';}
     const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${item.latitude},${item.longitude}&travelmode=${travelmode}`;
     const space=await checkParkingAvailability(item,vehicle);
+    console.log(origin)
+    console.log(space)
     if(space){
       createReview(item.id, user.id, authTokens.access);
      }
-    Linking.openURL(url);
+    await Linking.openURL(url);
   };
   const [sortBy, setSortBy] = useState('price');
   const [sortDirection, setSortDirection] = useState('asc');
@@ -553,7 +555,7 @@ const ParkingFinder = ({ route, navigation }) => {
                     <Text>Dia:</Text>
                     <View style={[{width:'70%'}]}>
                     <Picker
-                      selectedValue={currentDay}
+                      selectedValue={filters.selectedDay}
                       onValueChange={(value) => setFilters({ ...filters, selectedDay: value })}
                     >
                       <Picker.Item label="Lunes" value="L" />

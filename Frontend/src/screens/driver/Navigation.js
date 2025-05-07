@@ -114,8 +114,9 @@ const Navigation = ({ navigation, route }) => {
     useEffect(() => {
         if (route.params?.selectedParking) {
             setSelectedParking(route.params.selectedParking);
+            handleVehicleSelect(route.params.selectedVehicle);
         }
-    }, [route.params?.selectedParking]);
+    }, [route.params?.selectedParking, route.params?.selectedVehicle]);
 
 
 
@@ -235,10 +236,10 @@ const Navigation = ({ navigation, route }) => {
                                     </>
                                 ) : (
                                     <>
-                                        <Text>Fracción: ${selectedParking.prices.bicicleta_fraccion}</Text>
-                                        <Text>Hora: ${selectedParking.prices.bicicleta_hora}</Text>
-                                        <Text>Medio día: ${selectedParking.prices.bicicleta_medio_dia}</Text>
-                                        <Text>Día completo: ${selectedParking.prices.bicicleta_dia_completo}</Text>
+                                        <Text>Fracción: ${selectedParking.prices.bici_fraccion}</Text>
+                                        <Text>Hora: ${selectedParking.prices.bici_hora}</Text>
+                                        <Text>Medio día: ${selectedParking.prices.bici_medio_dia}</Text>
+                                        <Text>Día completo: ${selectedParking.prices.bici_dia_completo}</Text>
                                     </>
                                 )}
                             </View>
