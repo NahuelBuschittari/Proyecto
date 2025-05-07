@@ -65,8 +65,7 @@ const requestNotificationPermissions = async () => {
     }
     return true;
   }
-  
-  Alert.alert("Aviso", "Las notificaciones solo funcionan en dispositivos físicos");
+
   return false;
 };
 
@@ -95,7 +94,7 @@ export const checkParkingAvailability = async (parking, vehicleType) => {
       default:
         availableSpaces = 0;
     }
-
+    console.log('Espacios disponibles:', availableSpaces);
     if (availableSpaces <= 5) {
         // Solo intentar enviar la notificación si tenemos permisos
         if (hasPermission) {
