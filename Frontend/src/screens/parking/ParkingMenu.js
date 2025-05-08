@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { theme } from '../../styles/theme';
 import { useAuth } from '../../context/AuthContext';
 
-const bloqueado = false; // Esta constante determina si el usuario está bloqueado
+// ID del usuario que debe ser bloqueado
+const BLOCKED_USER_ID = 47; // Reemplaza esto con el ID específico
 
 const MenuButton = ({ title, onPress, iconName, disabled }) => (
   <TouchableOpacity 
@@ -38,17 +39,20 @@ const MenuButton = ({ title, onPress, iconName, disabled }) => (
 );
 
 const ParkingMenu = ({ navigation }) => {
-  const { logout } = useAuth();
-
+  const { logout, user } = useAuth();
+  const [bloqueado, setBloqueado] = useState(false);
+  
   useEffect(() => {
-    if (bloqueado) {
+    // Comprueba si el ID del usuario actual coincide con el ID bloqueado
+    if (user && user.id === BLOCKED_USER_ID) {
+      setBloqueado(true);
       Alert.alert(
         'Acceso restringido',
         'Para seguir usando la app, debe realizar el pago correspondiente.',
         [{ text: 'Aceptar' }]
       );
     }
-  }, []);
+  }, [user]);
   
   const handleLogout = async () => {
     try {
@@ -202,4 +206,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default ParkingMenu;
+export default ParkingMenu;

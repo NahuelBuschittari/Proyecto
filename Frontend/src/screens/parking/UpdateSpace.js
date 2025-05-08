@@ -29,7 +29,7 @@ const ParkingManager = () => {
         bikes: data.bikeCapacity || 0,
       });
     } catch (error) {
-      console.error(error);
+      console.log(error);
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ const ParkingManager = () => {
         Alert.alert('Error', 'Hubo un problema al guardar los datos');
       }
     } catch (error) {
-      console.error(error);
+      console.log(error);
       Alert.alert('Error', 'Hubo un problema al guardar los datos');
     }
   };

@@ -88,7 +88,7 @@ const Review = ({ navigation, route }) => {
             Alert.alert('Reseña registrada', 'Tu reseña ha sido registrada correctamente. Gracias por tu opinión.', [{ text: 'Aceptar', onPress: () => navigation.goBack() }]);
             console.log('Review actualizada correctamente:', data.message);
         } catch (error) {
-            console.error('Error en la actualización:', error.message);
+            console.log('Error en la actualización:', error.message);
         }
     };
 

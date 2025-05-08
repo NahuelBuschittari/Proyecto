@@ -195,7 +195,7 @@ const SignUp = ({ navigation }) => {
         'Hubo un error al registrar la cuenta. Por favor, intente nuevamente.',
         [{ text: 'OK' }]
       );
-      console.error('Error en el registro:', error);
+      console.log('Error en el registro:', error);
     } finally {
       setIsLoading(false);
     }

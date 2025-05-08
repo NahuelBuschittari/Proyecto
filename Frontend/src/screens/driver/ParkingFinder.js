@@ -22,9 +22,11 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
 import { setupNotifications,checkParkingAvailability } from '../../components/Notifications';
 import { API_URL } from '../../context/constants';
+import { useAuth } from '../../context/AuthContext';
+import createReview from '../../components/createReview';
 import axios from 'axios';
 const ParkingFinder = ({ route, navigation }) => {
-
+ 
   useEffect(() => {
     const fetchDay = async () => {
       try {
@@ -32,14 +34,14 @@ const ParkingFinder = ({ route, navigation }) => {
         setCurrentDay(day);
         setLoading(false); 
       } catch (error) {
-        console.error('Error fetching day:', error);
+        console.log('Error fetching day:', error);
         setLoading(false); 
       }
     };
     const fetchLocation = async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        console.error('Permission to access location was denied');
+        console.log('Permission to access location was denied');
         return;
       }
 
@@ -63,7 +65,7 @@ const ParkingFinder = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [isLoading,setIsLoading]=useState(false);
   const [origin, setOrigin] = useState(null);
-
+  const { user, authTokens } = useAuth();
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [pickerDate, setPickerDate] = useState(new Date());
@@ -198,7 +200,7 @@ const ParkingFinder = ({ route, navigation }) => {
         let parkings = response.data;
         setFilteredParkings(parkings);
       } catch (error) {
-        console.error('Error fetching initial parkings:', error);
+        console.log('Error fetching initial parkings:', error);
       }finally{
         setIsLoading(false);
       }
@@ -246,7 +248,7 @@ const ParkingFinder = ({ route, navigation }) => {
         setFilteredParkings(parkings);
         
       } catch (error) {
-        console.error('Error applying filters:', error);
+        console.log('Error applying filters:', error);
       }finally{
         setIsLoading(false);
       }
@@ -666,8 +668,10 @@ const ParkingFinder = ({ route, navigation }) => {
         dayToShow = day;
       }
 
-      const vehiclePrefix = selectedVehicle.toLowerCase().replace('í', 'i');
-
+      let vehiclePrefix = selectedVehicle.toLowerCase().replace('í', 'i');
+      if(vehiclePrefix==='bicicleta'){
+        vehiclePrefix='bici'
+      }
       return (
         <View style={styles.card}>
           <Text style={styles2.parkingTitle}>{item.nombre}</Text>

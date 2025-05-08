@@ -104,7 +104,7 @@ const Navigation = ({ navigation, route }) => {
                 console.log("parkings:",response.data);
                 setLoading(false);
             } catch (error) {
-                console.error('Error al obtener estacionamientos:', error.response || error.message);
+                console.log('Error al obtener estacionamientos:', error.response || error.message);
                 setLoading(false);
             }
         };

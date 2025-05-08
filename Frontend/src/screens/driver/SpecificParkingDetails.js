@@ -112,7 +112,7 @@ const SpecificParkingDetails = ({ route, navigation }) => {
             if (error.response && error.response.status === 404) {
                 setReviews([]);
             } else {
-                console.error('Error al cargar reseñas:', error);
+                console.log('Error al cargar reseñas:', error);
             }
         } finally {
             setIsLoadingReviews(false);

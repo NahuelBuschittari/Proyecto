@@ -111,7 +111,7 @@ export const checkParkingAvailability = async (parking, vehicleType) => {
     }
     return true;
   } catch (error) {
-    console.error('Error checking parking availability:', error);
+    console.log('Error checking parking availability:', error);
     return false;
   }
 };

@@ -436,10 +436,11 @@ const PriceHistoryChart = ({ priceHistory, onInfoPress }) => {
               const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
               
               // Calcular la diferencia con el precio anterior
-              let priceDiff = null;
-              if (index > 0) {
-                priceDiff = change.precio - changes[index - 1].precio;
-              }
+                let priceDiff = null;
+                if (index > 0) {
+                priceDiff = parseFloat((change.precio - changes[index - 1].precio).toFixed(2));
+                console.log("priceDiff",priceDiff)
+                }
               
               return (
                 <View key={index} style={styles.priceChange}>

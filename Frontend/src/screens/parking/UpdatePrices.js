@@ -30,7 +30,7 @@ const UpdatePrices = () => {
         setPrices(response.data[selectedVehicle] || {});
       }
     } catch (error) {
-      console.error('Error al cargar precios:', error);
+      console.log('Error al cargar precios:', error);
       Alert.alert('Error', 'No se pudieron cargar los precios');
     } finally {
       setLoading(false);
@@ -84,7 +84,7 @@ const UpdatePrices = () => {
         Alert.alert('Error', 'No se recibió un mensaje válido del servidor.');
       }
     } catch (error) {
-      console.error('Error al actualizar precios:', error.response?.data || error.message);
+      console.log('Error al actualizar precios:', error.response?.data || error.message);
       Alert.alert(
         'Error',
         error.response?.data?.error || 'Ocurrió un error inesperado. Intenta nuevamente.'

@@ -56,7 +56,7 @@ const DataAnalysis = () => {
       setPriceHistory(data);
 
     } catch (error) {
-      console.error('Error:', error);
+      console.log('Error:', error);
       setError('No se pudieron cargar los datos de análisis');
     }
   };
@@ -78,7 +78,7 @@ const DataAnalysis = () => {
       console.log('Scatter data:', data);
       setScatterData(data);
     } catch (error) {
-      console.error('Error:', error);
+      console.log('Error:', error);
       setError('No se pudieron cargar los datos de análisis');
     }
   }; 
@@ -121,7 +121,7 @@ const DataAnalysis = () => {
         setAverageRatings(averages);
       }
     } catch (error) {
-      console.error('Error loading reviews:', error);
+      console.log('Error loading reviews:', error);
       setError('Error al cargar las reseñas');
     } finally {
       setLoading(false);

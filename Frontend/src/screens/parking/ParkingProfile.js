@@ -38,7 +38,7 @@ const ParkingProfile = () => {
       const data = await response.json();
       setParkingInfo(data);
     } catch (error) {
-      console.error('Error:', error);
+      console.log('Error:', error);
       setError('No se pudo cargar la información del estacionamiento');
     } finally {
       setLoading(false);
@@ -59,7 +59,7 @@ const ParkingProfile = () => {
         setReviews(data);
       }
     } catch (error) {
-      console.error('Error loading reviews:', error);
+      console.log('Error loading reviews:', error);
     }
   };
 
