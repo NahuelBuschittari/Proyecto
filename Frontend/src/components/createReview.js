@@ -20,9 +20,9 @@ const createReview = async (parkingId, driverId, token) => {
             throw new Error('Error en el registro');
         }
         const data = await response.json();
-        console.log(data);
+        console.log("pipe",data);
     } catch (error) {
-        console.error(error);
+        console.log(error);
     }
 };
 export default createReview;

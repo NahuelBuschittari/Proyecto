@@ -112,7 +112,7 @@ const SpecificParkingDetails = ({ route, navigation }) => {
             if (error.response && error.response.status === 404) {
                 setReviews([]);
             } else {
-                console.error('Error al cargar reseñas:', error);
+                console.log('Error al cargar reseñas:', error);
             }
         } finally {
             setIsLoadingReviews(false);
@@ -147,7 +147,17 @@ const SpecificParkingDetails = ({ route, navigation }) => {
                 { type: 'camioneta', label: 'Camionetas' },
                 { type: 'moto', label: 'Motos' },
                 { type: 'bici', label: 'Bicicletas' }
-            ].map(({ type, label }) => (
+            ]
+            .filter(({ type }) => {
+                const p = parkingData.prices;
+                return (
+                    p[`${type}_fraccion`] > 0 ||
+                    p[`${type}_hora`] > 0 ||
+                    p[`${type}_medio_dia`] > 0 ||
+                    p[`${type}_dia_completo`] > 0
+                );
+            })
+            .map(({ type, label }) => (
                 <View key={type} style={styles2.priceCard}>
                     <Text style={styles2.priceTitle}>{label}</Text>
                     <View style={styles2.priceGrid}>
@@ -160,6 +170,7 @@ const SpecificParkingDetails = ({ route, navigation }) => {
             ))}
         </View>
     );
+    
 
     const ScheduleContent = () => (
         <View style={styles2.scheduleContainer}>

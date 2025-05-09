@@ -54,7 +54,7 @@ const DriverMenu = ({ navigation }) => {
         },
       });
     } catch (error) {
-      console.error("Error al descartar la reseña:", error);
+      console.log("Error al descartar la reseña:", error);
     }
   };
 

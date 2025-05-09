@@ -57,7 +57,7 @@ const PaymentScreen = () => {
 
       <View style={customStyles.warningSection}>
         <Text style={customStyles.warningText}>
-          Importante: Verifica los datos antes de realizar la transferencia. Una vez realizada, envía el comprobante a nuestro correo electrónico.
+          Importante: verifica los datos antes de realizar la transferencia. Una vez realizada, envía el comprobante a nuestro correo electrónico.
         </Text>
       </View>
     </ScrollView>

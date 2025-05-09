@@ -39,7 +39,7 @@ const DriverProfile = ({ navigation }) => {
                 });
                 setDate(new Date(data.fecha_nacimiento));
             } catch (error) {
-                console.error(error);
+                console.log(error);
             } finally {
                 setIsLoading(false);
             }
@@ -83,10 +83,10 @@ const DriverProfile = ({ navigation }) => {
             if (response.ok) {
                 navigation.goBack();
             } else {
-                console.error('Error al actualizar perfil');
+                console.log('Error al actualizar perfil');
             }
         } catch (error) {
-            console.error(error);
+            console.log(error);
         } finally {
             setIsLoading(false);
         }
@@ -96,7 +96,7 @@ const DriverProfile = ({ navigation }) => {
         try {
             await logout();
         } catch (error) {
-            console.error('Error al cerrar sesión:', error);
+            console.log('Error al cerrar sesión:', error);
         }
     };
 

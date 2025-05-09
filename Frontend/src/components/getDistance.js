@@ -13,7 +13,7 @@ export const getDistance = async (startLat, startLon, endLat, endLon) => {
         const distance = response.data.routes[0].distance; // Distancia en metros
         return distance;
     } catch (error) {
-        console.error('Error al calcular la distancia con OSRM:', error);
+        console.log('Error al calcular la distancia con OSRM:', error);
         return null;
     }
 };
