@@ -127,7 +127,7 @@ const ParkingFinder = ({ route, navigation }) => {
      }
     await Linking.openURL(url);
   };
-  const [sortBy, setSortBy] = useState('price');
+  const [sortBy, setSortBy] = useState('distance');
   const [sortDirection, setSortDirection] = useState('asc');
 
   const toggleDrawer = () => {
@@ -285,10 +285,10 @@ const ParkingFinder = ({ route, navigation }) => {
               }}
               style={styles2.picker}
             >
-              <Picker.Item label="Precio Ascendente" value="price-asc" />
-              <Picker.Item label="Precio Descendente" value="price-desc" />
               <Picker.Item label="Distancia Ascendente" value="distance-asc" />
               <Picker.Item label="Distancia Descendente" value="distance-desc" />
+              <Picker.Item label="Precio Ascendente" value="price-asc" />
+              <Picker.Item label="Precio Descendente" value="price-desc" />
             </Picker>
           </View>
         <CustomButton
@@ -309,10 +309,11 @@ const ParkingFinder = ({ route, navigation }) => {
               onValueChange={(itemValue) => {
                 setActiveFilterCategory(itemValue);
               }}
+              
             >
               <Picker.Item 
                 key={1} 
-                label='Ubi y precio' 
+                label='Ubicación/precio' 
                 value='ubiPrecio' 
                 color={theme.colors.text}
               />
@@ -343,9 +344,23 @@ const ParkingFinder = ({ route, navigation }) => {
             {activeFilterCategory === 'ubiPrecio' && (
               <>
                 <View style={styles2.row}>
+                  <Text>Distancia max:</Text>
+                  <CustomInput
+                    style={styles2.input}
+                    keyboardType="numeric"
+                    value={filters.maxDistance ? filters.maxDistance.toString(): null}
+                    setValue={(text) => {
+                      const distance = parseInt(text) || null;
+                      setFilters({ ...filters, maxDistance: distance });
+                    }}
+                  />
+                  <Text> cuadras</Text>
+                </View>
+                <View style={styles2.row}>
                 <Text>Vehiculo:</Text>
-                <View style={[{width:'70%'}]}>
+                <View style={[{height:'88%',width:'70%',borderRadius: theme.spacing.xs, borderColor: '#ccc', borderWidth: 1}]}>
                   <Picker pickerStyleType={[{fontSize:theme.typography.fontSize.small}]}
+                  
                     selectedValue={selectedVehicle}
                     onValueChange={(itemValue) => {
                       setSelectedVehicle(itemValue);
@@ -363,35 +378,10 @@ const ParkingFinder = ({ route, navigation }) => {
                   </Picker> 
                 </View>
                 </View>
-
-                <View style={styles2.row}>
-                  <Text>Distancia máxima(cuadras):</Text>
-                  <CustomInput
-                    style={styles2.input}
-                    keyboardType="numeric"
-                    value={filters.maxDistance ? filters.maxDistance.toString(): null}
-                    setValue={(text) => {
-                      const distance = parseInt(text) || null;
-                      setFilters({ ...filters, maxDistance: distance });
-                    }}
-                  />
-                </View>
-                <View style={styles2.row}>
-                  <Text>Precio máximo(pesos):</Text>
-                  <CustomInput
-                    style={styles2.input}
-                    keyboardType="numeric"
-                    value={filters.maxPrice ? filters.maxPrice.toString() : null}
-                    setValue={(text) => {
-                      const price = parseInt(text) || null;
-                      setFilters({ ...filters, maxPrice: price });
-                    }}
-                  />
-                </View>
                 <View style={styles2.row}>
                 <Text>Tipo de tarifa:</Text>
-                <View style={[{width:'70%'}]}>
-                  <Picker pickerStyleType={[{fontSize:theme.typography.fontSize.small}]}
+                <View style={[{height:'88%',width:'60%', borderRadius: theme.spacing.xs, borderColor: '#ccc', borderWidth: 1}]}>
+                  <Picker pickerStyleType={[{fontSize:6}]}
                     selectedValue={priceType}
                     onValueChange={(itemValue) => {
                       setPriceType(itemValue);
@@ -408,6 +398,19 @@ const ParkingFinder = ({ route, navigation }) => {
                     ))}
                   </Picker> 
                 </View>
+                </View>
+                <View style={styles2.row}>
+                  <Text>Precio max: </Text>
+                  <CustomInput
+                    style={styles2.input}
+                    keyboardType="numeric"
+                    value={filters.maxPrice ? filters.maxPrice.toString() : null}
+                    setValue={(text) => {
+                      const price = parseInt(text) || null;
+                      setFilters({ ...filters, maxPrice: price });
+                    }}
+                  />
+                  <Text>pesos </Text>
                 </View>
               </>
             )}
@@ -626,7 +629,7 @@ const ParkingFinder = ({ route, navigation }) => {
                 textStyle={styles.navigationButtonText}
               />
               <CustomButton 
-                text='Aplicar filtros' 
+                text='Aplicar' 
                 onPress={applyFilters} 
                 style={styles.navigationButton} 
                 textStyle={styles.navigationButtonText}
@@ -689,7 +692,7 @@ const ParkingFinder = ({ route, navigation }) => {
           )}
           <View style={styles.buttonContainer}>
             <CustomButton 
-              text='Mas info'
+              text='Mas información'
               style={styles.navigationButton}
               textStyle={styles.navigationButtonText}
               onPress={() => navigation.navigate('SpecificParkingDetails', {
@@ -698,7 +701,7 @@ const ParkingFinder = ({ route, navigation }) => {
               })}
             />
             <CustomButton 
-              text='Ir con Google Maps'
+              text='Ir con  Maps'
               style={styles.navigationButton}
               textStyle={styles.navigationButtonText}
               onPress={() => {
